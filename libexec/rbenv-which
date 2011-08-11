@@ -2,9 +2,11 @@
 
 expand_path() {
   local cwd="$(pwd)"
-  cd "$1"
-  pwd
-  cd "$cwd"
+  if [[ -e $1 ]]; then
+    cd "$1"
+    pwd
+    cd "$cwd"
+  fi
 }
 
 remove_from_path() {
