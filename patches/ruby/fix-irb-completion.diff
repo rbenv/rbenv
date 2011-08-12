@@ -1,0 +1,13 @@
+diff --git a/lib/irb/completion.rb b/lib/irb/completion.rb
+index 000658e..609dca3 100644
+--- a/lib/irb/completion.rb
++++ b/lib/irb/completion.rb
+@@ -157,7 +157,7 @@ module IRB
+ 	    end
+ 	    next if name != "IRB::Context" and 
+ 	      /^(IRB|SLex|RubyLex|RubyToken)/ =~ name
+-	    candidates.concat m.instance_methods(false)
++	    candidates.concat m.instance_methods(false).map { |m| m.to_s }
+ 	  }
+ 	  candidates.sort!
+ 	  candidates.uniq!

@@ -1,0 +1,225 @@
+diff -rux '*.o' ruby-1.8.7-p72/ChangeLog ruby-1.8.7-mbari/ChangeLog
+--- ruby-1.8.7-p72/ChangeLog	2008-12-19 23:42:15.000000000 -0800
++++ ruby-1.8.7-mbari/ChangeLog	2008-12-19 23:52:11.000000000 -0800
+@@ -1,7 +1,14 @@
++Tue Dec 19 20:15:36 2008  Brent Roman  <brent@mbari.org>
++
++        * eval.c:  added (Method|Proc)#(__line__|__file__) methods
++                   call ruby_set_current_source() before adding method nodes
++
++
+ Tue Dec 17  4:15:36 2008  Brent Roman  <brent@mbari.org>
+ 
+         * eval.c:  streamlined rb_thread_restore_context() to ensure O(1) time
+ 
++
+ Tue Dec 15  9:15:36 2008  Brent Roman  <brent@mbari.org>
+ 
+         * eval.c:  factored rb_eval() into many separate non-inlined
+diff -rux '*.o' ruby-1.8.7-p72/eval.c ruby-1.8.7-mbari/eval.c
+--- ruby-1.8.7-p72/eval.c	2008-12-19 23:42:15.000000000 -0800
++++ ruby-1.8.7-mbari/eval.c	2008-12-19 23:47:22.000000000 -0800
+@@ -3,7 +3,7 @@
+   eval.c -
+ 
+   $Author: brent $
+-  $Date: 2008/12/18 07:44:48 $
++  $Date: 2008/12/20 07:47:22 $
+   created at: Thu Jun 10 14:22:17 JST 1993
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+@@ -726,6 +726,7 @@
+     if (!name) {
+ 	rb_raise(rb_eArgError, "argument needs to be symbol or string");
+     }
++    ruby_set_current_source(); /* for Method#__line__ */
+     len = strlen(name)+2;
+     buf = ALLOCA_N(char,len);
+     snprintf(buf, len, "@%s", name);
+@@ -2248,7 +2249,10 @@
+     NODE *node;
+     NODE *rval;
+ {
+-    NODE *copy = NEW_NODE(NODE_SCOPE,0,rval,node->nd_next);
++    NODE *copy;
++    
++    ruby_set_current_source();  /* for Method#__line__ */
++    copy=NEW_NODE(NODE_SCOPE,0,rval,node->nd_next);
+ 
+     if (node->nd_tbl) {
+ 	copy->nd_tbl = ALLOC_N(ID, node->nd_tbl[0]+1);
+@@ -3878,7 +3882,8 @@
+   result = Qnil;
+   if (node) {
+     ruby_current_node = node;
+-    
++    SET_CURRENT_SOURCE();
++
+     switch (nd_type(node)) {
+       case NODE_BLOCK:
+ 	while (node->nd_next) {
+@@ -10119,6 +10124,7 @@
+     else {
+ 	rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
+     }
++    ruby_set_current_source(); /* for Method#__line__ */
+     if (RDATA(body)->dmark == (RUBY_DATA_FUNC)bm_mark) {
+ 	node = NEW_DMETHOD(method_unbind(body));
+     }
+@@ -10150,6 +10156,98 @@
+     return body;
+ }
+ 
++
++/*
++ * call-seq:
++ *    meth.__file__  => String  
++ *
++ * returns the filename containing this method's definition
++ * raises ArgumentError if method has no associated ruby source code
++ */
++ 
++static VALUE
++method_source_file_name(VALUE method)
++{
++    struct METHOD *data;
++    NODE *node;
++
++    Data_Get_Struct(method, struct METHOD, data);   
++    if (node = data->body) {
++      const char *filename = node->nd_file;
++      if (filename)
++        return rb_str_new2(filename);
++    }
++    rb_raise(rb_eArgError, "native Method");
++}
++
++/*
++ * call-seq:
++ *    meth.__line__  => Fixnum  
++ *
++ * returns the starting line number of this method
++ * raises ArgumentError if method has no associated ruby source code
++ */
++ 
++static VALUE
++method_source_line(VALUE method)
++{
++    struct METHOD *data;
++    NODE *node;
++
++    Data_Get_Struct(method, struct METHOD, data);
++    if (node = data->body) {
++      int lineno = nd_line(node);
++      if (lineno)
++        return INT2FIX(nd_line(node));
++    }
++    rb_raise(rb_eArgError, "native Method");
++}
++
++
++
++/*
++ * call-seq:
++ *    prc.__file__  => String  
++ *
++ * returns the filename where this proc is defined
++ * raises ArgumentError if proc has no associated ruby source
++ */
++ 
++static VALUE
++proc_source_file_name(VALUE block)
++{
++    struct BLOCK *data;
++    const char *filename;
++    NODE *node;
++
++    Data_Get_Struct(block, struct BLOCK, data);
++    if ((node = data->frame.node) || (node = data->body))
++      return rb_str_new2(node->nd_file);
++    rb_raise(rb_eArgError, "native Proc");
++}
++
++
++/*
++ * call-seq:
++ *    prc.__line__  => Fixnum  
++ *
++ * returns the starting line number of this proc
++ * raises ArgumentError if proc has no associated ruby source code
++ */
++ 
++static VALUE
++proc_source_line(VALUE block)
++{
++    struct BLOCK *data;
++    NODE *node;
++    
++    Data_Get_Struct(block, struct BLOCK, data);
++    if ((node = data->frame.node) || (node = data->body))
++      return INT2FIX( nd_line(node) );
++    rb_raise(rb_eArgError, "native Proc");
++}
++
++
+ /*
+  *  <code>Proc</code> objects are blocks of code that have been bound to
+  *  a set of local variables. Once bound, the code may be called in
+@@ -10201,6 +10299,8 @@
+     rb_define_method(rb_cProc, "to_s", proc_to_s, 0);
+     rb_define_method(rb_cProc, "to_proc", proc_to_self, 0);
+     rb_define_method(rb_cProc, "binding", proc_binding, 0);
++    rb_define_method(rb_cProc, "__file__", proc_source_file_name, 0);
++    rb_define_method(rb_cProc, "__line__", proc_source_line, 0);
+ 
+     rb_define_global_function("proc", proc_lambda, 0);
+     rb_define_global_function("lambda", proc_lambda, 0);
+@@ -10221,6 +10321,8 @@
+     rb_define_method(rb_cMethod, "owner", method_owner, 0);
+     rb_define_method(rb_cMethod, "unbind", method_unbind, 0);
+     rb_define_method(rb_mKernel, "method", rb_obj_method, 1);
++    rb_define_method(rb_cMethod, "__file__", method_source_file_name, 0);
++    rb_define_method(rb_cMethod, "__line__", method_source_line, 0);
+ 
+     rb_cUnboundMethod = rb_define_class("UnboundMethod", rb_cObject);
+     rb_undef_alloc_func(rb_cUnboundMethod);
+@@ -10233,6 +10335,8 @@
+     rb_define_method(rb_cUnboundMethod, "name", method_name, 0);
+     rb_define_method(rb_cUnboundMethod, "owner", method_owner, 0);
+     rb_define_method(rb_cUnboundMethod, "bind", umethod_bind, 1);
++    rb_define_method(rb_cUnboundMethod, "__file__", method_source_file_name, 0);
++    rb_define_method(rb_cUnboundMethod, "__line__", method_source_line, 0);
+     rb_define_method(rb_cModule, "instance_method", rb_mod_method, 1);
+ }
+ 
+diff -rux '*.o' ruby-1.8.7-p72/version.h ruby-1.8.7-mbari/version.h
+--- ruby-1.8.7-p72/version.h	2008-12-19 23:42:15.000000000 -0800
++++ ruby-1.8.7-mbari/version.h	2008-12-19 23:39:56.000000000 -0800
+@@ -1,7 +1,7 @@
+ #define RUBY_VERSION "1.8.7"
+-#define RUBY_RELEASE_DATE "2008-12-17"
++#define RUBY_RELEASE_DATE "2008-12-21"
+ #define RUBY_VERSION_CODE 187
+-#define RUBY_RELEASE_CODE 20081217
++#define RUBY_RELEASE_CODE 20081221
+ #define RUBY_PATCHLEVEL 72
+ 
+ #define RUBY_VERSION_MAJOR 1
+@@ -9,7 +9,7 @@
+ #define RUBY_VERSION_TEENY 7
+ #define RUBY_RELEASE_YEAR 2008
+ #define RUBY_RELEASE_MONTH 12
+-#define RUBY_RELEASE_DAY 17
++#define RUBY_RELEASE_DAY 21
+ 
+ #ifdef RUBY_EXTERN
+ RUBY_EXTERN const char ruby_version[];
+@@ -25,7 +25,7 @@
+ #define RUBY_BIRTH_MONTH 2
+ #define RUBY_BIRTH_DAY 24
+ 
+-#define RUBY_RELEASE_STR "MBARI 5 on patchlevel"
++#define RUBY_RELEASE_STR "MBARI 6 on patchlevel"
+ #define RUBY_RELEASE_NUM RUBY_PATCHLEVEL
+ 
+ 

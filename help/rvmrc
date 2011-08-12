@@ -1,0 +1,34 @@
+
+∴ rvm rvmrc {trust,untrust,trusted,load,reset} [optional-path]
+
+Tools for dealing with and loading the rvmrc trust for a given directory.
+All actions take an optional path to a directory to check.
+
+Examples:
+
+To check the status of ~/My/project, you'd run:
+
+  ∴ rvm rvmrc trusted ~/My/project
+
+Or, more conventionally,
+
+  ∴ cd ~/My/project && rvm rvmrc trusted
+
+To manually set it as trusted:
+
+  ∴ rvm rvmrc trust ~/My/project
+
+Or, to reset the trust and force a prompt:
+
+  ∴ rvm rvmrc reset ~/My/project
+  
+Finally, to load the rvmrc in a directory, you'd run:
+
+  ∴ rvm rvmrc load ~/My/project
+
+Or,
+
+  ∴ cd ~/My/project && rvm rvmrc load
+  
+Note that this replaces 'rvm load-rvmrc'. Note that load implicity trusts the
+rvmrc, even if it is set to untrusted.

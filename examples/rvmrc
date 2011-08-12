@@ -1,0 +1,64 @@
+# Example ~/.rvmrc file.
+#
+# This file shows some examples of setting defaults to your own tastes.
+#
+# If you wish to adjust the default ruby interpreter/version/patchlevel
+# settings they can be found in the $rvm_path/config/db file.
+# Beware that currently that file is overwritten on install so
+# back it up if you change anything.
+#
+
+# rvm Path
+#   This is where rvm installs and manages everything in by default.
+#export rvm_path="$HOME/.rvm"
+
+# Source Path
+#   This is where rvm extracts to for compiling & installing.
+#export rvm_source_path="${rvm_path}/src"
+
+# Log Path
+#   This is where rvm logs all of it's actions to
+#   (not including the 'do' actions)
+#export rvm_log_path="${rvm_path}/log"
+
+# Bin Path
+#   This is where rvm places all of it's executable/wrapper scripts.
+#export rvm_bin_path="${rvm_path}/bin"
+
+# Gem Path
+#   This is where rvm installs all gems to for each ruby
+#   interpreter/version%gemset
+#export rvm_gems_path="$rvm_path/gems"
+
+# Gem Options
+#   These options are passed to the 'gem' command in a RVM environment.
+#export rvm_gem_options="--no-rdoc --no-ri"
+
+# Temp Path
+#   This is where rvm stores all of its temporary files.
+#export rvm_tmp_path="${rvm_tmp_path:-"$rvm_path/tmp"}"
+
+# Install On Use Flag
+# Install rubies when used if are not installed.
+#export rvm_install_on_use_flag=1
+
+# Gemset Create on use Flag
+# This will create a gemset when the gemset is used if it does not exist
+# export rvm_gemset_create_on_use_flag=1
+
+# Make Flags, I have 8 cpu's so I might use 7 make threads:
+#export rvm_make_flags="-j7"
+
+# Automatically trust project .rvmrc files
+#  export rvm_trust_rvmrcs_flag=1
+
+# Always trust an rvmrc, even if it's contents change.
+# CAUTION: Can be dangerous / security risk. Only use this feature if you know
+#          what you are doing / accept the implications :)
+# export rvm_always_trust_rvmrc_flag
+
+# Specify RBXOPT enviroment settings that should always be set when calling
+# Rubinius scripts. For example, to always run the agent when running from
+# an Rubinius environment, set the value to '-Xagent'
+# export rvm_rbx_opt
+

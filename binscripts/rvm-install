@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+#
+# This script extracts and installs the RVM release tarball that is bundled
+# within the gem.
+#
+Dir.chpwd( File.join( ENV["GEM_HOME"], "gems", "rvm-#{RVM::Version::STRING}", "releases" ) ) do
+
+  puts "Extracting bundled rvm-#{RVM::Version::STRING}.tar.gz"
+
+  %x{tar zxf rvm-#{RVM::Version::STRING}.tar.gz --no-same-owner}
+
+  Dir.chpwd( "rvm-#{RVM::Version::STRING}" ) do
+
+    puts "Running RVM install script\n"
+
+    puts %x{bash ./scripts/install}
+
+  end
+
+end
+

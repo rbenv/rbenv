@@ -1,0 +1,196 @@
+#!/usr/bin/env bash
+
+default_flag="$rvm_default_flag"
+
+# Prevent recursion
+unset rvm_default_flag rvm_wrapper_name prefix
+
+source "$rvm_scripts_path/base"
+source "$rvm_scripts_path/initialize"
+
+usage()
+{
+  printf "
+  Usage:
+
+    rvm wrapper [ruby_string] [wrapper_prefix] [binary[ binary[ ...]]]
+
+  Binaries
+
+    ruby, gem, rake, irb, rdoc, ri, testrb
+
+  Notes
+
+    For more information, see 'rvm help wrapper'
+
+  Example
+
+    # Wrap the spec binary as 'rails3_spec' for 1.9.2@rails3
+    rvm wrapper 1.9.2@rails3 rails3 spec
+
+    # To create a single binary you can do the following,
+    user$ rvm use --create 1.8.7@ey ; gem install ey
+    user$ rvm wrapper 1.8.7@ey --no-prefix ey
+    # So that it is clear I am now in a different env,
+    user$ rvm 1.9.2
+    user$ ruby -v
+    ruby 1.9.2p180 (2011-02-18 revision 30909) [x86_64-darwin10.7.0]
+    # And we have the desired result,
+    user$ ey
+    Usage:
+      ey [--help] [--version] COMMAND [ARGS]
+      ...
+
+"
+}
+
+wrap()
+{
+
+  if [[ -n "${file_name:-""}" ]]
+  then
+    mkdir -p "$(dirname "$file_name")"
+    rm -f "$file_name"
+    if (( UID == 0 ))
+    then # ... this stuff should not be in here...
+      path="${rvm_path:-"/usr/local/rvm"}"
+    else
+      path="${rvm_path:-"$HOME/.rvm"}"
+    fi
+
+    printf "#!/usr/bin/env bash
+
+if [[ -s \"$path/environments/${environment_identifier}\" ]]
+then
+  source \"$path/environments/${environment_identifier}\"
+  exec $binary_name \"\$@\"
+else
+  echo \"ERROR: Missing RVM environment file: '$path/environments/${environment_identifier}'\" >&2
+  exit 1
+fi
+  " > "$file_name"
+
+    if [[ -f "$file_name" ]]
+    then
+      chmod +x "$file_name"
+    fi
+
+    return 0
+  else
+    rvm_error "wrap() : file_name unkown variable for wrap()."
+    return 1
+  fi
+}
+
+symlink_binary()
+{
+  # Generate the default wrapper with the given binary name.
+  # We first check if we can wrap the binary and if we were able to,
+  # we then symlink it into place.
+  if wrap_binary && [[ -f "$file_name" ]]
+  then
+    rm -f "$rvm_bin_path/${prefix}_${binary_name##*\/}"
+    ln -fs "$file_name" "$rvm_bin_path/${prefix}_${binary_name##*\/}"
+  fi
+}
+
+wrap_binary()
+{
+  # We wrap when the given binary is in the path or override_check is set to one.
+  if [[ "$override_check" = "1" ]] || command -v $binary_name > /dev/null
+  then
+    wrap
+  else
+    rvm_error "Binary '$binary_name' not found."
+    return 1
+  fi
+}
+
+# Empty ruby string: show usage and exit.
+if (( $# == 0 ))
+then
+  usage
+  exit 1
+else
+  ruby_string="$1"
+  shift
+  if (( $# > 0 ))
+  then
+    prefix="$1"
+    shift
+  fi
+fi
+
+if [[ -z "$ruby_string" ]]
+then
+  usage
+  exit 1
+fi
+
+binaries=($@)
+override_check=0
+
+# Default the list of binaries to those we use regularily.
+if [[ ${#binaries[@]} -eq 0 ]]
+then
+  binaries=(ruby gem irb ri rdoc rake erb testrb)
+fi
+
+# Use the correct ruby.
+__rvm_become "$ruby_string"
+
+__rvm_ensure_has_environment_files
+
+environment_identifier="$(__rvm_environment_identifier)"
+
+# For each binary, we want to generate the wrapper / symlink
+# it to the existing wrapper if needed.
+for binary_name in "${binaries[@]}"
+do
+  file_name="$rvm_wrappers_path/${environment_identifier}/${binary_name##*\/}"
+
+  if (( ${rvm_default_flag:-0} > 0 ))
+  then
+    prefix="default"
+  fi
+
+  if [[ ! -d "$rvm_bin_path" ]]
+  then
+    mkdir -p "$rvm_bin_path"
+  fi
+
+  if [[ -z "${prefix:-}" ]]
+  then
+    override_check=1
+    wrap_binary
+    # Symlink it into place.
+    if [[ -f "$file_name" ]]
+    then
+      if [[ "$binary_name" == "ruby" ]]
+      then
+        destination="$rvm_bin_path/$environment_identifier"
+      else
+        destination="$rvm_bin_path/${binary_name##*\/}-${environment_identifier}"
+      fi
+      rm -f "$destination"
+      ln -sf "$file_name" "$destination"
+    fi
+  elif [[ "--no-prefix" == "$prefix" ]]
+  then
+    override_check=1
+    wrap_binary
+    if [[ -f  "$file_name" ]]
+    then
+      destination="$rvm_bin_path/${binary_name##*\/}"
+      if [[ -s "$destination" ]]
+      then
+        rm -f "$destination"
+      fi
+      ln -sf "$file_name" "$destination"
+    fi
+  else
+    symlink_binary
+  fi
+done
+
+exit $?

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+__rvm_Answer_to_the_Ultimate_Question_of_Life_the_Universe_and_Everything()
+{
+  for index in {1..750} ; do sleep 0.25 ; echo -n '.' ; done ; printf "%d" 0x2A
+  echo
+  return 0
+}
+
+__rvm_ultimate_question()
+{
+  printf "
+  I do not know the Ultimate Question,
+  however I can help you build a more
+  powerful Ruby which can compute the
+  Ultimate Question:
+
+  $ rvm install rbx
+
+  "
+  return 0
+}
+

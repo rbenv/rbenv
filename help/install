@@ -1,0 +1,23 @@
+
+Usage
+
+  rvm install [ruby-string]
+
+
+For a partial list of valid ruby strings please run
+
+  rvm list known
+
+For MRI Rubies you may pass configuration parameters in one of two ways:
+
+  rvm install 1.9.2 --with-iconv-dir=$HOME/.rvm --without-readline
+
+and/or
+
+  rvm install 1.9.2 -C --with-iconv-dir=$HOME/.rvm,--without-readline
+
+Please see the documentation for further information:
+
+  http://rvm.beginrescueend.com/rubies/installing/
+
+

@@ -1,0 +1,14 @@
+
+  Usage:
+
+    rvm gemset [action]
+
+  Action:
+
+    {import,export,create,copy,rename,empty,delete,name,dir,list,list_all,gemdir,install,pristine,clear,use,update,unpack,globalcache}
+
+  Description:
+
+    Commands for working with and manipulating gemsets within RVM.
+
+

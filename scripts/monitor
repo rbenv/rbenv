@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+
+original_ruby_strings=$rvm_ruby_strings
+original_ruby_string=$rvm_ruby_string
+
+source "$rvm_scripts_path/base"
+
+rvm_monitor_sleep="${rvm_monitor_sleep:-2}"
+
+timestamp()
+{
+  if [[ "Darwin" = "$(uname)" ]] ; then
+    echo $(stat -f "%m" $1)
+  else
+    echo $(stat -c "%Y" $1)
+  fi
+}
+
+push_if_timestamp_changed()
+{
+  local file=$1
+
+  local file_timestamp=$(timestamp "$file")
+
+  eval "time=\$${framework}_timestamp"
+
+  if [[ "$file_timestamp" -gt $time ]] ; then
+
+    array_push "changed_${framework}_files" $file
+
+  fi
+}
+
+update_timestamp()
+{
+  if [[ -d "${1}/" ]] ; then
+
+    \touch "$rvm_path/${$}_${1}_timestamp"
+
+    eval "${1}_timestamp=\$(timestamp \"$rvm_path/${$}_${1}_timestamp\")"
+
+  fi
+}
+
+update_timestamp "test"
+update_timestamp "spec"
+
+while : ; do
+  changed_test_files=() ; changed_spec_files=() ; changed_code_files=()
+
+  for file in lib/**/*.rb lib/*.rb app/**/*.rb app/*.rb ; do
+    if [[ -f "$file" ]] ; then push_if_timestamp_changed $file "code" ; fi
+  done
+
+  for framework in test spec ; do
+
+    if [[ -d "$framework/" ]] ; then
+
+      for file in ${framework}/**/*_${framework}.rb ${framework}/*_${framework}.rb ; do
+        if [[ -f "$file" ]] ; then
+          push_if_timestamp_changed $file $framework
+        fi
+      done
+
+      if [[ "$(array_length "changed_${framework}_files")" -gt 0 ]] ; then
+        rvm_ruby_strings=$original_ruby_strings
+        rvm_ruby_string=$original_ruby_string
+        if [[ "spec" = "$framework" ]] ; then
+          rvm_action="spec"
+          rvm_ruby_args="spec/spec_helper.rb ${changed_spec_files[*]}"
+          "$rvm_scripts_path/set" $rvm_action $rvm_ruby_args
+        elif [[ "test" = "$framework" ]] ; then
+          rvm_action="ruby"
+          rvm_ruby_args=" -r$(echo "${changed_test_files[*]}" | sed 's/ / -r/g') test/test_helper.rb"
+          "$rvm_scripts_path/set" $rvm_action $rvm_ruby_args
+        fi
+        update=1
+      fi
+
+      if [[ "$(array_length "changed_code_files")" -gt 0 ]] ; then
+        rvm_ruby_strings=$original_ruby_strings
+        rvm_ruby_string=$original_ruby_string
+        if [[ "spec" = "$framework" ]] ; then
+          rvm_action="spec"
+          rvm_ruby_args="spec/"
+          "$rvm_scripts_path/set" $rvm_action $rvm_ruby_args
+        elif [[ "test" = "$framework" ]] ; then
+          rvm_action="rake"
+          rvm_ruby_args="test"
+          "$rvm_scripts_path/set" "$rvm_action" $rvm_ruby_args
+        fi
+        update=1
+      fi
+    fi
+
+    if [[ "$update" -eq 1 ]] ; then
+      update_timestamp $framework
+    fi
+  done
+
+  unset update changed_test_files changed_spec_files
+
+  sleep $rvm_monitor_sleep
+done
+

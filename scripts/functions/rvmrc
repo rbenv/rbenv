@@ -1,0 +1,390 @@
+#!/usr/bin/env bash
+
+__rvm_md5_for()
+{
+  if command -v md5 > /dev/null; then
+    echo "$1" | md5
+  elif command -v md5sum > /dev/null ; then
+    echo "$1" | md5sum | awk '{print $1}'
+  else
+    rvm_error "Neither md5 nor md5sum were found in the PATH"
+    return 1
+  fi
+
+  return 0
+}
+
+__rvm_md5_for_contents()
+{
+  if command -v md5 > /dev/null
+  then
+    echo "$1" | cat - "$1" | md5
+  elif command -v md5sum > /dev/null
+  then
+    echo "$1" | cat - "$1" | md5sum | awk '{print $1}'
+  else
+    rvm_error "Neither md5 nor md5sum were found in the PATH"
+    return 1
+  fi
+
+  return 0
+}
+
+__rvm_rvmrc_key()
+{
+  printf "$1" | tr '[#/.=]' _
+  return $?
+}
+
+__rvm_reset_rvmrc_trust()
+{
+  "$rvm_scripts_path/db" "$rvm_user_path/rvmrcs" \
+    "$(__rvm_rvmrc_key "$1")" "delete" >/dev/null 2>&1
+  return $?
+}
+
+__rvm_trust_rvmrc()
+{
+  __rvm_reset_rvmrc_trust "$1"
+  "$rvm_scripts_path/db" "$rvm_user_path/rvmrcs" \
+    "$(__rvm_rvmrc_key "$1")" "1;$(__rvm_md5_for_contents "$1")" >/dev/null 2>&1
+  return $?
+}
+
+__rvm_untrust_rvmrc()
+{
+  __rvm_reset_rvmrc_trust "$1"
+  "$rvm_scripts_path/db" "$rvm_user_path/rvmrcs" \
+    "$(__rvm_rvmrc_key "$1")" "0;$(__rvm_md5_for_contents "$1")" >/dev/null 2>&1
+  return $?
+}
+
+__rvm_rvmrc_stored_trust()
+{
+  "$rvm_scripts_path/db" "$rvm_user_path/rvmrcs" \
+    "$(__rvm_rvmrc_key "$1")"
+  return $?
+}
+
+__rvm_rvmrc_tools()
+{
+  export escape_flag=1
+
+  local rvmrc_action="$1"
+
+  if (( $# ))
+  then
+    shift
+  fi
+
+  local rvmrc_path="$(builtin cd "${1:-$PWD}" >/dev/null 2>&1; pwd)/.rvmrc"
+
+  case "$rvmrc_action" in
+
+    reset)
+
+      __rvm_reset_rvmrc_trust "$rvmrc_path"
+      echo "Reset trust for $rvmrc_path"
+    ;;
+
+    trust)
+
+      __rvm_trust_rvmrc "$rvmrc_path"
+      echo "Marked $rvmrc_path as trusted"
+    ;;
+
+    untrust)
+
+      __rvm_untrust_rvmrc "$rvmrc_path"
+      echo "Marked $rvmrc_path as untrusted"
+
+    ;;
+
+    trusted)
+
+      if [[ -f "$rvmrc_path" ]]
+      then
+        local saveIFS=$IFS
+        IFS=$';'
+        local trust=($(__rvm_rvmrc_stored_trust "$rvmrc_path"))
+        IFS=$saveIFS
+
+        if [[ -n "${trust[1]}" ]] && [[ "${trust[1]}" != "$(__rvm_md5_for_contents "$rvmrc_path")" ]]
+        then
+          echo "The rvmrc at '$rvmrc_path' contains unreviewed changes."
+        elif [[ "${trust[0]}" == "1" ]]
+        then
+          echo "The rvmrc at '$rvmrc_path' is currently trusted."
+        elif [[ "${trust[0]}" == "0" ]]
+        then
+          echo "The rvmrc at '$rvmrc_path' is currently untrusted."
+        else
+          echo "The trustiworthiness of '$rvmrc_path' is currently unknown."
+        fi
+      else
+        echo "There is no $rvmrc_path"
+      fi
+    ;;
+
+    load)
+
+      rvm_rvmrc_cwd="" rvm_trust_rvmrcs_flag=1  \
+        __rvm_project_rvmrc "$(dirname "$rvmrc_path")"
+    ;;
+
+    *)
+      echo "Usage: rvm rvmrc {trust,untrust,trusted,load,reset}"
+      return 1
+    ;;
+  esac
+
+  unset escape_flag
+
+  return $?
+}
+
+__rvm_check_rvmrc_trustworthiness()
+{
+  export escape_flag=1
+
+  # Trust when they have the flag... of doom!
+  if [[ -n "$1" && ${rvm_trust_rvmrcs_flag:-0} -eq 0 ]]
+  then
+    local saveIFS=$IFS trust
+    IFS=$';'
+    trust=( $( __rvm_rvmrc_stored_trust "$1" ) )
+    IFS=$saveIFS
+
+    if [[ -z "${trust[1]}" ]] || [[ "${trust[1]}" != "$(__rvm_md5_for_contents "$1")" ]]
+    then
+      __rvm_ask_to_trust "$1"
+    else
+      [[ "${trust[0]}" = "1" ]]
+    fi
+
+  fi
+  local result=$?
+
+  unset escape_flag
+
+  return $result
+}
+
+__rvm_ask_to_trust()
+{
+
+  local trusted value anykey _rvmrc="${1}"
+
+  if [[ ! -t 0 ]] || (( ${rvm_promptless:=0} == 1 ))
+  then
+    return 2
+  fi
+
+  printf "
+  ===============================================================
+  = NOTICE:                                                     =
+  ===============================================================
+  = RVM has encountered a new or modified .rvmrc file in the    =
+  = current working directory. Resource files may execute       =
+  = arbitrary instructions, so RVM will not use an .rvmrc file  =
+  = that has not been explicitly marked as 'trusted.'           =
+  =                                                             =
+  = Examine the contents of this file carefully to be sure the  =
+  = contents are good before trusting it!                       =
+  =                                                             =
+  = You will now be given a chance to read the .rvmrc file      =
+  = before deciding whether or not its contents are safe. After =
+  = reading the file, you will be prompted 'yes or no' to set   =
+  = the trust level for this particular version of the file.    =
+  =                                                             =
+  = Note: You will be re-prompted each time the .rvmrc file     =
+  = changes, and may change the trust setting manually at any   =
+  = time.                                                       =
+  ===============================================================
+
+  (press enter to review the .rvmrc file)
+
+"
+
+read -r anykey
+
+command cat -v "${_rvmrc}"
+
+  printf "
+
+  Examination of %s is now complete.
+
+  ================================================================
+  = Trusting an .rvmrc file means that whenever you cd into this =
+  = directory, RVM will run this .rvmrc script in your shell.    =
+  =                                                              =
+  = If the contents of the file change, you will be re-prompted  =
+  = to review the file and adjust its trust settings. You may    =
+  = also change the trust settings manually at any time with     =
+  = the 'rvm rvmrc' command.                                     =
+  =                                                              =
+  = Now that you have examined the contents of the file, do you  =
+  = wish to trust this particular .rvmrc?                        =
+  ================================================================
+
+" "$_rvmrc"
+
+  trusted=0
+  while (( ! trusted ))
+  do
+    printf "%s" '  Yes or No: [y/N]? '
+    read response
+    value="$(echo -n "${response}" | tr '[[:upper:]]' '[[:lower:]]' | __rvm_strip)"
+
+    case "${value:-n}" in
+      y|yes)
+        trusted=1
+      ;;
+      n|no)
+        break
+      ;;
+    esac
+  done
+
+  if (( trusted ))
+  then
+    __rvm_trust_rvmrc "$1"
+    return 0
+  else
+    __rvm_untrust_rvmrc "$1"
+    return 1
+  fi
+}
+
+# Checks the rvmrc for the given directory. Note that if
+# argument is passed, it will be used instead of pwd.
+__rvm_project_rvmrc()
+{
+  local working_dir
+  if [[ -n "${rvm_scripts_path}" || -n "${rvm_path}" ]]
+  then
+    # TODO: ... wtf was this for?
+    source "${rvm_scripts_path:-"$rvm_path/scripts"}/initialize"
+  fi
+
+  # Get the first argument or the pwd.
+  working_dir="${1:-"$PWD"}"
+
+  while : ; do
+
+    if [[ -z "$working_dir" || "$HOME" = "$working_dir" || "/" = "$working_dir" ]]
+    then
+      if [[ -n "${rvm_current_rvmrc:-""}" ]]
+      then
+        if [[ ${rvm_project_rvmrc_default:-0} -eq 1 ]]
+        then
+          __rvm_load_environment "default"
+        elif [[ -n "${rvm_previous_environment:-""}" ]]
+        then
+          __rvm_load_environment "$rvm_previous_environment"
+        fi
+        unset rvm_current_rvmrc rvm_previous_environment
+      fi
+      break
+    else
+      if [[ -f "$working_dir/.rvmrc" ]]
+      then
+        if [[ "${rvm_current_rvmrc:-""}" != "$working_dir/.rvmrc" ]]
+        then
+          __rvm_check_rvmrc_trustworthiness "$working_dir/.rvmrc"
+          local rvm_trustworthiness_result=$?
+          if  [[ $rvm_trustworthiness_result -eq 0 ]]
+          then
+            rvm_previous_environment="$(__rvm_environment_identifier)"
+            rvm_current_rvmrc="$working_dir/.rvmrc"
+            source "$working_dir/.rvmrc"
+            return 0
+          else
+            return "$rvm_trustworthiness_result"
+          fi
+        fi
+        break
+      else
+        working_dir="$(dirname "$working_dir")"
+      fi
+    fi
+  done
+
+  return $?
+}
+
+__rvm_set_rvmrc()
+{
+  local flags
+  true ${rvm_verbose_flag:=0}
+
+  if [[ "$HOME" != "$PWD" ]]
+  then
+    if (( rvm_verbose_flag ))
+    then
+      flags="use "
+    fi
+
+    if [[ -s .rvmrc ]]
+    then
+      mv .rvmrc .rvmrc.$(date +%m.%d.%Y-%H:%M:%S)
+      rvm_warn ".rvmrc is not empty, moving aside to preserve."
+    fi
+
+    local identifier=$(__rvm_environment_identifier)
+
+    printf "#!/usr/bin/env bash
+
+# This is an RVM Project .rvmrc file, used to automatically load the ruby
+# development environment upon cd'ing into the directory
+
+# First we specify our desired <ruby>[@<gemset>], the @gemset name is optional.
+environment_id=\"$identifier\"
+
+#
+# Uncomment following line if you want options to be set only for given project.
+#
+# PROJECT_JRUBY_OPTS=( --1.9 )
+
+#
+# First we attempt to load the desired environment directly from the environment
+# file. This is very fast and efficient compared to running through the entire
+# CLI and selector. If you want feedback on which environment was used then
+# insert the word 'use' after --create as this triggers verbose mode.
+#
+if [[ -d \"\${rvm_path:-\$HOME/.rvm}/environments\" \\
+  && -s \"\${rvm_path:-\$HOME/.rvm}/environments/\$environment_id\" ]]
+then
+  \\. \"\${rvm_path:-\$HOME/.rvm}/environments/\$environment_id\"
+
+  if [[ -s \"\${rvm_path:-\$HOME/.rvm}/hooks/after_use\" ]]
+  then
+    . \"\${rvm_path:-\$HOME/.rvm}/hooks/after_use\"
+  fi
+else
+  # If the environment file has not yet been created, use the RVM CLI to select.
+  if ! rvm --create $flags \"\$environment_id\"
+  then
+    echo \"Failed to create RVM environment '\${environment_id}'.\"
+    exit 1
+  fi
+fi
+
+#
+# If you use an RVM gemset file to install a list of gems (*.gems), you can have
+# it be automatically loaded. Uncomment the following and adjust the filename if
+# necessary.
+#
+# filename=\".gems\"
+# if [[ -s \"\$filename\" ]] ; then
+#   rvm gemset import \"\$filename\" | grep -v already | grep -v listed | grep -v complete | sed '/^$/d'
+# fi
+
+" >> .rvmrc
+
+  else
+    rvm_error ".rvmrc cannot be set in your home directory.\
+      \nThe home .rvmrc is for global rvm settings only."
+  fi
+}
+

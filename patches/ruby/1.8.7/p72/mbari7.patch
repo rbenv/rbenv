@@ -1,0 +1,1509 @@
+diff -ru ruby-1.8.7-p72/ChangeLog ruby-1.8.7-mbari/ChangeLog
+--- ruby-1.8.7-p72/ChangeLog	2009-02-09 21:21:30.000000000 -0800
++++ ruby-1.8.7-mbari/ChangeLog	2009-02-09 20:24:44.000000000 -0800
+@@ -1,3 +1,126 @@
++Mon Feb 09 00:01:19 2009  Brent Roman  <brent@mbari.org>
++
++        * rubysig.h:  default values for STACK_WIPE_SITES if x86_64
++                      cast builtin_alloca result to (VALUE *)
++        
++        * gc.c:  don't use builtin-frame-address at all
++        
++        * version.h:  bumped date
++
++Sun Feb 08 00:01:19 2009  Brent Roman  <brent@mbari.org>
++
++        * rubysig.h:  changed default values for STACK_WIPE_SITES
++        
++        * gc.c:  don't trust config's USE_BUILTIN_FRAME_ADDRESS
++        
++        * version.h:  bumped date
++
++
++Thu Jan 23 00:01:19 2009  Brent Roman  <brent@mbari.org>
++
++        * rubysig.h:  remapped wipe methods to avoid values > 9
++                      added cases for __ppc64__ and __x86_64__
++        
++        * missing/alloca.c:  made 64-bit clean
++        
++        * version.h:  bumped date
++        
++        
++Sun Jan 18 20:15:36 2009  Brent Roman  <brent@mbari.org>
++
++        * rubysig.h:  added support for STACK_WIPE_METHOD==5 (x86 asm)
++
++        * gc.c:       allow another STACK_WIPE_METHOD
++
++        * version.h:  bumped date
++
++
++Sat Jan 17 20:15:36 2009  Brent Roman  <brent@mbari.org>
++
++        * gc.c:     use separate gc stack so it never need be wiped
++
++        * version.h:  bumped date
++
++
++Fri Jan 16 20:15:36 2009  Brent Roman  <brent@mbari.org>
++
++        * gc.c:     added GC_STACK_PAD, renamed stack_gc_limit->gc_stack_limit
++                    optionally wipe the entire GC stack after each gc pass
++        
++        * rubysig.h:  default STACK_WIPE_SITES changed to 0x4770
++        
++        * version.h:  bumped date
++
++
++Wed Jan 14 20:15:36 2009  Brent Roman  <brent@mbari.org>
++
++        * eval.c:     declare wipe_after with gnu always_inline attribute
++        
++        * rubysig.h:  use alloca(0) to get sp for all CPU except PowerPC
++                      (less likely to trash stack when clearing it)
++        
++        * version.h:  bumped date
++
++
++Sun Jan 13 20:15:36 2009  Brent Roman  <brent@mbari.org>
++
++        * rubysig.h:  moved #defs to configure alloca here from gc.c
++                      added missing # to #else
++        
++        * gc.c: removed #defs to configurure alloca
++                set_stack_size must handle signed rlim_t for Darwin & BSD Unix
++                
++        * version.h:  bumped date
++
++
++Sun Jan 11 20:15:36 2009  Brent Roman  <brent@mbari.org>
++
++        * rubysig.h:  added support for multiple STACK_WIPE_METHODs
++                      added __stack_depth()
++                      added 2nd param to stack_past()
++                      __sp() returns stack pointer in an efficent, portable way                     
++        
++        * gc.c: STACK_END uses __sp()
++                STACK_UPPER now takes only two parameters
++                added rb_gc_wipe_stack()               
++                rb_mark_tbl() and mark_hash() implemented as #define macros
++                added STACK_END parameters to __stack_past() invocations
++                exploited missed opportunities for tail recursion in markchilren
++                
++        * version.h:  bumped date
++
++
++Mon Jan  5 20:15:36 2009  Brent Roman  <brent@mbari.org>
++
++        * common.mk:  added dependency on rubysig.h to version.h     
++        
++        * eval.c:  added wipeAfter and STACK_WIPE_SITES cofiguration options
++        
++        * gc.c: added STACK_WIPE_SITES cofiguration options
++                added GC.exorcise method
++        
++        * rubysig.h:  added STACK_WIPE_SITES cofiguration options
++                      when available, use gcc asm to optimize wipe_stack
++        
++        * version.h:  include STACK_WIPE_SITES options in MBARI release string
++
++        
++Sun Jan  4 20:15:36 2009  Brent Roman  <brent@mbari.org>
++
++        * eval.c:  eliminated up_stk_extent(), wipe_stack in rb_thread_switch
++        
++        * gc.c: removed lev counter args, check stack pointer instead
++                streamlined SET_STACK_END and STACK_END, stack_length(), etc.
++                added TOP_FRAME to use gcc's builtin frame_address
++                optimized is_heap_pointer()
++                gc_mark_rest() does not need to copy entire mark_stack!
++                added set_stack_size() to properly hande RLIM_INFINITY
++                
++        * rubysig.h:  repaired broken pseudo preemptive thread switching
++                      removed rb_gc_malloc_increase & limit
++                      replaced buggy __stack_grown* with __stack_past* macros
++        
++
+ Tue Dec 19 20:15:36 2008  Brent Roman  <brent@mbari.org>
+ 
+         * eval.c:  added (Method|Proc)#(__line__|__file__) methods
+diff -ru ruby-1.8.7-p72/common.mk ruby-1.8.7-mbari/common.mk
+--- ruby-1.8.7-p72/common.mk	2008-08-03 22:05:38.000000000 -0700
++++ ruby-1.8.7-mbari/common.mk	2009-01-05 01:18:37.000000000 -0800
+@@ -462,7 +462,7 @@
+   {$(VPATH)}env.h {$(VPATH)}node.h {$(VPATH)}st.h {$(VPATH)}util.h
+ version.$(OBJEXT): {$(VPATH)}version.c {$(VPATH)}ruby.h config.h \
+   {$(VPATH)}defines.h {$(VPATH)}intern.h {$(VPATH)}missing.h \
+-  {$(VPATH)}version.h
++  {$(VPATH)}rubysig.h {$(VPATH)}version.h
+ 
+ dist: $(PROGRAM)
+ 	$(RUNRUBY) $(srcdir)/distruby.rb
+diff -ru ruby-1.8.7-p72/eval.c ruby-1.8.7-mbari/eval.c
+--- ruby-1.8.7-p72/eval.c	2009-02-09 21:21:30.000000000 -0800
++++ ruby-1.8.7-mbari/eval.c	2009-01-22 02:54:08.000000000 -0800
+@@ -3,7 +3,7 @@
+   eval.c -
+ 
+   $Author: brent $
+-  $Date: 2008/12/20 07:47:22 $
++  $Date: 2009/01/15 07:41:46 $
+   created at: Thu Jun 10 14:22:17 JST 1993
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+@@ -1028,14 +1028,26 @@
+ #define PROT_LAMBDA INT2FIX(2)	/* 5 */
+ #define PROT_YIELD  INT2FIX(3)	/* 7 */
+ 
+-#define EXEC_TAG()    ruby_setjmp(((void)0), prot_tag->buf)
+-
+-static inline 
+-int up_stk_extent(int status)
++#if STACK_WIPE_SITES & 0x42
++#ifdef __GNUC__
++static inline int wipeAfter(int) __attribute__((always_inline));
++#endif
++static inline int wipeAfter(int status)
+ {
+-  rb_gc_update_stack_extent();
++  rb_gc_wipe_stack();
+   return status;
+ }
++#else
++#define wipeAfter(status) status
++#endif
++#if STACK_WIPE_SITES & 2
++#define wipeAfterTag(status) wipeAfter(status)
++#else
++#define wipeAfterTag(status) status
++#endif
++
++#define EXEC_TAG_0()  ruby_setjmp(((void)0), prot_tag->buf)
++#define EXEC_TAG()    wipeAfterTag(EXEC_TAG_0())
+ 
+ #define JUMP_TAG(st) do {		\
+     ruby_frame = prot_tag->frame;	\
+@@ -1116,6 +1128,12 @@
+ 
+ static VALUE rb_yield_0 _((VALUE, VALUE, VALUE, int, int));
+ 
++#if STACK_WIPE_SITES & 0x20
++#define wipeBeforeYield()  rb_gc_wipe_stack()
++#else
++#define wipeBeforeYield()  (void)0
++#endif
++
+ #define YIELD_LAMBDA_CALL 1
+ #define YIELD_PROC_CALL   2
+ #define YIELD_PUBLIC_DEF  4
+@@ -3079,6 +3097,9 @@
+ 	  goto while_out;
+       do {
+ 	while_redo:
++#if STACK_WIPE_SITES & 0x10
++          rb_gc_wipe_stack();
++#endif
+ 	  rb_eval(self, node->nd_body);
+ 	while_next:
+ 	  ;
+@@ -3121,6 +3142,9 @@
+ 	  goto until_out;
+       do {
+         until_redo:
++#if STACK_WIPE_SITES & 0x10
++          rb_gc_wipe_stack();
++#endif
+ 	  rb_eval(self, node->nd_body);
+         until_next:
+ 	  ;
+@@ -5347,6 +5371,7 @@
+ rb_yield(val)
+     VALUE val;
+ {
++    wipeBeforeYield();
+     return rb_yield_0(val, 0, 0, 0, Qfalse);
+ }
+ 
+@@ -5395,6 +5420,7 @@
+ loop_i()
+ {
+     for (;;) {
++        wipeBeforeYield();
+ 	rb_yield_0(Qundef, 0, 0, 0, Qfalse);
+ 	CHECK_INTS;
+     }
+@@ -10949,6 +10975,9 @@
+ rb_thread_switch(n)
+     int n;
+ {
++#if STACK_WIPE_SITES & 1
++    rb_gc_wipe_stack();
++#endif
+     rb_trap_immediate = (curr_thread->flags&0x100)?1:0;
+     switch (n) {
+       case 0:
+@@ -10985,7 +11014,7 @@
+     return 1;
+ }
+ 
+-#define THREAD_SAVE_CONTEXT(th) (rb_thread_switch(up_stk_extent( \
++#define THREAD_SAVE_CONTEXT(th) (rb_thread_switch( wipeAfter(\
+                   ruby_setjmp(rb_thread_save_context(th), (th)->context))))
+ 
+ NORETURN(static void rb_thread_restore_context _((rb_thread_t,int)));
+@@ -13911,7 +13940,7 @@
+ 
+     tag = ID2SYM(rb_to_id(tag));
+     PUSH_TAG(tag);
+-    if ((state = EXEC_TAG()) == 0) {
++    if ((state = wipeAfter(EXEC_TAG_0())) == 0) {
+ 	val = rb_yield_0(tag, 0, 0, 0, Qfalse);
+     }
+     else if (state == TAG_THROW && tag == prot_tag->dst) {
+@@ -13979,6 +14008,9 @@
+     if (!tt) {
+ 	rb_name_error(SYM2ID(tag), "uncaught throw `%s'", rb_id2name(SYM2ID(tag)));
+     }
++#if STACK_WIPE_SITES & 0x800
++    rb_gc_update_stack_extent();
++#endif
+     rb_trap_restore_mask();
+     JUMP_TAG(TAG_THROW);
+ #ifndef __GNUC__
+diff -ru ruby-1.8.7-p72/gc.c ruby-1.8.7-mbari/gc.c
+--- ruby-1.8.7-p72/gc.c	2009-02-09 21:21:30.000000000 -0800
++++ ruby-1.8.7-mbari/gc.c	2009-02-09 20:24:44.000000000 -0800
+@@ -3,7 +3,7 @@
+   gc.c -
+ 
+   $Author: brent $
+-  $Date: 2008/12/18 07:43:46 $
++  $Date: 2009/02/09 20:45:03 $
+   created at: Tue Oct  5 09:44:46 JST 1993
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+@@ -22,10 +22,6 @@
+ #include <setjmp.h>
+ #include <sys/types.h>
+ 
+-#ifdef HAVE_SYS_TIME_H
+-#include <sys/time.h>
+-#endif
+-
+ #ifdef HAVE_SYS_RESOURCE_H
+ #include <sys/resource.h>
+ #endif
+@@ -43,25 +39,6 @@
+ int _setjmp(), _longjmp();
+ #endif
+ 
+-/* Make alloca work the best possible way.  */
+-#ifdef __GNUC__
+-# ifndef atarist
+-#  ifndef alloca
+-#   define alloca __builtin_alloca
+-#  endif
+-# endif /* atarist */
+-#else
+-# ifdef HAVE_ALLOCA_H
+-#  include <alloca.h>
+-# else
+-#  ifndef _AIX
+-#   ifndef alloca /* predefined by HP cc +Olibcalls */
+-void *alloca ();
+-#   endif
+-#  endif /* AIX */
+-# endif /* HAVE_ALLOCA_H */
+-#endif /* __GNUC__ */
+-
+ #ifndef GC_MALLOC_LIMIT
+ #if defined(MSDOS) || defined(__human68k__)
+ #define GC_MALLOC_LIMIT 200000
+@@ -70,11 +47,18 @@
+ #endif
+ #endif
+ 
++#ifndef GC_LEVEL_MAX  /*maximum # of VALUEs on 'C' stack during GC*/
++#define GC_LEVEL_MAX  8000
++#endif
++#ifndef GC_STACK_PAD
++#define GC_STACK_PAD  200  /* extra padding VALUEs for GC stack */
++#endif
++#define GC_STACK_MAX  (GC_LEVEL_MAX+GC_STACK_PAD)
+ 
+-size_t rb_gc_malloc_increase = 0;
+-#define malloc_increase rb_gc_malloc_increase
+-static unsigned long malloc_limit = GC_MALLOC_LIMIT;
+-size_t rb_gc_malloc_limit = GC_MALLOC_LIMIT-GC_MALLOC_LIMIT/8;
++static VALUE *stack_limit, *gc_stack_limit;
++
++static size_t malloc_increase = 0;
++static size_t malloc_limit = GC_MALLOC_LIMIT;
+ 
+ /*
+  *  call-seq:
+@@ -108,7 +92,6 @@
+   long limit = NUM2LONG(newLimit);
+   if (limit < 0) return gc_getlimit(mod);
+   malloc_limit = limit;
+-  rb_gc_malloc_limit = malloc_limit - malloc_limit/8;
+   return newLimit;
+ }
+ 
+@@ -126,6 +109,20 @@
+ }
+ 
+ 
++/*
++ *  call-seq:
++ *     GC.exorcise
++ *
++ *  Purge ghost references from recently freed stack space
++ *
++ */
++static VALUE gc_exorcise(VALUE mod)
++{
++  rb_gc_wipe_stack();
++  return Qnil;
++}
++
++
+ static void run_final();
+ static VALUE nomem_error;
+ static void garbage_collect();
+@@ -174,7 +171,9 @@
+ 	    rb_memerror();
+ 	}
+     }
++#if STACK_WIPE_SITES & 0x100
+     rb_gc_update_stack_extent();
++#endif
+     return mem;
+ }
+ 
+@@ -214,7 +213,9 @@
+ 	    rb_memerror();
+         }
+     }
++#if STACK_WIPE_SITES & 0x200
+     rb_gc_update_stack_extent();
++#endif
+     return mem;
+ }
+ 
+@@ -509,38 +510,32 @@
+ # define STACK_LEVEL_MAX 655300
+ #endif
+ 
+-#ifdef C_ALLOCA
+-# define SET_STACK_END VALUE stack_end; alloca(0);
++#ifndef nativeAllocA
++  /* portable way to return an approximate stack pointer */
++VALUE *__sp(void) {
++  VALUE tos;
++  return &tos;
++}
++# define SET_STACK_END VALUE stack_end
+ # define STACK_END (&stack_end)
+ #else
+-# if defined(__GNUC__) && defined(USE_BUILTIN_FRAME_ADDRESS) && !defined(__ia64)
+-#  if ( __GNUC__ == 3 && __GNUC_MINOR__ > 0 ) || __GNUC__ > 3
+-__attribute__ ((noinline))
+-#  endif
+-static void
+-stack_end_address(VALUE **stack_end_p)
+-{
+-    VALUE stack_end;
+-    *stack_end_p = &stack_end;
+-}
+-#  define  SET_STACK_END    VALUE *stack_end; stack_end_address(&stack_end)
+-# else
+-#  define  SET_STACK_END    VALUE *stack_end = alloca(1)
+-# endif
+-# define STACK_END (stack_end)
++# define SET_STACK_END ((void)0)
++# define STACK_END __sp()
+ #endif
++
+ #if STACK_GROW_DIRECTION < 0
+ # define STACK_LENGTH(start)  ((start) - STACK_END)
+ #elif STACK_GROW_DIRECTION > 0
+ # define STACK_LENGTH(start)  (STACK_END - (start) + 1)
+ #else
+-# define STACK_LENGTH(start)  ((STACK_END < (start)) ? (start) - STACK_END\
+-                                           : STACK_END - (start) + 1)
++# define STACK_LENGTH(start)  ((STACK_END < (start)) ? \
++                                 (start) - STACK_END : STACK_END - (start) + 1)
+ #endif
++
+ #if STACK_GROW_DIRECTION > 0
+-# define STACK_UPPER(x, a, b) a
++# define STACK_UPPER(a, b) a
+ #elif STACK_GROW_DIRECTION < 0
+-# define STACK_UPPER(x, a, b) b
++# define STACK_UPPER(a, b) b
+ #else
+ int rb_gc_stack_grow_direction;
+ static int
+@@ -550,33 +545,54 @@
+     SET_STACK_END;
+     return rb_gc_stack_grow_direction = STACK_END > addr ? 1 : -1;
+ }
+-# define STACK_UPPER(x, a, b) (rb_gc_stack_grow_direction > 0 ? a : b)
++# define STACK_UPPER(a, b) (rb_gc_stack_grow_direction > 0 ? a : b)
+ #endif
+ 
+-#define GC_WATER_MARK 512
+-
+-#define CHECK_STACK(ret) do {\
+-    SET_STACK_END;\
+-    (ret) = (STACK_LENGTH(rb_gc_stack_start) > STACK_LEVEL_MAX + GC_WATER_MARK);\
+-} while (0)
+-
+ int
+ ruby_stack_length(start, base)
+     VALUE *start, **base;
+ {
+     SET_STACK_END;
+-    if (base) *base = STACK_UPPER(STACK_END, start, STACK_END);
++    if (base) *base = STACK_UPPER(start, STACK_END);
+     return STACK_LENGTH(start);
+ }
+ 
+ int
+ ruby_stack_check()
+ {
+-    int ret;
++    SET_STACK_END;
++    return __stack_past(stack_limit, STACK_END);
++}
+ 
+-    CHECK_STACK(ret);
+-    return ret;
++/*
++  Zero memory that was (recently) part of the stack, but is no longer.
++  Invoke when stack is deep to mark its extent and when it's shallow to wipe it.
++*/
++#if STACK_WIPE_METHOD != 4
++#if STACK_WIPE_METHOD
++void rb_gc_wipe_stack(void)
++{
++  VALUE *stack_end = rb_gc_stack_end;
++  VALUE *sp = __sp();
++  rb_gc_stack_end = sp;
++#if STACK_WIPE_METHOD == 1
++#warning clearing of "ghost references" from the call stack has been disabled
++#elif STACK_WIPE_METHOD == 2  /* alloca ghost stack before clearing it */
++  if (__stack_past(sp, stack_end)) {
++    size_t bytes = __stack_depth((char *)stack_end, (char *)sp);
++    STACK_UPPER(sp = nativeAllocA(bytes), stack_end = nativeAllocA(bytes));
++    __stack_zero(stack_end, sp);
++  }
++#elif STACK_WIPE_METHOD == 3    /* clear unallocated area past stack pointer */
++  __stack_zero(stack_end, sp);  /* will crash if compiler pushes a temp. here */
++#else
++#error unsupported method of clearing ghost references from the stack
++#endif
+ }
++#else
++#warning clearing of "ghost references" from the call stack completely disabled
++#endif
++#endif
+ 
+ #define MARK_STACK_MAX 1024
+ static VALUE mark_stack[MARK_STACK_MAX];
+@@ -592,6 +608,17 @@
+ 
+ #define MARK_STACK_EMPTY (mark_stack_ptr == mark_stack)
+ 
++static inline void
++push_mark_stack(VALUE ptr)
++{
++    if (!mark_stack_overflow) {
++	if (mark_stack_ptr - mark_stack < MARK_STACK_MAX)
++	    *mark_stack_ptr++ = ptr;
++	else
++	    mark_stack_overflow = 1;
++    }
++}
++    
+ static st_table *source_filenames;
+ 
+ char *
+@@ -635,22 +662,22 @@
+     }
+ }
+ 
+-static void gc_mark _((VALUE ptr, int lev));
+-static void gc_mark_children _((VALUE ptr, int lev));
++#define gc_mark(ptr) rb_gc_mark(ptr)
++static void gc_mark_children _((VALUE ptr));
+ 
+ static void
+ gc_mark_all()
+ {
+     RVALUE *p, *pend;
+-    int i;
++    struct heaps_slot *heap = heaps+heaps_used;
+ 
+     init_mark_stack();
+-    for (i = 0; i < heaps_used; i++) {
+-	p = heaps[i].slot; pend = p + heaps[i].limit;
++    while (--heap >= heaps) {
++	p = heap->slot; pend = p + heap->limit;
+ 	while (p < pend) {
+ 	    if ((p->as.basic.flags & FL_MARK) &&
+ 		(p->as.basic.flags != FL_MARK)) {
+-		gc_mark_children((VALUE)p, 0);
++		gc_mark_children((VALUE)p);
+ 	    }
+ 	    p++;
+ 	}
+@@ -660,169 +687,129 @@
+ static void
+ gc_mark_rest()
+ {
++    size_t stackLen = mark_stack_ptr - mark_stack;
++#ifdef nativeAllocA
++    VALUE *tmp_arry = nativeAllocA(stackLen*sizeof(VALUE));
++#else
+     VALUE tmp_arry[MARK_STACK_MAX];
+-    VALUE *p;
+-
+-    p = (mark_stack_ptr - mark_stack) + tmp_arry;
+-    MEMCPY(tmp_arry, mark_stack, VALUE, MARK_STACK_MAX);
++#endif
++    VALUE *p = tmp_arry + stackLen;
++    
++    MEMCPY(tmp_arry, mark_stack, VALUE, stackLen);
+ 
+     init_mark_stack();
+-    while(p != tmp_arry){
+-	p--;
+-	gc_mark_children(*p, 0);
+-    }
++    while(--p >= tmp_arry) gc_mark_children(*p);
+ }
+ 
+ static inline int
+ is_pointer_to_heap(ptr)
+     void *ptr;
+ {
+-    register RVALUE *p = RANY(ptr);
+-    register RVALUE *heap_org;
+-    register long i;
++    RVALUE *p = RANY(ptr);
++    struct heaps_slot *heap;
+ 
+-    if (p < lomem || p > himem) return Qfalse;
+-    if ((VALUE)p % sizeof(RVALUE) != 0) return Qfalse;
++    if (p < lomem || p > himem || (VALUE)p % sizeof(RVALUE)) return Qfalse;
+ 
+     /* check if p looks like a pointer */
+-    for (i=0; i < heaps_used; i++) {
+-	heap_org = heaps[i].slot;
+-	if (heap_org <= p && p < heap_org + heaps[i].limit)
+-	    return Qtrue;
+-    }
++    heap = heaps+heaps_used;
++    while (--heap >= heaps) 
++      if (p >= heap->slot && p < heap->slot + heap->limit)
++        return Qtrue;
+     return Qfalse;
+ }
+ 
+ static void
+ mark_locations_array(x, n)
+-    register VALUE *x;
+-    register long n;
++    VALUE *x;
++    size_t n;
+ {
+     VALUE v;
+     while (n--) {
+         v = *x;
+ 	if (is_pointer_to_heap((void *)v)) {
+-	    gc_mark(v, 0);
++	    gc_mark(v);
+ 	}
+ 	x++;
+     }
+ }
+ 
+-void
++void inline
+ rb_gc_mark_locations(start, end)
+     VALUE *start, *end;
+ {
+-    long n;
+-
+-    n = end - start;
+-    mark_locations_array(start,n);
++    mark_locations_array(start,end - start);
+ }
+ 
+ static int
+-mark_entry(key, value, lev)
++mark_entry(key, value)
+     ID key;
+     VALUE value;
+-    int lev;
+ {
+-    gc_mark(value, lev);
++    gc_mark(value);
+     return ST_CONTINUE;
+ }
+ 
+-static void
+-mark_tbl(tbl, lev)
+-    st_table *tbl;
+-    int lev;
+-{
+-    if (!tbl) return;
+-    st_foreach(tbl, mark_entry, lev);
+-}
+-
+ void
+ rb_mark_tbl(tbl)
+     st_table *tbl;
+ {
+-    mark_tbl(tbl, 0);
++    if (!tbl) return;
++    st_foreach(tbl, mark_entry, 0);
+ }
++#define mark_tbl(tbl)  rb_mark_tbl(tbl)
+ 
+ static int
+-mark_keyvalue(key, value, lev)
++mark_keyvalue(key, value)
+     VALUE key;
+     VALUE value;
+-    int lev;
+ {
+-    gc_mark(key, lev);
+-    gc_mark(value, lev);
++    gc_mark(key);
++    gc_mark(value);
+     return ST_CONTINUE;
+ }
+ 
+-static void
+-mark_hash(tbl, lev)
+-    st_table *tbl;
+-    int lev;
+-{
+-    if (!tbl) return;
+-    st_foreach(tbl, mark_keyvalue, lev);
+-}
+-
+ void
+ rb_mark_hash(tbl)
+     st_table *tbl;
+ {
+-    mark_hash(tbl, 0);
++    if (!tbl) return;
++    st_foreach(tbl, mark_keyvalue, 0);
+ }
++#define mark_hash(tbl)  rb_mark_hash(tbl)
+ 
+ void
+ rb_gc_mark_maybe(obj)
+     VALUE obj;
+ {
+     if (is_pointer_to_heap((void *)obj)) {
+-	gc_mark(obj, 0);
++	gc_mark(obj);
+     }
+ }
+ 
+-#define GC_LEVEL_MAX 250
+-
+-static void
+-gc_mark(ptr, lev)
++void
++rb_gc_mark(ptr)
+     VALUE ptr;
+-    int lev;
+ {
+-    register RVALUE *obj;
+-
+-    obj = RANY(ptr);
++    RVALUE *obj = RANY(ptr);
++    SET_STACK_END;
++    
+     if (rb_special_const_p(ptr)) return; /* special const not marked */
+     if (obj->as.basic.flags == 0) return;       /* free cell */
+     if (obj->as.basic.flags & FL_MARK) return;  /* already marked */
+     obj->as.basic.flags |= FL_MARK;
+ 
+-    if (lev > GC_LEVEL_MAX || (lev == 0 && ruby_stack_check())) {
+-	if (!mark_stack_overflow) {
+-	    if (mark_stack_ptr - mark_stack < MARK_STACK_MAX) {
+-		*mark_stack_ptr = ptr;
+-		mark_stack_ptr++;
+-	    }
+-	    else {
+-		mark_stack_overflow = 1;
+-	    }
+-	}
+-	return;
++    if (__stack_past(gc_stack_limit, STACK_END))
++      push_mark_stack(ptr);
++    else{
++      gc_mark_children(ptr);
+     }
+-    gc_mark_children(ptr, lev+1);
+-}
+-
+-void
+-rb_gc_mark(ptr)
+-    VALUE ptr;
+-{
+-    gc_mark(ptr, 0);
+ }
+ 
+ static void
+-gc_mark_children(ptr, lev)
++gc_mark_children(ptr)
+     VALUE ptr;
+-    int lev;
+ {
+-    register RVALUE *obj = RANY(ptr);
++    RVALUE *obj = RANY(ptr);
+ 
+     goto marking;		/* skip */
+ 
+@@ -856,7 +843,7 @@
+ 	  case NODE_RESCUE:
+ 	  case NODE_RESBODY:
+ 	  case NODE_CLASS:
+-	    gc_mark((VALUE)obj->as.node.u2.node, lev);
++	    gc_mark((VALUE)obj->as.node.u2.node);
+ 	    /* fall through */
+ 	  case NODE_BLOCK:	/* 1,3 */
+ 	  case NODE_ARRAY:
+@@ -869,7 +856,7 @@
+ 	  case NODE_CALL:
+ 	  case NODE_DEFS:
+ 	  case NODE_OP_ASGN1:
+-	    gc_mark((VALUE)obj->as.node.u1.node, lev);
++	    gc_mark((VALUE)obj->as.node.u1.node);
+ 	    /* fall through */
+ 	  case NODE_SUPER:	/* 3 */
+ 	  case NODE_FCALL:
+@@ -896,7 +883,7 @@
+ 	  case NODE_ALIAS:
+ 	  case NODE_VALIAS:
+ 	  case NODE_ARGS:
+-	    gc_mark((VALUE)obj->as.node.u1.node, lev);
++	    gc_mark((VALUE)obj->as.node.u1.node);
+ 	    /* fall through */
+ 	  case NODE_METHOD:	/* 2 */
+ 	  case NODE_NOT:
+@@ -934,7 +921,7 @@
+ 	  case NODE_SCOPE:	/* 2,3 */
+ 	  case NODE_BLOCK_PASS:
+ 	  case NODE_CDECL:
+-	    gc_mark((VALUE)obj->as.node.u3.node, lev);
++	    gc_mark((VALUE)obj->as.node.u3.node);
+ 	    ptr = (VALUE)obj->as.node.u2.node;
+ 	    goto again;
+ 
+@@ -967,25 +954,26 @@
+ 
+ 	  default:		/* unlisted NODE */
+ 	    if (is_pointer_to_heap(obj->as.node.u1.node)) {
+-		gc_mark((VALUE)obj->as.node.u1.node, lev);
++		gc_mark((VALUE)obj->as.node.u1.node);
+ 	    }
+ 	    if (is_pointer_to_heap(obj->as.node.u2.node)) {
+-		gc_mark((VALUE)obj->as.node.u2.node, lev);
++		gc_mark((VALUE)obj->as.node.u2.node);
+ 	    }
+ 	    if (is_pointer_to_heap(obj->as.node.u3.node)) {
+-		gc_mark((VALUE)obj->as.node.u3.node, lev);
++                ptr = (VALUE)obj->as.node.u3.node;
++                goto again;
+ 	    }
+ 	}
+-	return;			/* no need to mark class. */
++        return;	/* no need to mark class. */
+     }
+ 
+-    gc_mark(obj->as.basic.klass, lev);
++    gc_mark(obj->as.basic.klass);
+     switch (obj->as.basic.flags & T_MASK) {
+       case T_ICLASS:
+       case T_CLASS:
+       case T_MODULE:
+-	mark_tbl(obj->as.klass.m_tbl, lev);
+-	mark_tbl(obj->as.klass.iv_tbl, lev);
++	mark_tbl(obj->as.klass.m_tbl);
++	mark_tbl(obj->as.klass.iv_tbl);
+ 	ptr = obj->as.klass.super;
+ 	goto again;
+ 
+@@ -995,17 +983,16 @@
+ 	    goto again;
+ 	}
+ 	else {
+-	    long i, len = obj->as.array.len;
+ 	    VALUE *ptr = obj->as.array.ptr;
+-
+-	    for (i=0; i < len; i++) {
+-		gc_mark(*ptr++, lev);
++            VALUE *pend = ptr + obj->as.array.len;
++	    while (ptr < pend) {
++		gc_mark(*ptr++);
+ 	    }
+ 	}
+ 	break;
+ 
+       case T_HASH:
+-	mark_hash(obj->as.hash.tbl, lev);
++	mark_hash(obj->as.hash.tbl);
+ 	ptr = obj->as.hash.ifnone;
+ 	goto again;
+ 
+@@ -1022,7 +1009,7 @@
+ 	break;
+ 
+       case T_OBJECT:
+-	mark_tbl(obj->as.object.iv_tbl, lev);
++	mark_tbl(obj->as.object.iv_tbl);
+ 	break;
+ 
+       case T_FILE:
+@@ -1040,7 +1027,7 @@
+ 	break;
+ 
+       case T_VARMAP:
+-	gc_mark(obj->as.varmap.val, lev);
++	gc_mark(obj->as.varmap.val);
+ 	ptr = (VALUE)obj->as.varmap.next;
+ 	goto again;
+ 
+@@ -1050,19 +1037,17 @@
+ 	    VALUE *vars = &obj->as.scope.local_vars[-1];
+ 
+ 	    while (n--) {
+-		gc_mark(*vars++, lev);
++		gc_mark(*vars++);
+ 	    }
+ 	}
+ 	break;
+ 
+       case T_STRUCT:
+ 	{
+-	    long len = obj->as.rstruct.len;
+ 	    VALUE *ptr = obj->as.rstruct.ptr;
+-
+-	    while (len--) {
+-		gc_mark(*ptr++, lev);
+-	    }
++            VALUE *pend = ptr + obj->as.rstruct.len;
++            while (ptr < pend)
++	       gc_mark(*ptr++);
+ 	}
+ 	break;
+ 
+@@ -1134,7 +1119,7 @@
+ 	    p = heaps[i].slot; pend = p + heaps[i].limit;
+ 	    while (p < pend) {
+ 		if (!(p->as.basic.flags&FL_MARK) && BUILTIN_TYPE(p) == T_NODE)
+-		    gc_mark((VALUE)p, 0);
++		    gc_mark((VALUE)p);
+ 		p++;
+ 	    }
+ 	}
+@@ -1346,7 +1331,7 @@
+ rb_gc_mark_frame(frame)
+     struct FRAME *frame;
+ {
+-    gc_mark((VALUE)frame->node, 0);
++    gc_mark((VALUE)frame->node);
+ }
+ 
+ #ifdef __GNUC__
+@@ -1384,8 +1369,10 @@
+ #endif /* __human68k__ or DJGPP */
+ #endif /* __GNUC__ */
+ 
++
++
+ static void
+-garbage_collect()
++garbage_collect_0(VALUE *top_frame)
+ {
+     struct gc_list *list;
+     struct FRAME * frame;
+@@ -1406,9 +1393,10 @@
+     if (during_gc) return;
+     during_gc++;
+ 
++    gc_stack_limit = __stack_grow(STACK_END, GC_LEVEL_MAX);
+     init_mark_stack();
+ 
+-    gc_mark((VALUE)ruby_current_node, 0);
++    gc_mark((VALUE)ruby_current_node);
+ 
+     /* mark frame stack */
+     for (frame = ruby_frame; frame; frame = frame->prev) {
+@@ -1421,10 +1409,10 @@
+ 	    }
+ 	}
+     }
+-    gc_mark((VALUE)ruby_scope, 0);
+-    gc_mark((VALUE)ruby_dyna_vars, 0);
++    gc_mark((VALUE)ruby_scope);
++    gc_mark((VALUE)ruby_dyna_vars);
+     if (finalizer_table) {
+-	mark_tbl(finalizer_table, 0);
++	mark_tbl(finalizer_table);
+     }
+ 
+     FLUSH_REGISTER_WINDOWS;
+@@ -1432,14 +1420,14 @@
+     rb_setjmp(save_regs_gc_mark);
+     mark_locations_array((VALUE*)save_regs_gc_mark, sizeof(save_regs_gc_mark) / sizeof(VALUE *));
+ #if STACK_GROW_DIRECTION < 0
+-    rb_gc_mark_locations((VALUE*)STACK_END, rb_gc_stack_start);
++    rb_gc_mark_locations(top_frame, rb_gc_stack_start);
+ #elif STACK_GROW_DIRECTION > 0
+-    rb_gc_mark_locations(rb_gc_stack_start, (VALUE*)STACK_END + 1);
++    rb_gc_mark_locations(rb_gc_stack_start, top_frame + 1);
+ #else
+     if (rb_gc_stack_grow_direction < 0)
+-	rb_gc_mark_locations((VALUE*)STACK_END, rb_gc_stack_start);
++	rb_gc_mark_locations(top_frame, rb_gc_stack_start);
+     else
+-	rb_gc_mark_locations(rb_gc_stack_start, (VALUE*)STACK_END + 1);
++	rb_gc_mark_locations(rb_gc_stack_start, top_frame + 1);
+ #endif
+ #ifdef __ia64
+     /* mark backing store (flushed register window on the stack) */
+@@ -1479,10 +1467,35 @@
+ 	}
+ 	rb_gc_abort_threads();
+     } while (!MARK_STACK_EMPTY);
+-
+     gc_sweep();
+ }
+ 
++static void
++garbage_collect()
++{
++  VALUE *top = __sp();
++#if STACK_WIPE_SITES & 0x400
++# ifdef nativeAllocA
++  if (__stack_past (top, stack_limit)) {
++  /* allocate a large frame to ensure app stack cannot grow into GC stack */
++    volatile char *spacer = 
++                    nativeAllocA(__stack_depth((void*)stack_limit,(void*)top));
++  }  
++  garbage_collect_0(top);
++# else /* no native alloca() available */
++  garbage_collect_0(top);
++  {
++    VALUE *paddedLimit = __stack_grow(gc_stack_limit, GC_STACK_PAD);
++    if (__stack_past(rb_gc_stack_end, paddedLimit))
++      rb_gc_stack_end = paddedLimit;
++  }
++  rb_gc_wipe_stack();  /* wipe the whole stack area reserved for this gc */  
++# endif
++#else
++  garbage_collect_0(top);
++#endif
++}
++
+ void
+ rb_gc()
+ {
+@@ -1507,6 +1520,7 @@
+     return Qnil;
+ }
+ 
++
+ void
+ ruby_set_stack_size(size)
+     size_t size;
+@@ -1514,6 +1528,29 @@
+ #ifndef STACK_LEVEL_MAX
+     STACK_LEVEL_MAX = size / sizeof(VALUE);
+ #endif
++    stack_limit = __stack_grow(rb_gc_stack_start, STACK_LEVEL_MAX-GC_STACK_MAX);
++}
++
++static void
++set_stack_size(void)
++{
++#ifdef HAVE_GETRLIMIT
++  struct rlimit rlim;
++  if (getrlimit(RLIMIT_STACK, &rlim) == 0) {
++    if (rlim.rlim_cur > 0 && rlim.rlim_cur != RLIM_INFINITY) {
++      size_t maxStackBytes = rlim.rlim_cur;
++      if (rlim.rlim_cur != maxStackBytes)
++        maxStackBytes = -1;
++      {
++        size_t space = maxStackBytes/5;
++        if (space > 1024*1024) space = 1024*1024;
++        ruby_set_stack_size(maxStackBytes - space);
++        return;
++      }
++    }
++  }
++#endif
++  ruby_set_stack_size(STACK_LEVEL_MAX*sizeof(VALUE));
+ }
+ 
+ void
+@@ -1547,7 +1584,7 @@
+     memset(&m, 0, sizeof(m));
+     VirtualQuery(&m, &m, sizeof(m));
+     rb_gc_stack_start =
+-	STACK_UPPER((VALUE *)&m, (VALUE *)m.BaseAddress,
++	STACK_UPPER((VALUE *)m.BaseAddress,
+ 		    (VALUE *)((char *)m.BaseAddress + m.RegionSize) - 1);
+ #elif defined(STACK_END_ADDRESS)
+     {
+@@ -1556,28 +1593,16 @@
+     }
+ #else
+     if (!addr) addr = (void *)&addr;
+-    STACK_UPPER(&addr, addr, ++addr);
++    STACK_UPPER(addr, ++addr);
+     if (rb_gc_stack_start) {
+-	if (STACK_UPPER(&addr,
+-			rb_gc_stack_start > addr,
++	if (STACK_UPPER(rb_gc_stack_start > addr,
+ 			rb_gc_stack_start < addr))
+ 	    rb_gc_stack_start = addr;
+ 	return;
+     }
+     rb_gc_stack_start = addr;
+ #endif
+-#ifdef HAVE_GETRLIMIT
+-    {
+-	struct rlimit rlim;
+-
+-	if (getrlimit(RLIMIT_STACK, &rlim) == 0) {
+-	    unsigned int space = rlim.rlim_cur/5;
+-
+-	    if (space > 1024*1024) space = 1024*1024;
+-	    STACK_LEVEL_MAX = (rlim.rlim_cur - space) / sizeof(VALUE);
+-	}
+-    }
+-#endif
++    set_stack_size();
+ }
+ 
+ void ruby_init_stack(VALUE *addr
+@@ -1587,8 +1612,7 @@
+     )
+ {
+     if (!rb_gc_stack_start ||
+-        STACK_UPPER(&addr,
+-                    rb_gc_stack_start > addr,
++        STACK_UPPER(rb_gc_stack_start > addr,
+                     rb_gc_stack_start < addr)) {
+         rb_gc_stack_start = addr;
+     }
+@@ -1599,16 +1623,7 @@
+     }
+ #endif
+ #ifdef HAVE_GETRLIMIT
+-    {
+-        struct rlimit rlim;
+-
+-        if (getrlimit(RLIMIT_STACK, &rlim) == 0) {
+-            unsigned int space = rlim.rlim_cur/5;
+-
+-            if (space > 1024*1024) space = 1024*1024;
+-            STACK_LEVEL_MAX = (rlim.rlim_cur - space) / sizeof(VALUE);
+-        }
+-    }
++    set_stack_size();
+ #elif defined _WIN32
+     {
+ 	MEMORY_BASIC_INFORMATION mi;
+@@ -1619,7 +1634,7 @@
+ 	    size = (char *)mi.BaseAddress - (char *)mi.AllocationBase;
+ 	    space = size / 5;
+ 	    if (space > 1024*1024) space = 1024*1024;
+-	    STACK_LEVEL_MAX = (size - space) / sizeof(VALUE);
++	    ruby_set_stack_size(size - space);
+ 	}
+     }
+ #endif
+@@ -2111,6 +2126,7 @@
+     rb_define_singleton_method(rb_mGC, "limit", gc_getlimit, 0);
+     rb_define_singleton_method(rb_mGC, "limit=", gc_setlimit, 1);
+     rb_define_singleton_method(rb_mGC, "increase", gc_increase, 0);
++    rb_define_singleton_method(rb_mGC, "exorcise", gc_exorcise, 0);
+     rb_define_method(rb_mGC, "garbage_collect", rb_gc_start, 0);
+ 
+     rb_mObSpace = rb_define_module("ObjectSpace");
+diff -ru ruby-1.8.7-p72/intern.h ruby-1.8.7-mbari/intern.h
+--- ruby-1.8.7-p72/intern.h	2009-02-09 21:21:30.000000000 -0800
++++ ruby-1.8.7-mbari/intern.h	2008-12-23 21:54:37.000000000 -0800
+@@ -2,8 +2,8 @@
+ 
+   intern.h -
+ 
+-  $Author: shyouhei $
+-  $Date: 2008-07-07 12:29:28 +0900 (Mon, 07 Jul 2008) $
++  $Author: brent $
++  $Date: 2008/12/24 05:54:37 $
+   created at: Thu Jun 10 14:22:17 JST 1993
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+diff -ru ruby-1.8.7-p72/missing/alloca.c ruby-1.8.7-mbari/missing/alloca.c
+--- ruby-1.8.7-p72/missing/alloca.c	2007-02-12 15:01:19.000000000 -0800
++++ ruby-1.8.7-mbari/missing/alloca.c	2009-01-23 00:01:03.000000000 -0800
+@@ -29,6 +29,7 @@
+ static char	SCCSid[] = "@(#)alloca.c	1.1";	/* for the "what" utility */
+ #endif
+ 
++#include <sys/types.h>
+ #include "config.h"
+ #ifdef emacs
+ #ifdef static
+@@ -44,11 +45,7 @@
+ #endif /* static */
+ #endif /* emacs */
+ 
+-#ifdef X3J11
+ typedef void	*pointer;		/* generic pointer type */
+-#else
+-typedef char	*pointer;		/* generic pointer type */
+-#endif /* X3J11 */
+ 
+ #define	NULL	0			/* null pointer constant */
+ 
+@@ -140,8 +137,7 @@
+ static header *last_alloca_header = NULL; /* -> last alloca header */
+ 
+ pointer
+-alloca (size)			/* returns pointer to storage */
+-     unsigned	size;		/* # bytes to allocate */
++alloca (size_t size)		/* returns pointer to storage */
+ {
+   auto char	probe;		/* probes stack depth: */
+   register char	*depth = &probe;
+diff -ru ruby-1.8.7-p72/rubysig.h ruby-1.8.7-mbari/rubysig.h
+--- ruby-1.8.7-p72/rubysig.h	2009-02-09 21:21:30.000000000 -0800
++++ ruby-1.8.7-mbari/rubysig.h	2009-02-09 20:55:50.000000000 -0800
+@@ -3,7 +3,7 @@
+   rubysig.h -
+ 
+   $Author: brent $
+-  $Date: 2008/12/14 07:24:10 $
++  $Date: 2009/02/09 20:45:48 $
+   created at: Wed Aug 16 01:15:38 JST 1995
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+@@ -12,8 +12,75 @@
+ 
+ #ifndef SIG_H
+ #define SIG_H
++
+ #include <errno.h>
+ 
++/* STACK_WIPE_SITES determines where attempts are made to exorcise
++   "ghost object refereces" from the stack and how the stack is cleared:
++   
++   0x*001 -->  wipe stack just after every thread_switch
++   0x*002 -->  wipe stack just after every EXEC_TAG()
++   0x*004 -->  wipe stack in CHECK_INTS
++   0x*010 -->  wipe stack in while & until loops
++   0x*020 -->  wipe stack before yield() in iterators and outside eval.c
++   0x*040 -->  wipe stack on catch and thread save context
++   0x*100 -->  update stack extent on each object allocation
++   0x*200 -->  update stack extent on each object reallocation
++   0x*400 -->  update stack extent during GC marking passes
++   0x*800 -->  update stack extent on each throw (use with 0x040)
++   0x1000 -->  use inline assembly code for x86, PowerPC, or ARM CPUs
++
++   0x0*** -->  do not even call rb_wipe_stack()
++   0x2*** -->  call dummy rb_wipe_stack() (for debugging and profiling)
++   0x4*** -->  safe, portable stack clearing in memory allocated with alloca
++   0x6*** -->  use faster, but less safe stack clearing in unallocated stack
++   0x8*** -->  use faster, but less safe stack clearing (with inline code)
++   
++   for most effective gc use 0x*707
++   for fastest micro-benchmarking use 0x0000
++   0x*770 prevents almost all memory leaks caused by ghost references
++   without adding much overhead for stack clearing.
++   Other good trade offs are 0x*270, 0x*703, 0x*303 or even 0x*03
++   
++   In general, you may lessen the default -mpreferred-stack-boundary
++   only if using less safe stack clearing (0x6***).  Lessening the
++   stack alignment with portable stack clearing (0x4***) may fail to clear 
++   all ghost references off the stack.
++   
++   When using 0x6*** or 0x8***, the compiler could insert 
++   stack push(s) between reading the stack pointer and clearing 
++   the ghost references.  The register(s) pushed will be
++   cleared by the rb_gc_stack_wipe(), typically resulting in a segfault
++   or an interpreter hang.
++   
++   STACK_WIPE_SITES of 0x8770 works well compiled with gcc on most machines
++   using the recommended CFLAGS="-O2 -fno-stack-protector".  However...
++   If it hangs or crashes for you, try changing STACK_WIPE_SITES to 0x4770
++   and please report your details.  i.e. CFLAGS, compiler, version, CPU
++   
++   Note that it is redundant to wipe_stack in looping constructs if 
++   also doing so in CHECK_INTS.  It is also redundant to wipe_stack on
++   each thread_switch if wiping after every thread save context.
++*/
++#ifndef STACK_WIPE_SITES
++# ifdef __x86_64__     /* deal with "red zone" by not inlining stack clearing */
++#  define STACK_WIPE_SITES  0x6770
++# elif defined __ppc__ || defined __ppc64__   /* On any PowerPC, deal with... */
++#  define STACK_WIPE_SITES  0x7764   /* red zone & alloc(0) doesn't return sp */
++# else
++#  define STACK_WIPE_SITES  0x8770 /*normal case, use 0x4770 if problems arise*/
++# endif
++#endif
++
++#if (STACK_WIPE_SITES & 0x14) == 0x14
++#warning  wiping stack in CHECK_INTS makes wiping in loops redundant
++#endif
++#if (STACK_WIPE_SITES & 0x41) == 0x41
++#warning  wiping stack after thread save makes wiping on thread_switch redundant
++#endif
++
++#define STACK_WIPE_METHOD (STACK_WIPE_SITES>>13)
++
+ #ifdef _WIN32
+ typedef LONG rb_atomic_t;
+ 
+@@ -79,52 +146,151 @@
+ 
+ RUBY_EXTERN int rb_thread_critical;
+ void rb_thread_schedule _((void));
+-#if defined(HAVE_SETITIMER) || defined(_THREAD_SAFE)
+-RUBY_EXTERN int rb_thread_pending;
+ 
+-EXTERN size_t rb_gc_malloc_increase;
+-EXTERN size_t rb_gc_malloc_limit;
+-EXTERN VALUE *rb_gc_stack_end;
+-EXTERN int *rb_gc_stack_grow_direction;  /* -1 for down or 1 for up */
+-#define __stack_zero_up(end,sp)  while (end >= ++sp) *sp=0
+-#define __stack_grown_up  (rb_gc_stack_end > (VALUE *)alloca(0))
+-#define __stack_zero_down(end,sp)  while (end <= --sp) *sp=0
+-#define __stack_grown_down  (rb_gc_stack_end < (VALUE *)alloca(0))
++RUBY_EXTERN VALUE *rb_gc_stack_end;
++RUBY_EXTERN int rb_gc_stack_grow_direction;  /* -1 for down or 1 for up */
+ 
+ #if STACK_GROW_DIRECTION > 0
++
++/* clear stack space between end and sp (not including *sp) */
+ #define __stack_zero(end,sp)  __stack_zero_up(end,sp)
+-#define __stack_grown  __stack_grown_up
++
++/* true if top has grown past limit, i.e. top deeper than limit */
++#define __stack_past(limit,top)  __stack_past_up(limit,top)
++
++/* depth of mid below stack top */
++#define __stack_depth(top,mid)   __stack_depth_up(top,mid)
++
++/* stack pointer top adjusted to include depth more items */
++#define __stack_grow(top,depth)  __stack_grow_up(top,depth)
++
++
+ #elif STACK_GROW_DIRECTION < 0
+ #define __stack_zero(end,sp)  __stack_zero_down(end,sp)
+-#define __stack_grown  __stack_grown_down
++#define __stack_past(limit,top)  __stack_past_down(limit,top)
++#define __stack_depth(top,mid)   __stack_depth_down(top,mid)
++#define __stack_grow(top,depth)  __stack_grow_down(top,depth)
++
+ #else  /* limp along if stack direction can't be determined at compile time */
+ #define __stack_zero(end,sp) if (rb_gc_stack_grow_direction<0) \
+         __stack_zero_down(end,sp); else __stack_zero_up(end,sp);
+-#define __stack_grown  \
+-        (rb_gc_stack_grow_direction<0 ? __stack_grown_down : __stack_grown_up)
++#define __stack_past(limit,top)  (rb_gc_stack_grow_direction<0 ? \
++                      __stack_past_down(limit,top) : __stack_past_up(limit,top))
++#define __stack_depth(top,mid) (rb_gc_stack_grow_direction<0 ? \
++                       __stack_depth_down(top,mid) : __stack_depth_up(top,mid))
++#define __stack_grow(top,depth) (rb_gc_stack_grow_direction<0 ? \
++                      __stack_grow_down(top,depth) : __stack_grow_up(top,depth))
+ #endif
+  
++#define __stack_zero_up(end,sp)  while (end >= ++sp) *sp=0
++#define __stack_past_up(limit,top)  ((limit) < (top))
++#define __stack_depth_up(top,mid) ((top) - (mid))
++#define __stack_grow_up(top,depth) ((top)+(depth))
++
++#define __stack_zero_down(end,sp)  while (end <= --sp) *sp=0
++#define __stack_past_down(limit,top)  ((limit) > (top))
++#define __stack_depth_down(top,mid) ((mid) - (top))
++#define __stack_grow_down(top,depth) ((top)-(depth))
++
++/* Make alloca work the best possible way.  */
++#ifdef __GNUC__
++# ifndef atarist
++#  ifndef alloca
++#   define alloca __builtin_alloca
++#  endif
++# endif /* atarist */
++
++# define nativeAllocA __builtin_alloca
++
++/* use assembly to get stack pointer quickly */
++# if STACK_WIPE_SITES & 0x1000
++#  define __defspfn(asmb)  \
++static inline VALUE *__sp(void) __attribute__((always_inline)); \
++static inline VALUE *__sp(void) \
++{ \
++  VALUE *sp; asm(asmb); \
++  return sp; \
++}
++#  if defined __ppc__ || defined __ppc64__
++__defspfn("addi %0, r1, 0": "=r"(sp))
++#  elif defined  __i386__
++__defspfn("movl %%esp, %0": "=r"(sp))
++#  elif defined __x86_64__
++__defspfn("movq %%rsp, %0": "=r"(sp))
++#  elif __arm__
++__defspfn("mov %0, sp": "=r"(sp))
++#  else
++#   define __sp()  ((VALUE *)__builtin_alloca(0))
++#   warning No assembly version of __sp() defined for this CPU.
++#  endif
++# else
++#  define __sp()  ((VALUE *)__builtin_alloca(0))
++# endif
++
++#else  // not GNUC
++
++# ifdef HAVE_ALLOCA_H
++#  include <alloca.h>
++# else
++#  ifndef _AIX
++#   ifndef alloca /* predefined by HP cc +Olibcalls */
++void *alloca ();
++#   endif
++#  endif /* AIX */
++# endif /* HAVE_ALLOCA_H */
++
++# if STACK_WIPE_SITES & 0x1000
++#  warning No assembly versions of __sp() defined for this compiler.
++# endif
++# if HAVE_ALLOCA
++#  define __sp()  ((VALUE *)alloca(0))
++#  define nativeAllocA alloca
++# else
++RUBY_EXTERN VALUE *__sp(void);
++#  if STACK_WIPE_SITES
++#   define STACK_WIPE_SITES 0
++#   warning Disabled Stack Wiping because there is no native alloca()
++#  endif
++# endif
++#endif /* __GNUC__ */
++
++
+ /*
+-  zero the memory that was (recently) part of the stack
+-  but is no longer.  Invoke when stack is deep to mark its extent
+-  and when it is shallow to wipe it
++  Zero memory that was (recently) part of the stack, but is no longer.
++  Invoke when stack is deep to mark its extent and when it's shallow to wipe it.
+ */
++#if STACK_WIPE_METHOD == 0
++#define rb_gc_wipe_stack() ((void)0)
++#elif STACK_WIPE_METHOD == 4
+ #define rb_gc_wipe_stack() {     \
+-  VALUE *sp = alloca(0);         \
+   VALUE *end = rb_gc_stack_end;  \
++  VALUE *sp = __sp();            \
+   rb_gc_stack_end = sp;          \
+   __stack_zero(end, sp);   \
+ }
++#else
++RUBY_EXTERN void rb_gc_wipe_stack(void);
++#endif
+ 
+ /*
+   Update our record of maximum stack extent without zeroing unused stack
+ */
+-#define rb_gc_update_stack_extent() \
+-    if __stack_grown rb_gc_stack_end = alloca(0);
++#define rb_gc_update_stack_extent() do { \
++    VALUE *sp = __sp(); \
++    if __stack_past(rb_gc_stack_end, sp) rb_gc_stack_end = sp; \
++} while(0)
++
+ 
++#if STACK_WIPE_SITES & 4
++# define CHECK_INTS_wipe_stack()  rb_gc_wipe_stack()
++#else
++# define CHECK_INTS_wipe_stack()  (void)0
++#endif
+ 
++#if defined(HAVE_SETITIMER) || defined(_THREAD_SAFE)
++RUBY_EXTERN int rb_thread_pending;
+ # define CHECK_INTS do {\
+-    rb_gc_wipe_stack(); \
++    CHECK_INTS_wipe_stack(); \
+     if (!(rb_prohibit_interrupt || rb_thread_critical)) {\
+         if (rb_thread_pending) rb_thread_schedule();\
+ 	if (rb_trap_pending) rb_trap_exec();\
+@@ -135,14 +301,14 @@
+ RUBY_EXTERN int rb_thread_tick;
+ #define THREAD_TICK 500
+ #define CHECK_INTS do {\
+-    rb_gc_wipe_stack(); \
++    CHECK_INTS_wipe_stack(); \
+     if (!(rb_prohibit_interrupt || rb_thread_critical)) {\
+ 	if (rb_thread_tick-- <= 0) {\
+ 	    rb_thread_tick = THREAD_TICK;\
+             rb_thread_schedule();\
+ 	}\
++        if (rb_trap_pending) rb_trap_exec();\
+     }\
+-    if (rb_trap_pending) rb_trap_exec();\
+ } while (0)
+ #endif
+ 
+diff -ru ruby-1.8.7-p72/version.h ruby-1.8.7-mbari/version.h
+--- ruby-1.8.7-p72/version.h	2009-02-09 21:21:30.000000000 -0800
++++ ruby-1.8.7-mbari/version.h	2009-02-09 20:24:44.000000000 -0800
+@@ -1,15 +1,15 @@
+ #define RUBY_VERSION "1.8.7"
+-#define RUBY_RELEASE_DATE "2008-12-21"
++#define RUBY_RELEASE_DATE "2009-2-9"
+ #define RUBY_VERSION_CODE 187
+-#define RUBY_RELEASE_CODE 20081221
++#define RUBY_RELEASE_CODE 20090209
+ #define RUBY_PATCHLEVEL 72
+ 
+ #define RUBY_VERSION_MAJOR 1
+ #define RUBY_VERSION_MINOR 8
+ #define RUBY_VERSION_TEENY 7
+-#define RUBY_RELEASE_YEAR 2008
+-#define RUBY_RELEASE_MONTH 12
+-#define RUBY_RELEASE_DAY 21
++#define RUBY_RELEASE_YEAR 2009
++#define RUBY_RELEASE_MONTH 2
++#define RUBY_RELEASE_DAY 9
+ 
+ #ifdef RUBY_EXTERN
+ RUBY_EXTERN const char ruby_version[];
+@@ -25,7 +25,12 @@
+ #define RUBY_BIRTH_MONTH 2
+ #define RUBY_BIRTH_DAY 24
+ 
+-#define RUBY_RELEASE_STR "MBARI 6 on patchlevel"
++#include "rubysig.h"
++
++#define string_arg(s) #s
++#define MBARI_RELEASE(wipe_sites) "MBARI 7/" string_arg(wipe_sites)
++
++#define RUBY_RELEASE_STR MBARI_RELEASE(STACK_WIPE_SITES) " on patchlevel"
+ #define RUBY_RELEASE_NUM RUBY_PATCHLEVEL
+ 
+ 

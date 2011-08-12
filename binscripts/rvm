@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+if (( ${rvm_ignore_rvmrc:=0} == 0 ))
+then
+  for rvmrc in /etc/rvmrc "$HOME/.rvmrc"
+  do
+    if [[ -f "$rvmrc" ]]
+    then
+      if grep '^\s*rvm .*$' "$rvmrc" >/dev/null 2>&1
+      then
+        printf "\n  Error:
+    $rvmrc is for rvm settings only.
+    rvm CLI may NOT be called from within $rvmrc.
+    Skipping the loading of $rvmrc
+"
+        exit 1
+      else
+        source "$rvmrc"
+      fi
+    fi
+  done
+fi
+
+if (( ${rvm_user_install_flag:=0} == 0 ))
+then
+  if (( UID == 0 )) || [[ "${rvm_prefix:-}" != "$HOME" ]]
+  then
+    rvm_user_install_flag=0
+  else
+    rvm_user_install_flag=1
+  fi
+fi
+
+if [[ -z "${rvm_prefix:-""}" ]]
+then
+  if (( ${rvm_user_install_flag:=0} == 0 ))
+  then
+    rvm_prefix="/usr/local"
+  else
+    rvm_prefix="$HOME"
+  fi
+fi
+
+if [[ -z "${rvm_path:-""}" ]]
+then
+  if [[ "$rvm_prefix" = "$HOME" ]]
+  then
+    rvm_path="${rvm_prefix}/.rvm"
+  else
+    rvm_path="${rvm_prefix}/rvm"
+  fi
+fi
+
+source "${rvm_scripts_path:="$rvm_path/scripts"}/rvm"
+
+rvm "$@"

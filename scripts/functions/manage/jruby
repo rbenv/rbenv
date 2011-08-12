@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+jruby_install()
+{
+  if ! command -v java > /dev/null
+  then
+    printf "java must be installed and in PATH for JRuby."
+    return 1
+  fi
+
+  if [[ "Darwin" = "$(uname)" ]]
+  then
+    java_version=$(java -version 2>&1  | awk -F'"' '/ version /{print $2}')
+    case "$java_version" in
+      1.5.*)
+        printf "\n\nWARNING: A very outdated JAVA version is being used ($java_version), it is strongly recommended that you upgrade to the latest version.\n\n"
+        ;;
+      1.3.*|1.4.*)
+        printf "\n\nERROR: Unsupported JAVA version $java_version. In order to install and use JRuby you must upgrade to the latest JAVA version.\n\n"
+        exit 1
+        ;;
+    esac
+  fi
+
+  builtin cd "${rvm_src_path}"
+
+  __rvm_fetch_ruby
+  result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "There has been an error while trying to fetch the source.  \nHalting the installation."
+    exit $result
+  fi
+
+  builtin cd "${rvm_src_path}/$rvm_ruby_string"
+
+  if (( ${rvm_head_flag:=0} == 1 ))
+  then
+    __rvm_apply_patches
+
+    __rvm_run "ant.jar" "ant jar" "$rvm_ruby_string - #ant jar"
+  fi
+
+  mkdir -p "$rvm_ruby_home/bin/"
+
+  case "$rvm_ruby_version" in
+    1.3|1.2)
+      __rvm_run "nailgun" \
+        "builtin cd \"${rvm_src_path}/$rvm_ruby_string/tool/nailgun\" &&  make $rvm_make_flags" \
+        "Building Nailgun"
+      ;;
+    *)
+      __rvm_run "nailgun" \
+        "builtin cd \"${rvm_src_path}/$rvm_ruby_string/tool/nailgun\" && ${rvm_configure_env:-""} ./configure --prefix=$rvm_ruby_home && make $rvm_make_flags" \
+        "Building Nailgun"
+      ;;
+  esac
+
+  __rvm_rm_rf "$rvm_ruby_home"
+
+  __rvm_run "install" \
+    "/bin/cp -Rf ${rvm_src_path}/$rvm_ruby_string $rvm_ruby_home" "$rvm_ruby_string - #installing to $rvm_ruby_home"
+
+  (
+  builtin cd "$rvm_ruby_home/bin/"
+  for binary in jirb jruby jgem ; do
+    ln -fs "$binary" "${binary#j}"
+  done
+  )
+
+  # -server is "a lot slower for short-lived scripts like rake tasks, and takes longer to load"
+  #sed -e 's#^JAVA_VM=-client#JAVA_VM=-server#' $rvm_ruby_home/bin/jruby > $rvm_ruby_home/bin/jruby.new &&
+    #  mv $rvm_ruby_home/bin/jruby.new $rvm_ruby_home/bin/jruby
+  chmod +x "$rvm_ruby_home/bin/jruby"
+
+  binaries=(jrubyc jirb_swing jirb jgem rdoc ri spec autospec testrb ast generate_yaml_index.rb)
+
+  for binary in "${binaries[@]}"
+  do
+    __rvm_inject_gem_env "$rvm_ruby_home/bin/$binary"
+  done
+
+  __rvm_inject_ruby_shebang "$rvm_ruby_home/bin/rake"
+
+  __rvm_irbrc
+
+  __rvm_bin_script
+
+  __rvm_use
+
+  __rvm_post_install
+
+  # jruby ships with some built in gems, copy them in to place.
+  if [[ -d "$rvm_ruby_home/lib/ruby/gems/1.8" ]]
+  then
+    rvm_log "Copying across included gems"
+    cp -R "$rvm_ruby_home/lib/ruby/gems/1.8/" "$rvm_ruby_gem_home/"
+  fi
+
+  "$rvm_ruby_home/bin/gem" install jruby-launcher
+}

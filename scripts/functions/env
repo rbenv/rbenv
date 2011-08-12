@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+
+#
+# Environment manipulation functions.
+#
+
+__rvm_default_flags()
+{
+  true ${rvm_head_flag:=0} ${rvm_clang_flag:=0} ${rvm_delete_flag:=0}
+}
+
+__rvm_nuke_rvm_variables()
+{
+  unset rvm_head_flag $(env | awk -F= '/^rvm_/{print $1" "}')
+}
+
+# Unset ruby-specific variables
+__rvm_unset_ruby_variables()
+{
+  # unset rvm_ruby_flag $(env | awk -F= '/^rvm_ruby_/{printf $1" "}')
+  unset rvm_ruby_string rvm_ruby_strings rvm_ruby_binary rvm_ruby_gem_home rvm_ruby_gem_path rvm_ruby_home rvm_ruby_interpreter rvm_ruby_irbrc rvm_ruby_log_path rvm_ruby_major_version rvm_ruby_minor_version rvm_ruby_package_name rvm_ruby_patch_level rvm_ruby_release_version rvm_ruby_repo_url rvm_ruby_repo_branch rvm_ruby_revision rvm_ruby_selected_flag rvm_ruby_tag rvm_ruby_version rvm_ruby_load_path rvm_ruby_require rvm_head_flag rvm_ruby_package_file rvm_ruby_configure rvm_ruby_name rvm_ruby_url rvm_ruby_global_gems_path rvm_ruby_args rvm_ruby_name rvm_llvm_flag
+}
+
+
+# TODO: Should be able to...
+#   Unset both rvm variables as well as ruby-specific variables
+# Preserve gemset if 'rvm_sticky' is set
+# (persist gemset unless clear is explicitely called).
+__rvm_cleanse_variables()
+{
+  __rvm_unset_ruby_variables
+
+  if [[ ${rvm_sticky_flag:-0} -eq 1 ]] ; then
+    export rvm_gemset_name
+  else
+    unset rvm_gemset_name
+  fi
+
+  unset rvm_ruby_string rvm_action rvm_irbrc_file rvm_command rvm_error_message rvm_force_flag rvm_all_flag rvm_reconfigure_flag rvm_make_flags rvm_bin_flag rvm_import_flag rvm_export_flag rvm_self_flag rvm_gem_flag rvm_rubygems_flag rvm_debug_flag rvm_delete_flag rvm_summary_flag rvm_test_flag _rvm_spec_flag rvm_json_flag rvm_yaml_flag rvm_shebang_flag rvm_env_flag rvm_tail_flag rvm_use_flag rvm_dir_flag rvm_list_flag rvm_empty_flag rvm_file_name rvm_benchmark_flag rvm_clear_flag rvm_name_flag rvm_verbose_flag rvm_user_flag rvm_system_flag rvm_configure_flags rvm_uninstall_flag rvm_install_flag rvm_llvm_flag rvm_ruby_bits rvm_sticky_flag rvm_rvmrc_flag rvm_gems_flag rvm_only_path_flag rvm_docs_flag rvm_ruby_aliases rvm_patch_names rvm_clang_flag rvm_install_args rvm_dump_environment_flag rvm_ruby_alias rvm_static_flag rvm_archive_extension rvm_hook rvm_ruby_name
+  # rvm_gemsets_path rvm_user_path rvm_wrappers_path rvm_patches_path rvm_docs_path rvm_config_path rvm_examples_path rvm_rubies_path rvm_usr_path rvm_src_path rvm_tmp_path rvm_lib_path rvm_repos_path rvm_log_path rvm_help_path rvm_environments_path rvm_archives_path
+}
+
+# Add bin path if not present
+__rvm_conditionally_add_bin_path()
+{
+  if printf "${PATH//:/ }" | \grep -vF "${rvm_bin_path} " >/dev/null 2>&1
+  then
+    case "${rvm_ruby_string:-"system"}" in
+      system)
+        PATH="$PATH:${rvm_bin_path}"
+        ;;
+      *)
+        PATH="${rvm_bin_path}:$PATH"
+        ;;
+    esac
+
+    builtin hash -r
+  fi
+
+  return 0
+}
+
+__rvm_load_environment()
+{
+  local string="$1"
+  if [[ -f "$rvm_environments_path/$string" ]]; then
+    # Restore the path to it's state minus rvm
+    __rvm_remove_rvm_from_path
+
+    # source the environment file
+    \. "$rvm_environments_path/$string"
+    
+    if [[ -s "${rvm_path:-$HOME/.rvm}/hooks/after_use" ]]
+    then
+      \. "${rvm_path:-$HOME/.rvm}/hooks/after_use"
+    fi
+
+    # clear the PATH cache
+    builtin hash -r
+  elif [[ -n "$string" ]] ; then
+    rvm "$string"
+  else
+    : # TODO: This should have some error handling in the context.
+  fi
+  return 0
+}
+
+__rvm_export()
+{
+
+  # extract the variable name from the first arg.
+  local name=${1%%=*}
+
+  # store the current value, to be restored later.
+  builtin export rvm_old_$name=${!name}
+
+  # pass-through the return value of the builtin.
+  export "$@"
+  return $?
+}
+
+__rvm_unset_exports()
+{
+  env | while read pair; do
+    # ignore everything except for wrapped variables.
+    case "$pair" in
+      rvm_old_*)
+        local wrap_name=${pair%%=*}
+        local name=${wrap_name#rvm_old_}
+        local value=${!wrap_name}
+
+        # if the old value is non-empty, restore it.
+        if [[ -n $value ]]; then
+          export $name=${value}
+
+        # otherwise, just remove it.
+        else
+          unset $name
+        fi
+
+        # unset the wrapped variable.
+        unset $wrap_name
+        ;;
+    esac
+  done
+}
+
+# Clean all *duplicate* items out of the path. (keep first occurrence of each)
+__rvm_clean_path()
+{
+  PATH="$(printf "$PATH" \
+          | awk -v RS=: -v ORS=: '!($0 in a){a[$0];print}')"
+  PATH="${PATH/%:/}" # Strip trailing : if it exists
+
+  export PATH
+
+  builtin hash -r
+}
+
+# Clean all rvm items out of the current working path.
+__rvm_remove_rvm_from_path()
+{
+  PATH="$(printf "$PATH" \
+          | awk -v RS=: -v ORS=: "/${rvm_path//\//\/}/ {next} {print}")"
+  PATH="${PATH/%:/}" # Strip trailing : if it exists
+
+  export PATH
+
+  builtin hash -r
+}

@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+
+source "$rvm_scripts_path/base"
+
+usage()
+{
+  printf "
+  Usage:
+
+    rvm repair [option]
+
+  Options:
+    wrappers     - Repair wrappers
+    symlinks     - Repair symlinks
+    environments - Repair environments
+    archives     - Repair archives
+    gemsets      - Repair gemsets
+    all          - Repair all of the above
+
+"
+}
+
+repair_gemsets()
+{
+  local directory directories
+
+  rvm_log "Removing gemsets missing names or interpreters."
+
+  (
+    builtin cd "${rvm_gems_path:-"rvm_path/gems"}"
+
+    directories=(
+      $( find . -mindepth 1 -maxdepth 1 -type d | grep '@$' )
+      $( find . -mindepth 1 -maxdepth 1 -type d | grep '^./@')
+    )
+
+    for directory in "${directories[@]//.\/}" ; do
+
+      __rvm_rm_rf "./$directory/"
+
+    done
+  )
+
+  rvm_log "Gemsets repaired."
+
+  return 0
+}
+
+repair_wrappers()
+{
+  local wrapper_ruby_name
+
+  rvm_log "Regenerating all wrappers..."
+
+  while read -r wrapper_ruby_name ; do
+
+    rvm_log "Regenerating wrappers for $wrapper_ruby_name"
+
+    __rvm_run "wrappers.regenerate" \
+      "\"$rvm_scripts_path/wrapper\" '$wrapper_ruby_name'"
+
+  done < <("$rvm_scripts_path/list" gemsets strings)
+
+  rvm_log "Wrappers regenerated"
+
+  return 0
+}
+
+# Removes stale symlinks in $rvm_bin_path, likely
+# related to wrappers.
+repair_symlinks()
+{
+  rvm_log "Repairing symlinks..."
+
+  (
+    builtin cd "${rvm_bin_path}"
+
+    for executable_name in $(\find \. -type l); do
+
+      if [[ -e "$executable_name" \
+        || "$(readlink "$executable_name")" != "$rvm_wrappers_path/"* ]] ; then
+        continue
+      fi
+
+      if [[ -f "$executable_name" ]]  ; then
+
+        rvm_log "removing stale symlink from $(basename "$executable_name")"
+
+        \rm -f "$executable_name"
+
+      fi
+    done
+  )
+
+  rvm_log "Symlinks repaired"
+}
+
+# Regenerates each symlink file.
+repair_environments()
+{
+  local environment_name environments
+
+  rvm_log "Regenerating environments..."
+
+  environments=($(builtin cd "$rvm_environments_path" ; find . -maxdepth 1 -mindepth 1 -type f))
+
+  for environment_name in "${environments[@]//.\/}" ; do
+
+    [[ -L "$rvm_environments_path/$environment_name" ]] && continue
+
+    rvm_log "Regenerating environment file for '$environment_name'"
+
+    [[ -f "$rvm_environments_path/$environment_name" ]] && \rm -f "$rvm_environments_path/$environment_name"
+
+    (
+    source "$rvm_scripts_path/base"
+
+    __rvm_become "$environment_name"
+
+    __rvm_ensure_has_environment_files
+    )
+
+  done
+
+  rvm_log "Environments regenerated"
+
+  return 0
+}
+
+# Removes archives that have incorrect md5 sums.
+repair_archives()
+{
+  local archive_file archives stored_md5sum
+
+  rvm_log "Repairing archives..."
+
+  archives=($(builtin cd "${rvm_archives_path}" ; find . -maxdepth 1 -mindepth 1 -type f))
+
+  for archive_file in "${archives[@]//.\/}" ; do
+
+    [[ -f "${rvm_archives_path}/$archive_file" ]] || continue
+
+    stored_md5sum="$("$rvm_scripts_path/db" "$rvm_config_path/md5" "$archive_file" | head -n1)"
+
+    if [[ -n "$stored_md5sum" ]] ; then
+
+      if ! "$rvm_scripts_path/md5" "${rvm_archives_path}/$archive_file" "$stored_md5sum" ; then
+
+        rvm_log "Removing archive for '$archive_file' - Incorrect md5 checksum."
+
+        __rvm_rm_rf "${rvm_archives_path}/$archive_file"
+      fi
+    fi
+  done
+
+  rvm_log "Archives repaired"
+
+  return 0
+}
+
+repair_all()
+{
+  repair_symlinks
+
+  repair_archives
+
+  repair_environments
+
+  repair_wrappers
+
+  return 0
+}
+
+args=($*)
+action="${args[$__array_start]}"
+args[$__array_start]=""
+args=(${args[@]})
+
+if [[ -z "$action" ]]; then
+  usage
+  exit $?
+fi
+
+case "$action" in
+  all)          repair_all          ;;
+  symlinks)     repair_symlinks     ;;
+  gemsets)      repair_gemsets      ;;
+  environments) repair_environments ;;
+  archives)     repair_archives     ;;
+  wrappers)     repair_wrappers     ;;
+  help)         usage               ;;
+  *)            usage >&2 ; exit 1  ;;
+esac
+
+exit $?

@@ -1,0 +1,3 @@
+ruby_version=^ruby 1.9.1p243 \(2009-07-16 revision 24175\)
+gem_home=ruby/1.9.1
+ruby_home=ree-1.9.1-p243

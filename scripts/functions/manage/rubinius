@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+
+file_exists_at_url()
+{
+  local _url="${1:-}"
+  if [[ -n "${_url}" ]]
+  then
+    if curl -slk --head "${_url}" 2>&1 | head -1  | grep '200 OK' >/dev/null 2>&1
+    then
+      return 0
+    else
+      return 1
+    fi
+  else
+    rvm_log "Warning: URL was not passed to __rvm_check_for_tarball"
+    return 1
+  fi
+
+}
+
+rbx_install()
+{
+  rvm_log "$rvm_ruby_string installing #dependencies "
+
+  if ! __rvm_ensure_has_mri_ruby
+  then
+    rvm_log "No MRI ruby found, cannot build rbx."
+    return 1
+  fi
+
+  export ruby="$(__rvm_mri_ruby)"
+
+  # TODO: use 'rvm gems load' here:
+  unset CFLAGS LDFLAGS ARCHFLAGS # Important.
+  unset GEM_HOME GEM_PATH MY_RUBY_HOME IRBRC
+
+  __rvm_remove_rvm_from_path
+
+  __rvm_conditionally_add_bin_path
+  export PATH
+
+  builtin hash -r
+
+  if [[ -s "${rvm_archives_path}/${rvm_ruby_package_file}" ]] ||
+    [[ -n "${rvm_ruby_url:-}" ]] && file_exists_at_url "${rvm_ruby_url}"
+  then
+    rvm_head_flag=0
+  else
+    rvm_head_flag=1
+    rvm_ruby_repo_branch="${rvm_ruby_version}"
+  fi
+
+  if (( rvm_head_flag == 0 ))
+  then
+    # Install from tarball url.
+    rvm_log "$rvm_ruby_string #downloading ($rvm_ruby_package_file), this may take a while depending on your connection..."
+
+    "$rvm_scripts_path/fetch" "$rvm_ruby_url"
+    result=$?
+
+    if (( result > 0 ))
+    then
+      rvm_error "There has been an error while trying to fetch the source. Halting the installation."
+      exit $result
+    fi
+    __rvm_run "extract" \
+      "gunzip < \"${rvm_archives_path}/$(basename ${rvm_ruby_package_file})\" | tar xf - -C ${rvm_src_path} --no-same-owner" \
+      "$rvm_ruby_string - #extracting"
+    result=$?
+
+    if (( result > 0 ))
+    then
+      rvm_error "There has been an error while trying to extract the source.  \nHalting the installation."
+      exit $result
+    fi
+
+    # Remove the left over folder first.
+    __rvm_rm_rf "${rvm_src_path}/$rvm_ruby_string"
+
+    mv "${rvm_src_path}/rubinius-${rvm_ruby_version}" \
+      "${rvm_src_path}/$rvm_ruby_string"
+  else
+    # Install from repository
+    __rvm_db "rubinius_repo_url" "rvm_ruby_repo_url"
+    #rvm_ruby_home="$rvm_rubies_path/$rvm_ruby_interpreter-$rvm_ruby_version"
+    __rvm_fetch_from_github "rbx"
+    result=$?
+
+    if (( result > 0 ))
+    then
+      rvm_error "There has been an error while fetching the rbx git repo.  \nHalting the installation."
+      exit $result
+    fi
+  fi
+
+  builtin cd "${rvm_src_path}/$rvm_ruby_string"
+
+  chmod +x ./configure
+
+  __rvm_apply_patches
+  result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "There has been an error while trying to apply patches to rubinius.  \nHalting the installation."
+    return $result
+  fi
+
+  __rvm_db "${rvm_ruby_interpreter}_configure_flags" "db_configure_flags"
+
+  rvm_configure_flags="${rvm_configure_flags:-"--skip-system"}"
+
+  rvm_ruby_configure="$rvm_wrappers_path/$ruby/ruby ${rvm_configure_env:-""} ./configure --prefix=$rvm_ruby_home $db_configure_flags $rvm_configure_flags ${rvm_install_args:-}"
+
+  message="$rvm_ruby_string - #configuring"
+
+  if (( ${rvm_llvm_flag:=1} == 0 ))
+  then # Explicitely disabled
+    rvm_ruby_configure="$rvm_ruby_configure --disable-llvm"
+  fi
+
+  __rvm_run "configure" "$rvm_ruby_configure" "$message"
+  result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "There has been an error while running '$rvm_ruby_configure'.  \nHalting the installation."
+    exit $result
+  fi
+
+  if (( ${rvm_trace_flag:=0} == 1 ))
+  then
+    rvm_ruby_make="$rvm_wrappers_path/$ruby/rake install --trace"
+    message="$rvm_ruby_string - #compiling (with --trace)"
+  else
+    rvm_ruby_make="$rvm_wrappers_path/$ruby/rake install"
+    message="$rvm_ruby_string - #compiling"
+  fi
+
+  __rvm_run "rake" "$rvm_ruby_make" "$message"
+  result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "There has been an error while running '$rvm_ruby_configure'.\nHalting the installation."
+    exit $result
+  fi ; unset ruby
+
+  # Symlink rubinius wrappers
+  ln -fs "$rvm_ruby_home/bin/rbx" "$rvm_ruby_home/bin/ruby"
+
+  # Install IRB Wrapper on Rubinius.
+  file_name="$rvm_ruby_home/bin/irb"
+
+  rm -f "$file_name"
+
+  printf '#!/usr/bin/env bash\n' > "$file_name"
+
+  printf "exec '$rvm_ruby_home/bin/rbx' 'irb' \"\$@\"\n" >> "$file_name"
+
+  if [[ ! -x "$file_name" ]]
+  then
+    chmod +x "$file_name"
+  fi
+
+  # Install Gem Wrapper on Rubinius.
+  file_name="$rvm_ruby_home/bin/gem"
+
+  cp -f "$rvm_ruby_home/lib/bin/gem.rb" "$file_name"
+
+  __rvm_inject_ruby_shebang "$file_name"
+
+  if [[ ! -x "$file_name" ]]
+  then
+    chmod +x "$file_name"
+  fi
+
+  unset file_name
+
+  binaries=(erb ri rdoc)
+
+  __rvm_post_install
+
+  __rvm_irbrc
+
+  __rvm_bin_script
+}

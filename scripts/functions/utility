@@ -1,0 +1,231 @@
+#!/usr/bin/env bash
+
+#
+# Functions RVM is built on
+#
+# match <value> <string|glob>
+match()
+{
+  case "$1" in
+    $2) return 0 ;;
+    *)  return 1 ;;
+  esac
+}
+
+is_a_function() {
+  type $1 | head -1 | \grep "function" >/dev/null 2>&1
+}
+
+#
+# RVM specific functions.
+#
+
+__rvm_warn_on_rubyopt()
+{
+  if [[ -n "${RUBYOPT:-""}" ]]; then
+    rvm_warn \
+      "Please note: You have the RUBYOPT environment variable set and this \
+            may interfere with normal rvm operations. We sugges unsetting it."
+    return 1
+  else
+    return 0
+  fi
+}
+
+__rvm_strings()
+{
+  local strings ruby_strings
+
+  ruby_strings=($(echo ${rvm_ruby_args:-$rvm_ruby_string}))
+
+  for rvm_ruby_string in "${ruby_strings[@]}" ; do
+    strings="$strings $(__rvm_select ; echo $rvm_ruby_string)"
+  done
+
+  echo $strings
+
+  return 0
+}
+
+# Return a list of directories under a given base path.
+# Derived from rvm_ruby_string.
+__rvm_ruby_string_paths_under()
+{
+  local path part parts
+
+  path="${1%/}" # Strip off any trailing slash
+
+  parts=(${rvm_ruby_string//-/ }) # Strip white space.
+
+  echo "$path"
+
+  for part in "${parts[@]}" ; do
+
+    path="$path/$part"
+
+    echo "$path"
+
+  done
+
+  return 0
+}
+
+__rvm_quote_args()
+{
+  local quoted_string=""
+
+  for quoted_argument in "$@"; do
+
+    if printf "%s" "$quoted_argument" | \grep -vq "^[[:alnum:]]$"; then
+
+      quoted_string="$quoted_string '$(printf "%s" "$quoted_argument" \
+        | \sed "s/'/\'\\\'\'/g")'"
+
+    else
+      quoted_string="$quoted_string $quoted_argument"
+    fi
+  done
+
+  echo "$quoted_string" | \sed -e 's/^ *//g' -e 's/ *$//g'
+
+  return 0
+}
+
+__rvm_quote_args_with_shift()
+{
+  local shift_value="$1"; shift
+
+  while [[ "$shift_value" -gt 0 && $# -gt 0 ]]; do
+
+    shift
+
+    ((shift_value--))
+
+  done
+
+  __rvm_quote_args "$@"
+
+  return 0
+}
+
+
+# Run a specified command and log it.
+__rvm_run()
+{
+  local name log temp_log_path command message
+  true ${rvm_debug_flag:=0} ${rvm_niceness:=0}
+
+  name="${1:-}"
+  command="${2:-}"
+  message="${3:-}"
+
+  if [[ -n "$message" ]]
+  then
+    rvm_log "$message"
+  fi
+
+  if (( rvm_debug_flag > 0 ))
+  then
+    rvm_debug "Executing: $command"
+  fi
+
+  if [[ -n "${rvm_ruby_string:-}" ]]
+  then
+    temp_log_path="${rvm_log_path}/$rvm_ruby_string"
+  else
+    temp_log_path="${rvm_log_path}"
+  fi
+
+  log="$temp_log_path/$name.log"
+
+  if [[ ! -d "${log%\/*}" ]]
+  then
+    \mkdir -p "${log%\/*}"
+  fi
+
+  if [[ ! -f "$log" ]]
+  then
+    \touch "$log" # for zsh :(
+  fi
+
+  # TODO: Allow an 'append_flag' setting?
+  printf "[$(date +'%Y-%m-%d %H:%M:%S')] $command\n" > "$log"
+
+  if (( rvm_niceness > 0 ))
+  then
+    command="nice -n $rvm_niceness $command"
+  fi
+
+  eval "$command" >> "$log" 2>&1
+  result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "Error running '$command', please read $log"
+  fi
+
+  return ${result}
+}
+
+# Output the current ruby's rvm source path.
+__rvm_source_dir()
+{
+  if [[ ${rvm_ruby_selected_flag:-0} -eq 0 ]] ; then __rvm_select ; fi
+
+  if [[ -z "$rvm_ruby_src_path" ]] ; then
+
+    rvm_error "No source directory exists for the default implementation."
+
+  else
+
+    echo "$rvm_ruby_src_path"
+
+  fi
+
+  return 0
+}
+
+# Output an inspection of selected 'binary' scripts, based on CLI selection.
+__rvm_inspect()
+{
+  for binary in $rvm_ruby_args ; do
+
+    actual_file="$(unset -f gem ; command -v gem )"
+
+    rvm_log "$actual_file:"
+
+    if [[ ${rvm_shebang_flag:-0} -eq 1 ]] ; then
+      \head -n 1    < "$actual_file"
+    fi
+
+    if [[ ${rvm_env_flag:-0} -eq 1 ]] ; then
+      \awk '/ENV/'  < "$actual_file"
+    fi
+
+    if [[ ${rvm_path_flag:-0} -eq 1 ]] ; then
+      \awk '/PATH/' < "$actual_file"
+    fi
+
+    if [[ ${rvm_head_flag:-0} -eq 1 ]] ; then
+      \head -n 5    < "$actual_file"
+    fi
+
+    if [[ ${rvm_tail_flag:-0} -eq 1 ]] ; then
+      \tail -n 5    < "$actual_file"
+    fi
+
+    if [[ ${rvm_all_flag:-0} -eq 1 ]] ; then
+      \cat $actual_file
+    fi
+
+  done
+
+  return 0
+}
+
+# Strip whitespace and normalize it all.
+__rvm_strip()
+{
+  \sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/[[:space:]]\{1,\}/ /g'
+  return $?
+}

@@ -1,0 +1,3 @@
+ruby_version=^ruby 1.9.2dev \(2009-09-26 trunk \d+\)
+gem_home=ruby/1.9.1
+ruby_home=ree-1.9.1-head

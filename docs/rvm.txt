@@ -1,0 +1,269 @@
+RVM(1)
+======
+
+
+NAME
+----
+rvm - The Ruby Version Manager
+
+
+SYNOPSIS
+--------
+*rvm* ['FLAGS'] ['OPTIONS'] 'ACTION' ['IMPLEMENTATION'[,'IMPLEMENTATION'[,'...']]
+
+
+DESCRIPTION
+-----------
+RVM is a command line tool which allows us to easily install, manage and work
+with multiple ruby environments from interpreters to sets of gems.
+
+
+FLAGS
+-----
+
+*--head*::
+    with update, updates rvm to git head version.
+
+*--rubygems*::
+    with update, updates rubygems for selected ruby
+
+*--default*::
+    with ruby select, sets a default ruby for new shells.
+
+*--debug*::
+    Toggle debug mode on for very verbose output.
+
+*--trace*::
+    Toggle trace mode on to see EVERYTHING rvm is doing.
+
+*--force*::
+    Force install, removes old install & source before install.
+
+*--summary*::
+    Used with rubydo to print out a summary of the commands run.
+
+*--latest*::
+    with gemset --dump skips version strings for latest gem.
+
+*--gems*::
+    with uninstall/remove removes gems with the interpreter.
+
+*--docs*::
+    with install, attempt to generate ri after installation.
+
+*--reconfigure*::
+    Force ./configure on install even if Makefile already exists.
+
+
+
+OPTIONS
+-------
+
+*-v, --version*::
+    Emit rvm version loaded for current shell.
+
+*-l, --level*::
+    patch level to use with rvm use / install
+
+*--prefix*::
+    path for all rvm files ('~/.rvm/'), with trailing slash!
+
+*--bin*::
+    path for binaries to be placed ('~/.rvm/bin/')
+
+*--source*::
+    src directory to use ('~/.rvm/src/')
+
+*--archives*::
+    directory for downladed files ('~/.rvm/archives/')
+
+*-S*::
+    Specify a script file to attempt to load and run (rubydo).
+
+*-e*::
+    Execute code from the command line.
+
+*-G*::
+    root gem path to use
+
+*--gems*::
+    Used to set the 'gems_flag', use with 'remove' to remove gems.
+
+*--archive*::
+    Used to set the 'archive_flag', use with 'remove' to remove archive.
+
+*--patch*, *--patches*::
+    With any ruby build from source, allows you to specify patch paths
+    and patch names to be applied prior to building. Values should
+    be a relative / absolute path to a patch or the name of known
+    patch / patchset. Optionally, paths or names may be followed by
+    '%someinteger' - e.g. '--patches mypatch%2' - where the number
+    following the % specifies the value of the -p argument to patch,
+    defaulting to two.
+
+*-C, --configure*::
+    custom configure options. If you need to pass several configure
+    options then append them comma separated: '-C --...,--...,--...'.
+
+*--nice*::
+    process niceness (for slow computers, default 0)
+
+*--ree-options*::
+    Options passed directly to ree's './installer' on the command line.
+
+
+ACTIONS
+-------
+
+*usage*::
+    Show this usage information.
+
+*version*::
+    Show the rvm version installed in rvm_path.
+
+*use*::
+    Setup current shell to use a specific ruby version.
+
+*reload*::
+    Reload rvm source itself (useful after changing rvm source).
+
+*env*::
+    Displays information about an environment specified but the
+    given ruby string. Useful for getting a sourceable path or an
+    evaluatable set of shell variable declarations.
+
+*implode*::
+    (seppuku) removes the rvm installation completely.
+    This means everything in $rvm_path ('~/.rvm').
+    This does not touch your profiles, which is why
+    there is an if around the sourcing 'scripts/rvm'.
+
+*update*::
+    Upgrades rvm to the latest version.
+    (If you experience bugs try this first with --head).
+
+*reset*::
+    Remove current and stored default & system settings.
+    (If you experience odd behavior try this second).
+
+*info*::
+    Show the *current* environment information for current ruby.
+
+*debug*::
+    Show info plus additional information for common issues.
+
+
+*install*::
+    Install one or many ruby versions.
+    http://rvm.beginrescueend.com/rubies/installing/
+
+*uninstall*::
+    Uninstall one or many ruby versions, leaves their sources.
+
+*remove*::
+    Uninstall one or many ruby versions and remove their sources.
+
+*wrapper*::
+    Generates a set of wrapper executables for a given ruby with the
+    specified ruby and gemset combination. Used under the hood for
+    passenger support and the like.
+
+*ruby*::
+    Runs a named ruby file against specified and/or all rubies.
+
+*gem*::
+    Runs a gem command using selected ruby's 'gem'.
+
+*rake*::
+    Runs a rake task against specified and/or all rubies.
+
+*tests*::
+    Runs 'rake test' across selected ruby versions.
+
+*specs*::
+    Runs 'rake spec' across selected ruby versions.
+
+*monitor*::
+    Monitor cwd for testing, run 'rake {spec,test}' on changes.
+
+*gemset*::
+    gemsets: http://rvm.beginrescueend.com/gemsets/
+
+*gemdir*::
+    Display the path to the current gem directory ('$GEM_HOME').
+
+*srcdir*::
+    Display the path to rvm source directory (may be yanked).
+
+*fetch*::
+    Performs an archive / src fetch only of the selected ruby.
+
+*list*::
+    Show currently installed rubies, interactive output.
+    http://rvm.beginrescueend.com/rubies/list/
+
+*pkg*::
+    Install a dependency package {readline,iconv,zlib,openssl}.
+    http://rvm.beginrescueend.com/packages/
+
+*notes*::
+    Display notes, with operating system specifics.
+
+*export*::
+    Temporarily set an environment variable in the current shell.
+
+*unexport*::
+    Undo changes made to the environment by 'rvm export'.
+
+
+IMPLEMENTATION
+--------------
+
+*ruby*::
+    MRI/YARV Ruby (The Gold Standard) {1.8.6,1.8.7,1.9.1,1.9.2...}
+
+*jruby*::
+    JRuby, Ruby interpreter on the Java Virtual Machine.
+
+*rbx*::
+    Rubinius
+
+*ree*::
+    Ruby Enterprise Edition, MRI Ruby with several custom
+    patches for performance, stability, and memory.
+
+*macruby*::
+    MacRuby, insanely fast, can make real apps (Mac OS X Only).
+
+*maglev*::
+    GemStone Ruby, awesome persistent ruby object store.
+
+*ironruby*::
+    IronRuby, NOT supported yet. Looking for volunteers to help.
+
+*system*::
+    Use the system ruby (eg. pre-rvm state).
+
+*default*::
+    Use rvm set default ruby and system if it hasn't been set.
+    http://rvm.beginrescueend.com/rubies/default/
+
+
+RESOURCES
+---------
+
+http://rvm.beginrescueend.com/[Main web site]
+
+https://www.pivotaltracker.com/projects/26822[Online issue-tracker]
+
+
+COPYING
+-------
+
+Copyright (c) 2009 Wayne E. Seguin
+
+See LICENCE file for details.
+
+////
+# vim:ft=asciidoc
+////

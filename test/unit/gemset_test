@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+
+source ./test/setup
+initialize_rvm
+
+# tests: 29
+# assertions: 290
+
+original_dir=$PWD
+
+gem build rvm.gemspec > /dev/null
+filename=$(find . -maxdepth 1 -mindepth 1 -type f -iname 'rvm*.gem' | head -n 1)
+filename="${filename//.\/}"
+
+setup_testset() { rvm 1.9.1 ; }
+remove_gemset_files() { \rm *.gems ; }
+
+test_reset() { unset GEM_HOME ; __rvm_cleanse_variables ; }
+
+#
+# As a user 'rvm gemset create tesset' should make my gem env gemdir be exactly the ${rvm_gemset_separator:-"@"}testset$ directory.
+#
+setup_testset
+heat "rvm gemset create testset ; gemdir=\$(gem env gemdir)"
+assert match "ruby\/1.9.1${rvm_gemset_separator:-"@"}testset$" "$gemdir"
+test_reset
+
+#
+# As a user after selecting a gemset named 'testset' 'rvm gemset name' should output the string "testset"
+#
+setup_testset
+heat "rvm gemset use testset ; gems=\$(rvm gemset name)"
+assert string_eq "testset" "$gems"
+test_reset
+
+setup_testset
+heat "rvm gemset use testset; gems_dir=\$(rvm gemset dir)"
+assert match "1.9.1${rvm_gemset_separator:-"@"}testset$" "$gems_dir"
+test_reset
+
+heat "rvm gemset dump testset ; gem install --no-rdoc --no-ri $filename > /dev/null ; rvm gemset dump"
+assert file_exists "testset"
+assert file_contains "^rvm" "testset"
+test_reset ; rvm gemset --force delete "testset" ; rm testset; remove_gemset_files
+
+heat "rvm gemset dump testset ; gem install --no-rdoc --no-ri $filename > /dev/null ; rvm gemset dump my_testset.gems"
+assert no_directory "${rvm_gems_path:-"$rvm_path/gems"}/ruby/1.9.1${rvm_gemset_separator:-"@"}my_testset"
+assert file_exists "my_testset.gems"
+assert file_contains "^rvm" "my_testset.gems"
+test_reset ; rvm gemset --force delete "testset" ; rvm gemset --force delete "my_testset" ; remove_gemset_files
+
+heat "rvm gemset testset ; gem install --no-rdoc --no-ri $filename > /dev/null ; rvm gemset dump my_testset.gems"
+assert no_directory "${rvm_gems_path:-"$rvm_path/gems"}/ruby/1.9.1${rvm_gemset_separator:-"@"}my_testset"
+assert file_exists "my_testset"
+assert file_does_not_exist "testset"
+assert file_does_not_contain "^rvm" "my_testset.gems"
+test_reset ; rvm gemset --force delete "testset" ; rvm gemset --force delete "my_testset" ; remove_gemset_files
+
+heat "rvm gemset testset ; gem install --no-rdoc --no-ri $filename > /dev/null ; rvm gemset dump my_testset2.gems"
+assert file_exists "my_testset2.gems"
+assert file_contains "^rvm" "my_testset2.gems"
+test_reset ; rvm gemset --force delete "my_testset2"; remove_gemset_files
+
+rvm gemset testset ; gem_dir="$(gem env gemdir)" ; \mkdir -p $gem_dir
+heat "rvm gemset testset ; gem install --no-rdoc --no-ri $filename > /dev/null ; rvm --force gemset delete testset"
+assert no_directory $gem_dir
+test_reset ; rvm gemset --force delete "testset"
+
+heat "rvm gemset testset4 ; echo '$filename' > testset4.gems ; rvm gemset load  > /dev/null"
+assert match "rvm" "$(rvm gemset testset4 ; gem list | \tr "\n" ",")"
+test_reset ; rvm gemset --force delete "testset4"
+
+heat "rvm gemset testset5 ; echo '$filename' > my_testset5.gems ; rvm gemset load my_testset5.gems > /dev/null"
+assert no_directory "${rvm_gems_path:-"$rvm_path/gems"}/ruby/1.9.1${rvm_gemset_separator:-"@"}my_testset5"
+assert match "rvm" "$(rvm gemset testset5 ; gem list | \tr "\n" ",")"
+test_reset ; rvm gemset --force delete "testset5" ; remove_gemset_files
+
+heat "rvm gemset testset6 ; rvm gemset testset7"
+assert match "testset6" "$(rvm gemset list | \tr "\n" ", ")"
+assert match "testset7" "$(rvm gemset list | \tr "\n" ", ")"
+test_reset ; rvm gemset --force delete "testset6" ; rvm gemset --force delete "testset7"
+
+rvm_ruby_string='1.9.1${rvm_gemset_separator:-"@"}testset8'      ; valid_string="ruby-1.9.1-p243"    ; heat "rvm_ruby_string=$rvm_ruby_string ; __rvm_select"
+assert match "ruby\/1.9.1${rvm_gemset_separator:-"@"}testset8$" "$rvm_ruby_gem_home"
+test_reset ; rvm gemset --force delete "testset8"
+
+rvm_ruby_string='ruby-1.9.1${rvm_gemset_separator:-"@"}testset9' ; valid_string="ruby-1.9.1-p243"    ; heat "rvm_ruby_string=$rvm_ruby_string ; __rvm_select"
+assert match "ruby\/1.9.1${rvm_gemset_separator:-"@"}testset9$" "$rvm_ruby_gem_home"
+test_reset ; rvm gemset --force delete "testset9"
+
+rvm_ruby_string='ruby-1.9.1-p243${rvm_gemset_separator:-"@"}testset10' ; valid_string="ruby-1.9.1-p243"    ; heat "rvm_ruby_string=$rvm_ruby_string ; __rvm_select"
+assert match "ruby\/1.9.1${rvm_gemset_separator:-"@"}testset10$" "$rvm_ruby_gem_home"
+test_reset ; rvm gemset --force delete "testset10"
+
+setup_testset
+heat "rvm 1.9.1${rvm_gemset_separator:-"@"}testset11 ; gemdir=\$(gem env gemdir)"
+assert match "ruby\/1.9.1${rvm_gemset_separator:-"@"}testset11$" "$gemdir"
+test_reset ; rvm gemset --force delete "testset11"
+
+rvm 1.9.1 ; rvm gemset testset12 ; gem install --no-rdoc --no-ri $filename > /dev/null
+rvm ree ; rvm gemset testset13 ; gem install --no-rdoc --no-ri $filename > /dev/null
+heat "output=\"\$(rvm 1.9.1${rvm_gemset_separator:-"@"}testset12,ree${rvm_gemset_separator:-"@"}testset13 gem list)\""
+assert match "ruby-1\.9\.1-p243.*rvm" "$(echo "$output" | \tr "\n" ", ")"
+assert match "ree-1\..*rvm" "$(echo "$output" | \tr "\n" ", ")"
+test_reset ; rvm gemset --force delete testset12 ; rvm gemset --force delete testset13
+
+heat "rvm gemset testset14; output=\"\$(rvm 1.9.1,ree gem env gemdir)\""
+assert match "ruby/1.9.1${rvm_gemset_separator:-"@"}testset14" "$(echo "$output" |  \tr "\n" ", ")"
+assert match "ree/1.8.7${rvm_gemset_separator:-"@"}testset14" "$(echo "$output" |  \tr "\n" ", ")"
+test_reset ; rvm 1.9.1,ree gemset --force delete testset14
+
+heat "rvm 1.9.1${rvm_gemset_separator:-"@"}testset15 ; rvm gemset clear ; gemdir=\$(gem env gemdir)"
+assert no_match "${rvm_gemset_separator:-"@"}testset15$" "$gemdir"
+test_reset ; rvm gemset --force delete testset15
+
+heat "rvm 1.9.1${rvm_gemset_separator:-"@"}testset16 ; new_path=\$PATH"
+assert match "${rvm_gemset_separator:-"@"}testset16" "$new_path"
+test_reset ; rvm gemset --force delete testset16
+
+heat "rvm 1.9.1${rvm_gemset_separator:-"@"}testset17 ; rvm gemset clear ; new_path=\$PATH"
+assert no_match "${rvm_gemset_separator:-"@"}testset17" "$new_path"
+test_reset ; rvm gemset --force delete testset17
+
+# TODO: Honor full path to a gem file.
+rvm 1.9.1 ; rvm gemset testset18 ; echo "$PWD/$(find . -maxdepth 1 -mindepth 1 -type d -iname 'rvm-*.gem' | head -n 1 | sed -e 's#./##g')" > testset18.gems
+heat "rvm 1.9.1${rvm_gemset_separator:-"@"}testset18 ; gem_list=\$(gem list)"
+assert no_match "rvm" "$gem_list"
+test_reset ; rvm gemset --force delete testset18
+
+# TODO: Check for gems/*.gem, gems/cache/*.gem and vendor/gems/cache/*.gem
+
+for gemset in ./test*.gems ; do
+  rm -f *.gems
+done
+
+if [[ -z "$rvm_teset_suite_flag" ]] ; then btu_summary ; fi
+

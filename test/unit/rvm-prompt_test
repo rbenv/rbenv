@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+source ./test/setup
+
+initialize_rvm
+
+heat "prompt=\$(rvm 1.9.1 ; binscripts/rvm-prompt)"
+assert string_eq "ruby-1.9.1-p378" "$prompt"
+
+heat "prompt=\$(rvm 1.9.2-preview3 ; binscripts/rvm-prompt)"
+assert string_eq "ruby-1.9.2-preview3" "$prompt"
+
+heat "prompt=\$(rvm 1.8.6 ; binscripts/rvm-prompt)"
+assert string_eq "ruby-1.8.6-p399" "$prompt"
+
+heat "prompt=\$(rvm ree ; binscripts/rvm-prompt)"
+assert string_eq "ree-1.8.7-2010.02" "$prompt"
+
+heat "prompt=\$(rvm ree ; binscripts/rvm-prompt i)"
+assert string_eq "ree" "$prompt"
+
+heat "prompt=\$(rvm ree ; binscripts/rvm-prompt i v)"
+assert string_eq "ree-1.8.7" "$prompt"
+
+heat "prompt=\$(rvm ree ; binscripts/rvm-prompt v)"
+assert string_eq "1.8.7" "$prompt"
+
+heat "prompt=\$(rvm ree ; binscripts/rvm-prompt v p)"
+assert string_eq "1.8.7-2010.02" "$prompt"
+
+heat "prompt=\$(rvm 1.8.7-head ; binscripts/rvm-prompt)"
+assert string_eq "ruby-1.8.7-head" "$prompt"
+
+heat "prompt=\$(rvm 1.9.2 ; binscripts/rvm-prompt s p v i)"
+assert string_eq "preview3-1.9.2-ruby" "$prompt"
+
+heat "prompt=\$(rvm system ; binscripts/rvm-prompt)"
+assert string_eq "" "$prompt"
+
+heat "prompt=\$(rvm system ; binscripts/rvm-prompt s p v i)"
+assert string_eq "system" "$prompt"
+
+heat "prompt=\$(rvm ree ; binscripts/rvm-prompt u v g)"
+assert string_eq "✈-1.8.7" "$prompt"
+
+if [[ -z "$rvm_teset_suite_flag" ]] ; then btu_summary ; fi
+

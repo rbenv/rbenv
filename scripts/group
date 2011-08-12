@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+source "$rvm_scripts_path/base"
+source "$rvm_scripts_path/version"
+source "$rvm_scripts_path/functions/group"
+
+group_add()
+{
+  for user in "${users[@]}"
+  do
+    printf "Ensuring '$user' is in group '$rvm_group_name'\n"
+    add_user_to_rvm_group $user
+  done
+}
+
+group_remove()
+{
+  :
+}
+
+group_help
+
+
+args=($*)
+action="${users[$__array_start]}"
+users[$__array_start]=""
+users=(${args[@]})
+
+true "${rvm_group_name:=rvm}"
+
+if (( UID > 0 ))
+then
+  rvm_log "rvm group must be run as root."
+  exit 1
+fi
+
+case "$action" in
+
+  add)
+    group_add
+    ;;
+
+  rm|remove)
+    group_remove
+    ;;
+
+  help)
+    get_help
+    true
+    ;;
+
+  *)
+    false
+    ;;
+esac
+
+exit $?

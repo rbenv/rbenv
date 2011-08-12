@@ -1,0 +1,371 @@
+diff -r -u ruby-1.8.5-p231/ext/openssl/extconf.rb ruby-1.8.5-p231-fixed/ext/openssl/extconf.rb
+--- ruby-1.8.5-p231/ext/openssl/extconf.rb	2007-02-13 08:01:19.000000000 +0900
++++ ruby-1.8.5-p231-fixed/ext/openssl/extconf.rb	2010-07-13 02:18:18.000000000 +0800
+@@ -1,5 +1,5 @@
+ =begin
+-= $RCSfile: extconf.rb,v $ -- Generator for Makefile
++= $RCSfile$ -- Generator for Makefile
+ 
+ = Info
+   'OpenSSL for Ruby 2' project
+@@ -11,7 +11,7 @@
+   (See the file 'LICENCE'.)
+ 
+ = Version
+-  $Id: extconf.rb,v 1.21.2.9 2006/06/20 11:18:15 gotoyuzo Exp $
++  $Id: extconf.rb 12572 2007-06-18 09:03:15Z technorama $
+ =end
+ 
+ require "mkmf"
+@@ -36,8 +36,6 @@
+ message "=== Checking for system dependent stuff... ===\n"
+ have_library("nsl", "t_open")
+ have_library("socket", "socket")
+-have_header("unistd.h")
+-have_header("sys/time.h")
+ have_header("assert.h")
+ 
+ message "=== Checking for required stuff... ===\n"
+@@ -61,6 +59,8 @@
+   exit 1
+ end
+ 
++%w"rb_str_set_len rb_block_call".each {|func| have_func(func, "ruby.h")}
++
+ message "=== Checking for OpenSSL features... ===\n"
+ have_func("ERR_peek_last_error")
+ have_func("BN_mod_add")
+@@ -83,6 +83,8 @@
+ have_func("HMAC_CTX_copy")
+ have_func("HMAC_CTX_init")
+ have_func("PEM_def_callback")
++have_func("PKCS5_PBKDF2_HMAC")
++have_func("PKCS5_PBKDF2_HMAC_SHA1")
+ have_func("X509V3_set_nconf")
+ have_func("X509V3_EXT_nconf_nid")
+ have_func("X509_CRL_add0_revoked")
+@@ -92,6 +94,7 @@
+ have_func("X509_STORE_get_ex_data")
+ have_func("X509_STORE_set_ex_data")
+ have_func("OBJ_NAME_do_all_sorted")
++have_func("SSL_SESSION_get_id")
+ have_func("OPENSSL_cleanse")
+ if try_compile("#define FOO(a, ...) foo(a, ##__VA_ARGS__)\n int x(){FOO(1);FOO(1,2);FOO(1,2,3);}\n")
+   $defs.push("-DHAVE_VA_ARGS_MACRO")
+diff -r -u ruby-1.8.5-p231/ext/openssl/openssl_missing.c ruby-1.8.5-p231-fixed/ext/openssl/openssl_missing.c
+--- ruby-1.8.5-p231/ext/openssl/openssl_missing.c	2007-02-13 08:01:19.000000000 +0900
++++ ruby-1.8.5-p231-fixed/ext/openssl/openssl_missing.c	2010-07-13 02:22:10.000000000 +0800
+@@ -1,5 +1,5 @@
+ /*
+- * $Id: openssl_missing.c,v 1.2.2.4 2006/06/02 10:02:56 gotoyuzo Exp $
++ * $Id: openssl_missing.c 16467 2008-05-19 03:00:52Z knu $
+  * 'OpenSSL for Ruby' project
+  * Copyright (C) 2001-2002  Michal Rokos <m.rokos@sh.cvut.cz>
+  * All rights reserved.
+@@ -22,17 +22,15 @@
+ #include "openssl_missing.h"
+ 
+ #if !defined(HAVE_HMAC_CTX_COPY)
+-int
++void
+ HMAC_CTX_copy(HMAC_CTX *out, HMAC_CTX *in)
+ {
+-    if (!out || !in) return 0;
++    if (!out || !in) return;
+     memcpy(out, in, sizeof(HMAC_CTX));
+ 
+-    if (!EVP_MD_CTX_copy(&out->md_ctx, &in->md_ctx)
+-	    || !EVP_MD_CTX_copy(&out->i_ctx, &in->i_ctx)
+-	    || !EVP_MD_CTX_copy(&out->o_ctx, &in->o_ctx))
+-	return 0;
+-    return 1;
++    EVP_MD_CTX_copy(&out->md_ctx, &in->md_ctx);
++    EVP_MD_CTX_copy(&out->i_ctx, &in->i_ctx);
++    EVP_MD_CTX_copy(&out->o_ctx, &in->o_ctx);
+ }
+ #endif /* HAVE_HMAC_CTX_COPY */
+ #endif /* NO_HMAC */
+diff -r -u ruby-1.8.5-p231/ext/openssl/openssl_missing.h ruby-1.8.5-p231-fixed/ext/openssl/openssl_missing.h
+--- ruby-1.8.5-p231/ext/openssl/openssl_missing.h	2007-02-13 08:01:19.000000000 +0900
++++ ruby-1.8.5-p231-fixed/ext/openssl/openssl_missing.h	2010-07-13 02:22:10.000000000 +0800
+@@ -1,5 +1,5 @@
+ /*
+- * $Id: openssl_missing.h,v 1.2.2.2 2005/04/15 19:16:18 gotoyuzo Exp $
++ * $Id: openssl_missing.h 18335 2008-08-04 04:44:17Z shyouhei $
+  * 'OpenSSL for Ruby' project
+  * Copyright (C) 2001-2002  Michal Rokos <m.rokos@sh.cvut.cz>
+  * All rights reserved.
+@@ -15,6 +15,10 @@
+ extern "C" {
+ #endif
+ 
++#ifndef TYPEDEF_D2I_OF
++typedef char *d2i_of_void();
++#endif
++
+ /*
+  * These functions are not included in headers of OPENSSL <= 0.9.6b
+  */
+@@ -56,14 +60,33 @@
+ 	(char *(*)())d2i_PKCS7_RECIP_INFO, (char *)ri)
+ #endif
+ 
++#if !defined(HAVE_EVP_MD_CTX_INIT)
+ void HMAC_CTX_init(HMAC_CTX *ctx);
+-int HMAC_CTX_copy(HMAC_CTX *out, HMAC_CTX *in);
++#endif
++
++#if !defined(HAVE_HMAC_CTX_COPY)
++void HMAC_CTX_copy(HMAC_CTX *out, HMAC_CTX *in);
++#endif
++
++#if !defined(HAVE_HMAC_CTX_CLEANUP)
+ void HMAC_CTX_cleanup(HMAC_CTX *ctx);
++#endif
+ 
++#if !defined(HAVE_EVP_MD_CTX_CREATE)
+ EVP_MD_CTX *EVP_MD_CTX_create(void);
++#endif
++
++#if !defined(HAVE_EVP_MD_CTX_INIT)
+ void EVP_MD_CTX_init(EVP_MD_CTX *ctx);
++#endif
++
++#if !defined(HAVE_EVP_MD_CTX_CLEANUP)
+ int EVP_MD_CTX_cleanup(EVP_MD_CTX *ctx);
++#endif
++
++#if !defined(HAVE_EVP_MD_CTX_DESTROY)
+ void EVP_MD_CTX_destroy(EVP_MD_CTX *ctx);
++#endif
+ 
+ #if !defined(HAVE_EVP_CIPHER_CTX_COPY)
+ int EVP_CIPHER_CTX_copy(EVP_CIPHER_CTX *out, EVP_CIPHER_CTX *in);
+@@ -107,19 +130,54 @@
+ #define OPENSSL_cleanse(p, l) memset(p, 0, l)
+ #endif
+ 
++#if !defined(HAVE_X509_STORE_SET_EX_DATA)
+ void *X509_STORE_get_ex_data(X509_STORE *str, int idx);
+ int X509_STORE_set_ex_data(X509_STORE *str, int idx, void *data);
++#endif
++
++#if !defined(HAVE_X509_CRL_SET_VERSION)
+ int X509_CRL_set_version(X509_CRL *x, long version);
++#endif
++
++#if !defined(HAVE_X509_CRL_SET_ISSUER_NAME)
+ int X509_CRL_set_issuer_name(X509_CRL *x, X509_NAME *name);
++#endif
++
++#if !defined(HAVE_X509_CRL_SORT)
+ int X509_CRL_sort(X509_CRL *c);
++#endif
++
++#if !defined(HAVE_X509_CRL_ADD0_REVOKED)
+ int X509_CRL_add0_revoked(X509_CRL *crl, X509_REVOKED *rev);
++#endif
++
++#if !defined(HAVE_BN_MOD_SQR)
+ int BN_mod_sqr(BIGNUM *r, const BIGNUM *a, const BIGNUM *m, BN_CTX *ctx);
++#endif
++
++#if !defined(HAVE_BN_MOD_ADD)
+ int BN_mod_add(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *m, BN_CTX *ctx);
++#endif
++
++#if !defined(HAVE_BN_MOD_SUB)
+ int BN_mod_sub(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *m, BN_CTX *ctx);
++#endif
++
++#if !defined(HAVE_BN_RAND_RANGE)
+ int BN_rand_range(BIGNUM *r, BIGNUM *range);
++#endif
++
++#if !defined(HAVE_BN_PSEUDO_RAND_RANGE)
+ int BN_pseudo_rand_range(BIGNUM *r, BIGNUM *range);
++#endif
++
++#if !defined(HAVE_CONF_GET1_DEFAULT_CONFIG_FILE)
+ char *CONF_get1_default_config_file(void);
++#endif
++
++#if !defined(HAVE_PEM_DEF_CALLBACK)
+ int PEM_def_callback(char *buf, int num, int w, void *key);
++#endif
+ 
+ #if defined(__cplusplus)
+ }
+diff -r -u ruby-1.8.5-p231/ext/openssl/ossl_hmac.c ruby-1.8.5-p231-fixed/ext/openssl/ossl_hmac.c
+--- ruby-1.8.5-p231/ext/openssl/ossl_hmac.c	2007-02-13 08:01:19.000000000 +0900
++++ ruby-1.8.5-p231-fixed/ext/openssl/ossl_hmac.c	2010-07-13 02:18:36.000000000 +0800
+@@ -1,5 +1,5 @@
+ /*
+- * $Id: ossl_hmac.c,v 1.4.2.2 2004/12/15 01:54:39 matz Exp $
++ * $Id: ossl_hmac.c 16467 2008-05-19 03:00:52Z knu $
+  * 'OpenSSL for Ruby' project
+  * Copyright (C) 2001-2002  Michal Rokos <m.rokos@sh.cvut.cz>
+  * All rights reserved.
+@@ -57,6 +57,12 @@
+     return obj;
+ }
+ 
++
++/*
++ *  call-seq:
++ *     HMAC.new(key, digest) -> hmac
++ *
++ */
+ static VALUE
+ ossl_hmac_initialize(VALUE self, VALUE key, VALUE digest)
+ {
+@@ -64,7 +70,7 @@
+ 
+     StringValue(key);
+     GetHMAC(self, ctx);
+-    HMAC_Init_ex(ctx, RSTRING(key)->ptr, RSTRING(key)->len,
++    HMAC_Init_ex(ctx, RSTRING_PTR(key), RSTRING_LEN(key),
+ 		 GetDigestPtr(digest), NULL);
+ 
+     return self;
+@@ -81,12 +87,15 @@
+     GetHMAC(self, ctx1);
+     SafeGetHMAC(other, ctx2);
+ 
+-    if (!HMAC_CTX_copy(ctx1, ctx2)) {
+-	ossl_raise(eHMACError, NULL);
+-    }
++    HMAC_CTX_copy(ctx1, ctx2);
+     return self;
+ }
+ 
++/*
++ *  call-seq:
++ *     hmac.update(string) -> self
++ *
++ */
+ static VALUE
+ ossl_hmac_update(VALUE self, VALUE data)
+ {
+@@ -94,7 +103,7 @@
+ 
+     StringValue(data);
+     GetHMAC(self, ctx);
+-    HMAC_Update(ctx, RSTRING(data)->ptr, RSTRING(data)->len);
++    HMAC_Update(ctx, RSTRING_PTR(data), RSTRING_LEN(data));
+ 
+     return self;
+ }
+@@ -104,9 +113,7 @@
+ {
+     HMAC_CTX final;
+ 
+-    if (!HMAC_CTX_copy(&final, ctx)) {
+-	ossl_raise(eHMACError, NULL);
+-    }
++    HMAC_CTX_copy(&final, ctx);
+     if (!(*buf = OPENSSL_malloc(HMAC_size(&final)))) {
+ 	HMAC_CTX_cleanup(&final);
+ 	OSSL_Debug("Allocating %d mem", HMAC_size(&final));
+@@ -116,6 +123,11 @@
+     HMAC_CTX_cleanup(&final);
+ }
+ 
++/*
++ *  call-seq:
++ *     hmac.digest -> aString
++ *
++ */
+ static VALUE
+ ossl_hmac_digest(VALUE self)
+ {
+@@ -131,6 +143,11 @@
+     return digest;
+ }
+ 
++/*
++ *  call-seq:
++ *     hmac.hexdigest -> aString
++ *
++ */
+ static VALUE
+ ossl_hmac_hexdigest(VALUE self)
+ {
+@@ -151,6 +168,27 @@
+     return hexdigest;
+ }
+ 
++/*
++ *  call-seq:
++ *     hmac.reset -> self
++ *
++ */
++static VALUE
++ossl_hmac_reset(VALUE self)
++{
++    HMAC_CTX *ctx;
++
++    GetHMAC(self, ctx);
++    HMAC_Init_ex(ctx, NULL, 0, NULL, NULL);
++
++    return self;
++}
++
++/*
++ *  call-seq:
++ *     HMAC.digest(digest, key, data) -> aString
++ *
++ */
+ static VALUE
+ ossl_hmac_s_digest(VALUE klass, VALUE digest, VALUE key, VALUE data)
+ {
+@@ -159,12 +197,17 @@
+ 	
+     StringValue(key);
+     StringValue(data);
+-    buf = HMAC(GetDigestPtr(digest), RSTRING(key)->ptr, RSTRING(key)->len,
+-	       RSTRING(data)->ptr, RSTRING(data)->len, NULL, &buf_len);
++    buf = HMAC(GetDigestPtr(digest), RSTRING_PTR(key), RSTRING_LEN(key),
++	       RSTRING_PTR(data), RSTRING_LEN(data), NULL, &buf_len);
+ 
+     return rb_str_new(buf, buf_len);
+ }
+ 
++/*
++ *  call-seq:
++ *     HMAC.digest(digest, key, data) -> aString
++ *
++ */
+ static VALUE
+ ossl_hmac_s_hexdigest(VALUE klass, VALUE digest, VALUE key, VALUE data)
+ {
+@@ -175,8 +218,8 @@
+     StringValue(key);
+     StringValue(data);
+ 	
+-    buf = HMAC(GetDigestPtr(digest), RSTRING(key)->ptr, RSTRING(key)->len,
+-	       RSTRING(data)->ptr, RSTRING(data)->len, NULL, &buf_len);
++    buf = HMAC(GetDigestPtr(digest), RSTRING_PTR(key), RSTRING_LEN(key),
++	       RSTRING_PTR(data), RSTRING_LEN(data), NULL, &buf_len);
+     if (string2hex(buf, buf_len, &hexbuf, NULL) != 2 * buf_len) {
+ 	ossl_raise(eHMACError, "Cannot convert buf to hexbuf");
+     }
+@@ -191,6 +234,10 @@
+ void
+ Init_ossl_hmac()
+ {
++#if 0 /* let rdoc know about mOSSL */
++    mOSSL = rb_define_module("OpenSSL");
++#endif
++
+     eHMACError = rb_define_class_under(mOSSL, "HMACError", eOSSLError);
+ 	
+     cHMAC = rb_define_class_under(mOSSL, "HMAC", rb_cObject);
+@@ -202,6 +249,7 @@
+     rb_define_method(cHMAC, "initialize", ossl_hmac_initialize, 2);
+     rb_define_copy_func(cHMAC, ossl_hmac_copy);
+ 
++    rb_define_method(cHMAC, "reset", ossl_hmac_reset, 0);
+     rb_define_method(cHMAC, "update", ossl_hmac_update, 1);
+     rb_define_alias(cHMAC, "<<", "update");
+     rb_define_method(cHMAC, "digest", ossl_hmac_digest, 0);

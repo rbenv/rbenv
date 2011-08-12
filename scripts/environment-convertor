@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+# Usage: $rvm_scripts_path/environment-convertor <shell> <environment>
+
+unset GREP_COLOR
+unset GREP_OPTIONS
+
+source "$rvm_scripts_path/base"
+
+convert_path_to_fish()
+{
+  local parts path_parts
+
+  path_part="$1"
+  parts="$(echo "$path_part" | sed -e 's#:\$PATH##' -e "s#:#\" \"#g" -e "s#^export \\([^[:space:]]*\\)=##")"
+
+  printf "\
+for path_part in $parts
+  if test -d $path_part
+    set PATH $path_parth $PATH
+  end
+end
+"
+  return 0
+}
+
+convert_unset_to_fish()
+{
+  sed 's#^unset #set -e #'
+}
+
+convert_exports_to_fish()
+{
+  sed -e "s#:#' '#g" -e "s#^\\(export \\)\\{0,1\\}\\([^[:space:]]*\\)=#set -x \\2 #"
+}
+
+contents_of_environment_file()
+{
+  cat "$rvm_environments_path/$(__rvm_environment_identifier)"
+}
+
+convert_to_shell()
+{
+  convert_path_to_fish "$(contents_of_environment_file | \grep '^export PATH=')"
+  while read -r shell_line; do
+    if echo "$shell_line" | \grep '^unset ' >/dev/null 2>&1; then
+      echo "$shell_line" | convert_unset_to_fish
+    else
+      echo "$shell_line" | convert_exports_to_fish
+    fi
+  done < <(contents_of_environment_file | \grep -v '^export [^=]*$' | \grep -v '^export PATH=')
+  unset shell_line
+}
+
+ensure_has_shell()
+{
+  for item in "path" "unset" "exports"; do
+    command -v "convert_${item}_to_${1}" >/dev/null || return 1
+  done; unset item
+}
+
+args=($*)
+shell_name="${args[0]}"
+environment_name="${args[1]:-"$(__rvm_environment_identifier)"}"
+args="$(echo ${args[@]:2}) " # Strip trailing / leading / extra spacing.
+
+[[ -n "$shell_name" && -n "$environment_name" ]] || exit 1
+ensure_has_shell "$shell_name"                   || exit 1
+# Check we're loading a different shell.
+if [[ "$(__rvm_environment_identifier)" != "$environment_name" ]]; then
+  __rvm_become "$environment_name" || exit 1
+fi
+
+convert_to_shell

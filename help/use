@@ -1,0 +1,13 @@
+
+∴ rvm use [ruby-string]
+
+Setup current shell to use a specific ruby version.
+
+
+For a list of currently install ruby string please run
+
+  rvm list
+
+Please see documentation for further information:
+
+  http://rvm.beginrescueend.com/rvm/basics

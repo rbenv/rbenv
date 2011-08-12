@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+if [[ ! -s ./scripts/rvm ]] ; then
+  echo "ERROR: This test must be run from within RVM project root."
+  exit 1
+fi
+
+rubies=(1.8.7 1.9.2 ree rbx)
+
+if [[ "Darwin" = "$(uname)" ]] ; then
+
+  rubies=(${rubies[@]} macruby)
+
+fi
+
+mkdir -p test/log
+
+results=()
+
+for ruby in "${rubies[@]}" ; do
+
+  (
+    source "$HOME/.rvm/scripts/rvm"
+    rvm install $ruby > test/log/$ruby.log 2>&1
+  )
+
+  results=(${results[@]} $?)
+
+done
+
+for ((index=0 ; index < ${#rubies[@]} ; index++)) ; do
+
+  if [[ ${results[$index]} -gt 0 ]] ; then
+
+    printf "fail : ${rubies[$index]} : install\n"
+
+  else
+
+    printf "pass : ${rubies[$index]} : install\n"
+
+  fi
+
+done

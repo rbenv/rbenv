@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+source ./test/setup
+initialize_rvm
+
+database_file="/tmp/$$.db"
+
+heat './scripts/db '$database_file' "akey" "avalue" 2>/dev/null'
+assert number_eq 1 $result
+# TODO: assert error 'Database file $database_file does not exist.'
+
+\touch $database_file
+
+heat './scripts/db '$database_file' "akey" "avalue"'
+assert file_contains 'akey=avalue' $database_file
+
+heat 'value=$(./scripts/db '$database_file' "akey")'
+assert string_eq "$value" "avalue"
+
+heat './scripts/db '$database_file' "akey" delete'
+assert file_does_not_contain 'akey=avalue' $database_file
+
+\rm -f $database_file # Cleanup, aisle 3!
+
+if [[ -z "$rvm_teset_suite_flag" ]] ; then btu_summary ; fi
+

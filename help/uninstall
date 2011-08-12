@@ -1,0 +1,13 @@
+
+∴ rvm uninstall [ruby-string[,ruby-string[,...]]]
+
+Uninstall one or many ruby versions, but leaves their sources.
+
+
+For a list of currently install ruby string please run
+
+  rvm list
+
+Please see documentation for further information:
+
+  https://rvm.beginrescueend.com/rubies/removing/

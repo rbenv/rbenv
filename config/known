@@ -1,0 +1,57 @@
+# MRI Rubies
+[ruby-]1.8.6[-p420]
+[ruby-]1.8.6-head
+[ruby-]1.8.7[-p352]
+[ruby-]1.8.7-head
+[ruby-]1.9.1-p378
+[ruby-]1.9.1[-p431]
+[ruby-]1.9.1-head
+[ruby-]1.9.2-p180
+[ruby-]1.9.2[-p290]
+[ruby-]1.9.2-head
+[ruby-]1.9.3[-preview1]
+[ruby-]1.9.3-head
+ruby-head
+
+# GoRuby
+goruby
+
+# JRuby
+jruby-1.2.0
+jruby-1.3.1
+jruby-1.4.0
+jruby-1.6.1
+jruby-1.6.2
+jruby[-1.6.3]
+jruby-head
+
+# Rubinius
+rbx-1.0.1
+rbx-1.1.1
+rbx-1.2.3
+rbx-1.2.4
+rbx[-head]
+rbx-2.0.0pre
+
+# Ruby Enterprise Edition
+ree-1.8.6
+ree[-1.8.7][-2011.03]
+ree-1.8.6-head
+ree-1.8.7-head
+
+# Kiji
+kiji
+
+# MagLev
+maglev[-26355]
+maglev-head
+
+# Mac OS X Snow Leopard Only
+macruby[-0.10]
+macruby-nightly
+macruby-head
+
+# IronRuby -- Not implemented yet.
+ironruby-0.9.3
+ironruby-1.0-rc2
+ironruby-head

@@ -1,0 +1,3 @@
+jruby-openssl
+jruby-launcher
+rake -v0.8.7

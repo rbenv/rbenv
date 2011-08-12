@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+
+maglev_install()
+{
+  __rvm_ensure_has_mri_ruby
+  compatible_ruby="$(__rvm_mri_ruby)"
+
+  rvm_log "Running MagLev prereqs checking script."
+
+  "$rvm_scripts_path/maglev"
+  result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "Prerequisite checks have failed. \nHalting the installation."
+    exit $result
+  fi
+
+  builtin cd "${rvm_src_path}"
+
+  system="$(uname -s)"
+  arch="$(uname -m)"
+  [ "${system}-${arch}"="Darwin-x86_64" ] && arch="i386"
+
+  true ${rvm_force_flag:=0}
+  if [[ ! -d "${rvm_src_path}/$rvm_ruby_string" ]] || (( rvm_force_flag == 1 ))
+  then
+    __rvm_rm_rf "${rvm_src_path}/$rvm_ruby_string/"
+
+    __rvm_fetch_ruby
+    result=$?
+
+    if (( result > 0 ))
+    then
+      rvm_error "There has been an error while trying to fetch the source.  \nHalting the installation."
+      exit $result
+    fi
+  fi
+
+  if (( ${rvm_head_flag:=0} == 1 ))
+  then
+    builtin cd "${rvm_src_path}/$rvm_ruby_string"
+
+    rvm_gemstone_package_file="GemStone-$(\grep ^GEMSTONE version.txt | cut -f2 -d-).${system}-${arch}"
+
+    rvm_gemstone_url="$maglev_url/${rvm_gemstone_package_file}.${rvm_archive_extension}"
+  fi
+
+  rvm_log "Downloading the GemStone package, this may take a while depending on your connection..."
+
+  "$rvm_scripts_path/fetch" "$rvm_gemstone_url"
+  result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "There has been an error while trying to fetch the GemStone package.\nHalting the installation."
+    exit $result
+  fi
+
+  builtin cd "${rvm_src_path}"
+
+  if [[ -s "$rvm_ruby_package_file" ]]
+  then
+    mv "$rvm_ruby_package_file" "${rvm_src_path}/$rvm_ruby_string"
+  fi
+
+  builtin cd "${rvm_src_path}/$rvm_ruby_string"
+
+  mkdir -p "${rvm_src_path}/${rvm_gemstone_package_file}"
+
+  __rvm_run "gemstone.extract" \
+    "gunzip < \"${rvm_archives_path}/${rvm_gemstone_package_file}.${rvm_archive_extension}\" | tar xf - -C ${rvm_src_path}/ --no-same-owner"
+  result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "There has been an error while trying to extract the GemStone package. \nHalting the installation."
+    exit $result
+  fi
+
+  ln -fs "${rvm_src_path}/$rvm_gemstone_package_file" "gemstone"
+
+  __rvm_rm_rf $rvm_ruby_home
+
+  __rvm_run "install" \
+    "/bin/cp -Rf ${rvm_src_path}/$rvm_ruby_string $rvm_ruby_home" \
+    "Installing maglev to $rvm_ruby_home"
+
+  (
+  builtin cd "$rvm_ruby_home/bin/"
+
+  for binary in maglev-irb maglev-ruby maglev-gem
+  do
+    ln -fs "$binary" "${binary#maglev-}"
+  done
+  unset binary
+  )
+
+  binaries=(maglev-ruby maglev-irb maglev-gem)
+
+  for binary in "${binaries[@]}"
+  do
+    __rvm_inject_gem_env "$rvm_ruby_home/bin/$binary"
+  done
+
+  builtin cd "$rvm_ruby_home"
+
+  if (( ${rvm_head_flag:=0} == 1 ))
+  then
+    git submodule update --init
+
+    "$rvm_ruby_home/bin/maglev" force-reload
+
+    ln -fs maglev.demo.key-${system}-${arch} etc/maglev.demo.key
+  fi
+
+  if [[ ! -e ${rvm_ruby_home}/etc/conf.d/maglev.conf ]]
+  then
+    rvm_log "Creating default 'maglev' repository."
+    "$rvm_wrappers_path/$compatible_ruby/rake" "stone:create[maglev]" >/dev/null 2>&1
+  fi
+
+  rvm_log "Generating maglev HTML documentation"
+  "$rvm_wrappers_path/$compatible_ruby/rake" rdoc >/dev/null 2>&1
+
+  rvm_log "Generating smalltalk FFI."
+  "$rvm_wrappers_path/$compatible_ruby/rake" stwrappers >/dev/null 2>&1
+
+  unset compatible_ruby
+
+  # MagLev comes with RubyGems preinstalled -- don't try to install it
+  # "$rvm_scripts_path/rubygems" latest
+
+  __rvm_irbrc
+
+  __rvm_bin_script
+
+  __rvm_use
+}

@@ -1,0 +1,84 @@
+'rvm ruby'
+
+Given:
+
+∴ cat test.rb
+  puts "patchlevel: #{RUBY_PATCHLEVEL}, release_date: #{RUBY_RELEASE_DATE}, ruby_version: #{RUBY_VERSION}, ruby_platform: #{RUBY_PLATFORM}"
+
+∴ rvm list
+
+  ruby:
+
+     ruby-1.8.6-p383 [x86_64]
+     ruby-1.8.7-p174 [x86_64]
+     ruby-1.9.1-head [x86_64]
+  => ruby-1.9.1-p243 [x86_64]
+     ruby-1.9.2-preview3 [x86_64]
+
+  jruby:
+
+     jruby-1.3.1 [x86_64]
+     jruby-1.4.0RC3 [x86_64]
+
+  ree:
+
+     ree-1.8.6-20090610 [x86_64]
+     ree-1.8.7-20090928 [x86_64]
+
+
+We can run the ruby program 'test.rb' against all versions of ruby installed by RVM very simply:
+
+∴ rvm ruby test.rb
+
+    jruby-1.3.1: jruby 1.3.1 (ruby 1.8.6p287) (2009-06-15 2fd6c3d) (Java HotSpot(TM) 64-Bit Server VM 1.6.0_15) [x86_64-java]
+
+    patchlevel: 287, release_date: 2009-06-15, ruby_version: 1.8.6, ruby_platform: java
+
+
+    jruby-1.4.0RC3: jruby 1.4.0RC3 (ruby 1.8.7 patchlevel 174) (2009-09-30 80c263b) (Java HotSpot(TM) 64-Bit Server VM 1.6.0_15) [x86_64-java]
+
+    patchlevel: 174, release_date: 2009-09-30, ruby_version: 1.8.7, ruby_platform: java
+
+
+    ree-1.8.6-20090610: ruby 1.8.6 (2008-08-11 patchlevel 287) [i686-darwin10.0.0] Ruby Enterprise Edition 20090610
+
+    patchlevel: 287, release_date: 2008-08-11, ruby_version: 1.8.6, ruby_platform: i686-darwin10.0.0
+
+
+    ree-1.8.7-20090928: ruby 1.8.7 (2009-06-12 patchlevel 174) [i686-darwin10.0.0], MBARI 0x6770, Ruby Enterprise Edition 20090928
+
+    patchlevel: 174, release_date: 2009-06-12, ruby_version: 1.8.7, ruby_platform: i686-darwin10.0.0
+
+
+    ruby-1.8.6-p383: ruby 1.8.6 (2009-08-04 patchlevel 383) [i686-darwin10.0.0]
+
+    patchlevel: 383, release_date: 2009-08-04, ruby_version: 1.8.6, ruby_platform: i686-darwin10.0.0
+
+
+    ruby-1.8.7-p174: ruby 1.8.7 (2009-06-12 patchlevel 174) [i686-darwin10.0.0]
+
+    patchlevel: 174, release_date: 2009-06-12, ruby_version: 1.8.7, ruby_platform: i686-darwin10.0.0
+
+
+    ruby-1.9.1-head: ruby 1.9.2dev (2009-09-26 trunk 25103) [x86_64-darwin10.0.0]
+
+    patchlevel: -1, release_date: 2009-09-26, ruby_version: 1.9.2, ruby_platform: x86_64-darwin10.0.0
+
+
+    ruby-1.9.1-p243: ruby 1.9.1p243 (2009-07-16 revision 24175) [i386-darwin10.0.0]
+
+    patchlevel: 243, release_date: 2009-07-16, ruby_version: 1.9.1, ruby_platform: i386-darwin10.0.0
+
+
+    ruby-1.9.2-preview3: ruby 1.9.2dev (2010-05-31 revision 28117) [x86_64-darwin10.3.0]
+
+    patchlevel: -1, release_date: 2010-05-31, ruby_version: 1.9.2, ruby_platform: x86_64-darwin10.3.0
+
+    ree-1.8.7-20090928: ruby 1.8.7 (2009-06-12 patchlevel 174) [i686-darwin10.0.0], MBARI 0x6770, Ruby Enterprise Edition 20090928
+
+    patchlevel: 174, release_date: 2009-06-12, ruby_version: 1.8.7, ruby_platform: i686-darwin10.0.0
+
+You can also restrict the above to a subset of named top level selections:
+
+  ∴ rvm 1.9.1,1.8.7,jruby test.rb
+    ...

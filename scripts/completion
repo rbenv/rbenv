@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+# bash completion for Ruby Version Manager (RVM)
+
+__rvm_comp()
+{
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  COMPREPLY=($(compgen -W "$1" -- "$cur"))
+  return 0
+}
+
+__rvm_subcommand()
+{
+  local word subcommand c=1
+
+  while [[ $c -lt $COMP_CWORD ]] ; do
+    word="${COMP_WORDS[c]}"
+    for subcommand in $1; do
+      if [[ "$subcommand" = "$word" ]]; then
+        echo "$subcommand"
+        return
+      fi
+    done
+    c=$((++c))
+  done
+}
+
+__rvm_rubies ()
+{
+  echo "$(rvm list strings) default system"
+}
+
+__rvm_gemsets ()
+{
+  echo "$(rvm gemset list | \grep -v gemset 2>/dev/null)"
+}
+
+__rvm_help_pages ()
+{
+  ls "$rvm_help_path"
+}
+
+__rvm_known ()
+{
+  # Strips comments and expands known patterns into each variation
+  rvm list known | sed 's/#.*$//' | sed '\
+    s/^(\([^)]*\))\(.*\)(\([^)]*\))$/\1\2\3 \1\2 \2\3 \2/\
+    s/^(\([^)]*\))\(.*\)$/\1\2 \2/\
+    s/^\(.*\)(\([^)]*\))$/\1\2 \1/'
+}
+
+_rvm_commands ()
+{
+  local cur=${COMP_WORDS[COMP_CWORD]}
+
+  COMMANDS='\
+        version use reload implode update reset info debug\
+        install uninstall remove\
+        ruby gem rake tests specs monitor gemset\
+        gemdir srcdir fetch list package notes snapshot\
+        help'
+
+  case "${cur}" in
+  -*)       _rvm_opts ;;
+  *)        __rvm_comp "$COMMANDS $(__rvm_rubies)" ;;
+  esac
+}
+
+_rvm_opts ()
+{
+  RVM_OPTS='\
+    -h\
+    --help\
+    -v\
+    --version\
+    -l --level\
+    --prefix\
+    --bin\
+    --gems\
+    --archive\
+    --patch
+    -S\
+    -e\
+    -G\
+    -C\
+    --configure\
+    --nice\
+    --ree-options\
+    --head\
+    --rubygems\
+    --default\
+    --debug\
+    --trace\
+    --force\
+    --summary\
+    --latest\
+    --docs\
+    --reconfigure
+    --create'
+
+  __rvm_comp "$RVM_OPTS"
+}
+
+_rvm_use ()
+{
+  local command="${COMP_WORDS[COMP_CWORD-2]}"
+
+  case "${command}" in
+  gemset) __rvm_comp "$(__rvm_gemsets)" ;;
+  *)      __rvm_comp "$(__rvm_rubies)" ;;
+  esac
+}
+
+_rvm_gemset ()
+{
+  local subcommand subcommands
+  subcommands="use create"
+  subcommand="$(__rvm_subcommand "$subcommands")"
+
+  if [[ -z "$subcommand" ]]; then
+    __rvm_comp "$subcommands"
+    return
+  fi
+}
+
+_rvm_help ()
+{
+  __rvm_comp "$(__rvm_help_pages)"
+}
+
+_rvm_install ()
+{
+  __rvm_comp "$(__rvm_known)"
+}
+
+_rvm ()
+{
+  local prev=${COMP_WORDS[COMP_CWORD-1]}
+
+  case "${prev}" in
+  use)      _rvm_use ;;
+  gemset)   _rvm_gemset ;;
+  help)     _rvm_help ;;
+  install)  _rvm_install ;;
+  *)        _rvm_commands ;;
+  esac
+
+  return 0
+}
+
+complete -o default -o nospace -F _rvm rvm

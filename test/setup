@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+if [[ -z "$test_setup_flag" ]] ; then
+  rvm_path=~/.rvm-test ; export rvm_path
+
+  ./install >/dev/null
+
+  source scripts/rvm
+
+  rubies=$(cd test/rubies ; find . -maxdepth 1 -mindepth 1 -type f)
+  rubies="${rubies//.\/}"
+
+  initialize_rvm() {
+    __rvm_cleanse_variables
+    __rvm_load_rvmrc
+    __rvm_initialize
+  }
+
+  # Load the Bash Test::Unit Framework
+  source test/btu
+
+  btu_init
+
+  original_dir=$PWD
+
+  test_setup_flag=1
+fi
+

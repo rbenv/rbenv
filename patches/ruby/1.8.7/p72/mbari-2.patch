@@ -1,0 +1,296 @@
+diff -rux '*.o' ruby-1.8.7-p72/ChangeLog ruby-1.8.7-mbari/ChangeLog
+--- ruby-1.8.7-p72/ChangeLog	2008-12-12 21:32:52.000000000 -0800
++++ ruby-1.8.7-mbari/ChangeLog	2008-12-12 21:58:04.000000000 -0800
+@@ -1,3 +1,14 @@
++Tue Dec 12  6:11:36 2008  Brent Roman  <brent@mbari.org>
++
++        * eval.c:  exclude other thread's stack frames from current one
++
++        * gc.c:  STACK_LENGTH macro takes start parameter
++
++        * node.h: added stk_start pointer to ruby thread struct
++
++        * intern.h:  stack_length takes base pointer as parameter
++        
++
+ Tue Dec  9  8:11:36 2008  Brent Roman  <brent@mbari.org>
+ 
+      * eval.c:  added Continuation.thread method
+diff -rux '*.o' ruby-1.8.7-p72/eval.c ruby-1.8.7-mbari/eval.c
+--- ruby-1.8.7-p72/eval.c	2008-12-12 21:32:52.000000000 -0800
++++ ruby-1.8.7-mbari/eval.c	2008-12-12 22:34:34.000000000 -0800
+@@ -3,7 +3,7 @@
+   eval.c -
+ 
+   $Author: brent $
+-  $Date: 2008/12/11 04:42:40 $
++  $Date: 2008/12/13 06:34:34 $
+   created at: Thu Jun 10 14:22:17 JST 1993
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+@@ -5141,6 +5141,7 @@
+ 		    tt->retval = result;
+ 		    JUMP_TAG(TAG_BREAK);
+ 		}
++                if (tt->tag == PROT_THREAD) break;
+ 		tt = tt->prev;
+ 	    }
+ 	    proc_jump_error(TAG_BREAK, result);
+@@ -6572,6 +6573,7 @@
+ 
+ 	    scope_dup(ruby_scope);
+ 	    for (tag=prot_tag; tag; tag=tag->prev) {
++                if (tag->tag == PROT_THREAD) break;
+ 		scope_dup(tag->scope);
+ 	    }
+ 	    for (vars = ruby_dyna_vars; vars; vars = vars->next) {
+@@ -10367,14 +10369,19 @@
+     return (double)tv.tv_sec + (double)tv.tv_usec * 1e-6;
+ }
+ 
+-#define STACK(addr) (th->stk_pos<(VALUE*)(addr) && (VALUE*)(addr)<th->stk_pos+th->stk_len)
+-#define ADJ(addr) (void*)(STACK(addr)?(((VALUE*)(addr)-th->stk_pos)+th->stk_ptr):(VALUE*)(addr))
++
++#define ADJ(addr) \
++   if ((size_t)((void *)addr - stkBase) < stkSize) addr=(void *)addr + stkShift
++
+ static void
+ thread_mark(th)
+     rb_thread_t th;
+ {
+     struct FRAME *frame;
+     struct BLOCK *block;
++    void *stkBase;
++    ptrdiff_t stkShift;
++    size_t stkSize;
+ 
+     rb_gc_mark(th->result);
+     rb_gc_mark(th->thread);
+@@ -10409,15 +10416,26 @@
+ 	}
+ #endif
+     }
++
++    stkBase = (void *)th->stk_start;
++    stkSize = th->stk_len * sizeof(VALUE);
++#if STACK_GROW_DIRECTION == 0
++    if ((VALUE *)&th < rb_gc_stack_start)
++#endif
++#if STACK_GROW_DIRECTION <= 0
++      stkBase -= stkSize;
++#endif
++    stkShift = (void *)th->stk_ptr - stkBase;
++    
+     frame = th->frame;
+     while (frame && frame != top_frame) {
+-	frame = ADJ(frame);
++	ADJ(frame);
+ 	rb_gc_mark_frame(frame);
+ 	if (frame->tmp) {
+ 	    struct FRAME *tmp = frame->tmp;
+ 
+ 	    while (tmp && tmp != top_frame) {
+-		tmp = ADJ(tmp);
++		ADJ(tmp);
+ 		rb_gc_mark_frame(tmp);
+ 		tmp = tmp->prev;
+ 	    }
+@@ -10426,7 +10444,7 @@
+     }
+     block = th->block;
+     while (block) {
+-	block = ADJ(block);
++	ADJ(block);
+ 	rb_gc_mark_frame(&block->frame);
+ 	block = block->prev;
+     }
+@@ -10579,13 +10597,10 @@
+ rb_thread_save_context(th)
+     rb_thread_t th;
+ {
+-    VALUE *pos;
+     int len;
+     static VALUE tval;
+ 
+-    len = ruby_stack_length(&pos);
+-    th->stk_len = 0;
+-    th->stk_pos = pos;
++    len = ruby_stack_length(th->stk_start,&th->stk_pos);
+     if (len > th->stk_max) {
+ 	VALUE *ptr = realloc(th->stk_ptr, sizeof(VALUE) * len);
+ 	if (!ptr) rb_memerror();
+@@ -12065,6 +12080,7 @@
+     th->result = 0;\
+     th->flags = 0;\
+ \
++    th->stk_start = rb_gc_stack_start;\
+     th->stk_ptr = 0;\
+     th->stk_len = 0;\
+     th->stk_max = 0;\
+@@ -12234,6 +12250,16 @@
+ 		 "can't start a new thread (frozen ThreadGroup)");
+     }
+ 
++
++    th->stk_start =   /* establish start of new thread's stack */
++#if STACK_GROW_DIRECTION > 0
++      (VALUE *)ruby_frame;
++#elif STACK_GROW_DIRECTION < 0
++      (VALUE *)(ruby_frame+1);
++#else
++      (VALUE *)(ruby_frame+((VALUE *)(&arg)<rb_gc_stack_start))
++#endif
++ 
+     if (!thread_init) {
+ 	thread_init = 1;
+ #if defined(HAVE_SETITIMER) || defined(_THREAD_SAFE)
+@@ -12277,6 +12303,8 @@
+     PUSH_TAG(PROT_THREAD);
+     if ((state = EXEC_TAG()) == 0) {
+ 	if (THREAD_SAVE_CONTEXT(th) == 0) {
++            ruby_frame->prev = top_frame;     /* hide parent thread's frames */
++            ruby_frame->tmp = 0;           
+ 	    curr_thread = th;
+ 	    th->result = (*fn)(arg, th);
+ 	}
+@@ -12388,9 +12416,6 @@
+     VALUE klass;
+ {
+     rb_thread_t th = rb_thread_alloc(klass);
+-    volatile VALUE *pos;
+-
+-    pos = th->stk_pos;
+     rb_obj_call_init(th->thread, argc, argv);
+     if (th->stk_pos == 0) {
+ 	rb_raise(rb_eThreadError, "uninitialized thread - check `%s#initialize'",
+@@ -13082,6 +13107,7 @@
+ 
+     scope_dup(ruby_scope);
+     for (tag=prot_tag; tag; tag=tag->prev) {
++        if (tag->tag == PROT_THREAD) break;
+ 	scope_dup(tag->scope);
+     }
+ 
+diff -rux '*.o' ruby-1.8.7-p72/gc.c ruby-1.8.7-mbari/gc.c
+--- ruby-1.8.7-p72/gc.c	2008-08-03 20:24:26.000000000 -0700
++++ ruby-1.8.7-mbari/gc.c	2008-12-12 21:47:46.000000000 -0800
+@@ -2,8 +2,8 @@
+ 
+   gc.c -
+ 
+-  $Author: shyouhei $
+-  $Date: 2008-08-04 12:24:26 +0900 (Mon, 04 Aug 2008) $
++  $Author: brent $
++  $Date: 2008/12/13 05:47:46 $
+   created at: Tue Oct  5 09:44:46 JST 1993
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+@@ -506,12 +506,12 @@
+ # define STACK_END (stack_end)
+ #endif
+ #if STACK_GROW_DIRECTION < 0
+-# define STACK_LENGTH  (rb_gc_stack_start - STACK_END)
++# define STACK_LENGTH(start)  ((start) - STACK_END)
+ #elif STACK_GROW_DIRECTION > 0
+-# define STACK_LENGTH  (STACK_END - rb_gc_stack_start + 1)
++# define STACK_LENGTH(start)  (STACK_END - (start) + 1)
+ #else
+-# define STACK_LENGTH  ((STACK_END < rb_gc_stack_start) ? rb_gc_stack_start - STACK_END\
+-                                           : STACK_END - rb_gc_stack_start + 1)
++# define STACK_LENGTH(start)  ((STACK_END < (start)) ? (start) - STACK_END\
++                                           : STACK_END - (start) + 1)
+ #endif
+ #if STACK_GROW_DIRECTION > 0
+ # define STACK_UPPER(x, a, b) a
+@@ -536,16 +536,16 @@
+ 
+ #define CHECK_STACK(ret) do {\
+     SET_STACK_END;\
+-    (ret) = (STACK_LENGTH > STACK_LEVEL_MAX + GC_WATER_MARK);\
++    (ret) = (STACK_LENGTH(rb_gc_stack_start) > STACK_LEVEL_MAX + GC_WATER_MARK);\
+ } while (0)
+ 
+ int
+-ruby_stack_length(p)
+-    VALUE **p;
++ruby_stack_length(start, base)
++    VALUE *start, **base;
+ {
+     SET_STACK_END;
+-    if (p) *p = STACK_UPPER(STACK_END, rb_gc_stack_start, STACK_END);
+-    return STACK_LENGTH;
++    if (base) *base = STACK_UPPER(STACK_END, start, STACK_END);
++    return STACK_LENGTH(start);
+ }
+ 
+ int
+diff -rux '*.o' ruby-1.8.7-p72/intern.h ruby-1.8.7-mbari/intern.h
+--- ruby-1.8.7-p72/intern.h	2008-07-06 20:29:28.000000000 -0700
++++ ruby-1.8.7-mbari/intern.h	2008-12-12 21:03:16.000000000 -0800
+@@ -251,7 +251,7 @@
+ /* gc.c */
+ NORETURN(void rb_memerror __((void)));
+ int ruby_stack_check _((void));
+-int ruby_stack_length _((VALUE**));
++int ruby_stack_length _((VALUE *,VALUE**));
+ int rb_during_gc _((void));
+ char *rb_source_filename _((const char*));
+ void rb_gc_mark_locations _((VALUE*, VALUE*));
+diff -rux '*.o' ruby-1.8.7-p72/node.h ruby-1.8.7-mbari/node.h
+--- ruby-1.8.7-p72/node.h	2008-07-06 23:17:24.000000000 -0700
++++ ruby-1.8.7-mbari/node.h	2008-12-12 21:02:23.000000000 -0800
+@@ -2,8 +2,8 @@
+ 
+   node.h -
+ 
+-  $Author: shyouhei $
+-  $Date: 2008-07-07 15:17:24 +0900 (Mon, 07 Jul 2008) $
++  $Author: brent $
++  $Date: 2008/12/13 05:02:23 $
+   created at: Fri May 28 15:14:02 JST 1993
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+@@ -409,10 +409,8 @@
+ 
+     VALUE result;
+ 
+-    long   stk_len;
+-    long   stk_max;
+-    VALUE *stk_ptr;
+-    VALUE *stk_pos;
++    long   stk_len, stk_max;
++    VALUE *stk_ptr, *stk_pos, *stk_start;
+ #ifdef __ia64
+     long   bstr_len;
+     long   bstr_max;
+diff -rux '*.o' ruby-1.8.7-p72/version.h ruby-1.8.7-mbari/version.h
+--- ruby-1.8.7-p72/version.h	2008-12-12 21:32:52.000000000 -0800
++++ ruby-1.8.7-mbari/version.h	2008-12-12 21:31:44.000000000 -0800
+@@ -1,7 +1,7 @@
+ #define RUBY_VERSION "1.8.7"
+-#define RUBY_RELEASE_DATE "2008-12-09"
++#define RUBY_RELEASE_DATE "2008-12-12"
+ #define RUBY_VERSION_CODE 187
+-#define RUBY_RELEASE_CODE 20081209
++#define RUBY_RELEASE_CODE 20081212
+ #define RUBY_PATCHLEVEL 72
+ 
+ #define RUBY_VERSION_MAJOR 1
+@@ -9,7 +9,7 @@
+ #define RUBY_VERSION_TEENY 7
+ #define RUBY_RELEASE_YEAR 2008
+ #define RUBY_RELEASE_MONTH 12
+-#define RUBY_RELEASE_DAY 9
++#define RUBY_RELEASE_DAY 12
+ 
+ #ifdef RUBY_EXTERN
+ RUBY_EXTERN const char ruby_version[];
+@@ -25,7 +25,7 @@
+ #define RUBY_BIRTH_MONTH 2
+ #define RUBY_BIRTH_DAY 24
+ 
+-#define RUBY_RELEASE_STR "MBARI 1 on patchlevel"
++#define RUBY_RELEASE_STR "MBARI 2 on patchlevel"
+ #define RUBY_RELEASE_NUM RUBY_PATCHLEVEL
+ 
+ 

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+rvm_base_except="selector"
+source "$rvm_scripts_path/base"
+
+usage()
+{
+  printf "
+
+  Usage:
+
+    rvm cleanup {all,archives,repos,sources,logs}
+
+  Description:
+
+    Cleans up the directory tree for the specified item.
+"
+return 0
+}
+
+cleanup()
+{
+  local cleanup_type current_path entry
+
+  for cleanup_type in $1; do
+
+    current_path="${rvm_path}/${cleanup_type}"
+
+    if [[ -n "$current_path" && -d "$current_path" && "$current_path" != "/" ]]; then
+
+      rvm_log "Cleaning up rvm directory '$current_path'"
+
+      for entry in "$current_path"/* ; do
+        __rvm_rm_rf "$entry"
+      done
+
+    fi
+
+  done
+
+  return 0
+}
+
+# Exit when there is no argument.
+if [[ -z "${1:-""}" ]] ; then
+  usage
+fi
+
+case "$1" in
+  all)      cleanup "archives repos src log" ;;
+  archives) cleanup "archives" ;;
+  repos)    cleanup "repos" ;;
+  sources)  cleanup "src" ;;
+  logs)     cleanup "log" ;;
+  help)     usage ;;
+  *)        usage ; exit 1;;
+esac
+
+exit $?

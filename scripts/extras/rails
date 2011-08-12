@@ -1,0 +1,279 @@
+#!/usr/bin/env bash
+
+# Copyright (c) 2011 Wayne E. Seguin <wayneeseguin@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# This feature is opt-in, in order to use the functions provided below source
+# this script in your start up from your profile(s).
+#
+# For example, if RVM is installed to $HOME/.rvm, you can put this in your
+# ~/.bash_profile:
+#
+# [[ -s "$HOME/.rvm/scripts/extras/rails" ]] && . "$HOME/.rvm/scripts/extras/rails"
+#
+rails_routes()
+{
+  # Usage:
+  #
+  #   rails_routes <or list, space separated> [options]
+  #
+  #   include string is a valid shell glob: http://mywiki.wooledge.org/glob
+  #
+  #   options are among
+  #
+  #     * a valid shell glob pattern
+  #     * -a <and glob>
+  #     * -o <or glob>
+  #     * -e <exclude (not) glob>
+  #
+  #   Processing occurs as ((or list) AND (and list)) NOT (exclude list)
+  #
+  # Examples:
+  #
+  #   rails_routes admin
+  #                       /admin/reports/agent/:id(.:format)        {:controller=>"reports", :action=>"agent"}
+  #
+  #   rails_routes "P@(OS|U)T"
+  #                POST   /current(.:format)                        {:action=>"create", :controller=>"current"}
+  #                PUT    /current/:id(.:format)                    {:action=>"update", :controller=>"current"}
+  #
+  #   or, equivalently, rails_routes POST -o PUT
+  #
+  #   List all routes containing admin but not test
+  #   rails_routes admin -e test
+  #
+  #   rails_routes
+
+  if [[ -n "${ZSH_VERSION:-}" ]] ; then
+    setopt extendedglob
+  else
+    if [[ -n "${BASH_VERSION:-}" ]] ; then
+      shopt -s extglob # Extended globs
+    else
+      printf "%s\n" "What the heck kind of shell are you running here???"
+    fi
+  fi
+
+  local md5_current md5_cached cache_file routes
+  declare -a ands ors nots
+
+  while [[ $# -gt 0 ]] ; do
+    token="$1" ; shift
+    case "$token" in
+
+      --trace)
+        set -o xtrace
+        export PS4="+ \${BASH_SOURCE##\${rvm_path:-}} : \${FUNCNAME[0]:+\${FUNCNAME[0]}()}  \${LINENO} > "
+        ;;
+
+      -a|and)
+        ands=(${ands[@]} "$1")
+        shift
+        ;;
+
+      -o|or)
+        ors=(${ors[@]} "$1")
+        shift
+        ;;
+
+      -e|exclude)
+        nots=(${exclude[@]} "$1")
+        shift
+        ;;
+      *) # Default is or.
+        ors=(${ors[@]} "$token")
+        ;;
+    esac
+  done
+
+  [[ -d tmp/rake ]] || mkdir -p "tmp/rake"
+  cache_file="tmp/rake/routes"
+
+  if ! command -v rake >/dev/null 2>&1 ; then
+    printf "ERROR: rake not found.\n" >&2
+    return 1
+  fi
+
+  case $(uname) in
+    Linux)  md5="md5sum" ;;
+    Darwin) md5="/sbin/md5 -q" ;;
+    *)      printf "ERROR: Unknown OS Type.\n" >&2 ;  return 1 ;;
+  esac
+
+  md5_current=$($md5 config/routes.rb)
+  md5_current=${md5%% *}
+
+  if [[ -s "$cache_file" && -s "$cache_file.md5" ]]; then
+    md5_cached=$(cat -v "${cache_file}.md5")
+    md5_cached=${md5%% *}
+  else
+    md5_cached=""
+  fi
+
+  if [[ -s "$cache_file" && $md5_current = $md5_cached ]]; then
+    routes=$(cat -v "$cache_file")
+  else
+    routes=$(rake routes 2>/dev/null)
+    if [[ $? -gt 0 ]]; then
+      printf "ERROR: There was an error running 'rake routes', does your application load console properly?" >&2
+      return 1
+    else
+      printf "$md5_current" > "${cache_file}.md5"
+      printf "$routes" > "$cache_file"
+    fi
+  fi
+  routes="${routes#\|\(in *\)}"
+
+  orig_ifs="$IFS"
+  condition="${ors[@]}"
+  condition="*${condition// /*|*}*"
+
+  IFS="
+"
+  # ORs
+  results=()
+
+  for route in ${routes} ; do
+    eval "case '${route}' in (${condition}) results=(\"${results[@]}\" \"${route}\") ;; esac"
+  done
+  routes=(${results[@]})
+
+
+  # ANDs
+  results=()
+  for condition in "${ands[@]}" ; do
+    for route in ${routes[@]} ; do
+      if [[ ${route} = ${condition} ]]; then
+        results=(${results[@]} ${route})
+      fi
+    done
+    routes=(${results[@]})
+    results=()
+  done
+
+  # NOTs
+  results=()
+  for condition in "${nots[@]}" ; do
+    for route in ${routes[@]} ; do
+      if [[ ${route} != *${condition}* ]]; then
+        results=(${results[@]} ${route})
+      fi
+    done
+    routes=(${results[@]})
+    results=()
+  done
+
+  for route in ${routes[@]} ; do
+    printf "${route}\n"
+  done
+
+  IFS="$orig_ifs"
+}
+
+#
+# r - Rails scripts helper function.
+#
+r() {
+  local action args
+
+  action="$1" ; shift
+
+  args="$@"
+
+  shopt -s extglob
+
+  case "$action" in
+
+    c|console)
+      action=console
+      ;;
+
+    d|db)
+      action=dbconsole
+      ;;
+
+    g|generate)
+      action=generate
+      ;;
+
+    d|destroy)
+      action=destroy
+      ;;
+
+    s|server)
+      action=server
+      ;;
+
+    r|routes)
+      rails_routes $args
+      return $?
+      ;;
+    n|new)
+      rails_version=$(rails -v)
+      rails_version=${rails_version##* }
+      rails_version=${rails_version%%.*}
+      if [[ $rails_version -ge 3 ]]; then
+        rails new $args
+      elif [[ $rails_version = 1 || $rails_version = 2 ]] ; then
+        rails $args
+      fi
+      ;;
+
+    (*(-)@(h|?|help))
+      action="-h"
+      ;;
+
+    (*(-)@(v|V|version))
+      action="-h"
+      ;;
+
+    usage)
+      printf "
+
+r - Rails shell convenience function
+
+Usage:
+
+  r [action]
+
+Actions:
+
+  c - Start a Rails Console
+  d - Start a database console
+  c - rails generate
+  s - rails server
+  r - rails routes <include filter glob> [-e <exclude filter glob>]
+
+      \n"
+      ;;
+
+  esac
+
+  if [[ -s ./script/rails ]] ; then
+
+    ruby ./script/rails $args
+
+  elif [[ -s ./script/$action ]] ; then
+
+      ruby ./script/$action $args
+
+  else
+
+    printf "ERROR: rails $action not found!!!"
+
+  fi
+
+  return 0
+}

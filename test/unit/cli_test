@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+source ./test/setup
+initialize_rvm
+
+if [[ -z "$rvm_teset_suite_flag" ]] ; then btu_summary ; fi
+

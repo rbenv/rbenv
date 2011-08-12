@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+after_use_hooks=($(
+  find -L "${rvm_path:-"$HOME/.rvm"}/hooks" -iname 'after_use_*' -type f
+))
+
+for after_use_hook in "${after_use_hooks[@]}"
+do
+  if [[ -x "${after_use_hook}" ]]
+  then
+    . "${after_use_hook}"
+  fi
+done
+

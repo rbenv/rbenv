@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+if [[ -z "${1:-""}" ]] || [[ -z "${2:-""}" ]] ; then exit 1 ; fi
+
+if [[ -n "$(echo "${1}" |  awk "/${2//\//\/}/")" ]] ; then exit 0 ; else exit 1 ; fi
+
+match()
+{
+  local value="$1" ; local regex="$2"
+
+  case "$value" in
+    $regex) return 0 ;;
+    *)      return 1 ;;
+  esac
+}

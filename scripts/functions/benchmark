@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+
+# Wrap the specified ruby code file in a Benchmark.bmbm block and execute it.
+__rvm_benchmark()
+{
+  local old_rvm_ruby_string
+
+  code="require \"benchmark\" \n \
+    Benchmark.bmbm do |benchmark| \n \
+    benchmark.report(\"${rvm_ruby_file}\") do \n"
+
+  printf "\n$code" > "${rvm_tmp_path}/$$.rb"
+
+  unset code
+
+  cat $rvm_ruby_file >> "${rvm_tmp_path}/$$.rb"
+
+  printf "\n end \nend\n" >> "${rvm_tmp_path}/$$.rb"
+
+  rvm_ruby_args="${rvm_tmp_path}/$$.rb"
+
+  rvm_benchmark_flag=1
+
+  rvm_action="ruby"
+
+  if [[ ${rvm_debug_flag:0} -gt 0 ]] ; then
+
+    printf "\n${rvm_tmp_path}/$$.rb:\n\
+      $(cat ${rvm_tmp_path}/$$.rb)"
+
+  fi
+
+  # Override ruby string stuff, pass through.
+
+  old_rvm_ruby_string=$rvm_ruby_string
+
+  # TODO: We can likely do this in a subshell in order to
+  #       preserve the original environment?
+
+  unset rvm_ruby_string
+
+  export rvm_ruby_strings
+
+  "$rvm_scripts_path/set" "$rvm_action" $rvm_ruby_args ; result=$?
+
+  # Restore the state pre-sets.
+  [[ -n "$old_rvm_ruby_string" ]] && rvm_ruby_string=$old_rvm_ruby_string
+
+  return ${result:-0}
+}
+

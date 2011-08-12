@@ -1,0 +1,1124 @@
+diff --git a/eval.c b/eval.c
+index 4098b83..c70f270 100644
+--- a/eval.c
++++ b/eval.c
+@@ -73,6 +73,7 @@ char *strrchr _((const char*,const char));
+ #endif
+ 
+ #include <time.h>
++#include <sys/mman.h>
+ 
+ #ifdef __BEOS__
+ #include <net/socket.h>
+@@ -1025,7 +1026,7 @@ static struct tag *prot_tag;
+     _tag.blkid = 0;			\
+     prot_tag = &_tag
+ 
+-#define PROT_NONE   Qfalse	/* 0 */
++#define PROT_EMPTY  Qfalse	/* 0 */
+ #define PROT_THREAD Qtrue	/* 2 */
+ #define PROT_FUNC   INT2FIX(0)	/* 1 */
+ #define PROT_LOOP   INT2FIX(1)	/* 3 */
+@@ -1236,7 +1237,7 @@ error_print()
+ 
+     if (NIL_P(ruby_errinfo)) return;
+ 
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if (EXEC_TAG() == 0) {
+ 	errat = get_backtrace(ruby_errinfo);
+     }
+@@ -1396,7 +1397,7 @@ ruby_init()
+     /* default visibility is private at toplevel */
+     SCOPE_SET(SCOPE_PRIVATE);
+ 
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if ((state = EXEC_TAG()) == 0) {
+ 	rb_call_inits();
+ 	ruby_class = rb_cObject;
+@@ -1530,7 +1531,7 @@ ruby_options(argc, argv)
+     int state;
+ 
+     Init_stack((void*)&state);
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if ((state = EXEC_TAG()) == 0) {
+ 	ruby_process_options(argc, argv);
+     }
+@@ -1547,7 +1548,7 @@ void rb_exec_end_proc _((void));
+ static void
+ ruby_finalize_0()
+ {
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if (EXEC_TAG() == 0) {
+ 	rb_trap_exit();
+     }
+@@ -1585,7 +1586,7 @@ ruby_cleanup(ex)
+     Init_stack((void *)&state);
+     ruby_finalize_0();
+     errs[0] = ruby_errinfo;
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     PUSH_ITER(ITER_NOT);
+     if ((state = EXEC_TAG()) == 0) {
+ 	rb_thread_cleanup();
+@@ -1636,7 +1637,7 @@ ruby_exec_internal()
+ {
+     int state;
+ 
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     PUSH_ITER(ITER_NOT);
+     /* default visibility is private at toplevel */
+     SCOPE_SET(SCOPE_PRIVATE);
+@@ -1858,7 +1859,7 @@ rb_eval_cmd(cmd, arg, level)
+     }
+     if (TYPE(cmd) != T_STRING) {
+ 	PUSH_ITER(ITER_NOT);
+-	PUSH_TAG(PROT_NONE);
++	PUSH_TAG(PROT_EMPTY);
+ 	ruby_safe_level = level;
+ 	if ((state = EXEC_TAG()) == 0) {
+ 	    val = rb_funcall2(cmd, rb_intern("call"), RARRAY(arg)->len, RARRAY(arg)->ptr);
+@@ -1880,7 +1881,7 @@ rb_eval_cmd(cmd, arg, level)
+ 
+     ruby_safe_level = level;
+ 
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if ((state = EXEC_TAG()) == 0) {
+ 	val = eval(ruby_top_self, cmd, Qnil, 0, 0);
+     }
+@@ -2387,7 +2388,7 @@ is_defined(self, node, buf)
+ 	val = self;
+ 	if (node->nd_recv == (NODE *)1) goto check_bound;
+       case NODE_CALL:
+-	PUSH_TAG(PROT_NONE);
++	PUSH_TAG(PROT_EMPTY);
+ 	if ((state = EXEC_TAG()) == 0) {
+ 	    val = rb_eval(self, node->nd_recv);
+ 	}
+@@ -2489,7 +2490,7 @@ is_defined(self, node, buf)
+ 	break;
+ 
+       case NODE_COLON2:
+-	PUSH_TAG(PROT_NONE);
++	PUSH_TAG(PROT_EMPTY);
+ 	if ((state = EXEC_TAG()) == 0) {
+ 	    val = rb_eval(self, node->nd_head);
+ 	}
+@@ -2538,7 +2539,7 @@ is_defined(self, node, buf)
+ 	goto again;
+ 
+       default:
+-	PUSH_TAG(PROT_NONE);
++	PUSH_TAG(PROT_EMPTY);
+ 	if ((state = EXEC_TAG()) == 0) {
+ 	    rb_eval(self, node);
+ 	}
+@@ -2742,7 +2743,7 @@ call_trace_func(event, node, self, id, klass)
+ 	    klass = rb_iv_get(klass, "__attached__");
+ 	}
+     }
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     raised = rb_thread_reset_raised(th);
+     if ((state = EXEC_TAG()) == 0) {
+ 	srcfile = rb_str_new2(ruby_sourcefile?ruby_sourcefile:"(ruby)");
+@@ -3302,7 +3303,7 @@ rb_eval(self, n)
+ 	    volatile VALUE e_info = ruby_errinfo;
+ 	    volatile int rescuing = 0;
+ 
+-	    PUSH_TAG(PROT_NONE);
++	    PUSH_TAG(PROT_EMPTY);
+ 	    if ((state = EXEC_TAG()) == 0) {
+ 	      retry_entry:
+ 		result = rb_eval(self, node->nd_head);
+@@ -3351,7 +3352,7 @@ rb_eval(self, n)
+ 	break;
+ 
+       case NODE_ENSURE:
+-	PUSH_TAG(PROT_NONE);
++	PUSH_TAG(PROT_EMPTY);
+ 	if ((state = EXEC_TAG()) == 0) {
+ 	    result = rb_eval(self, node->nd_head);
+ 	}
+@@ -3569,7 +3570,7 @@ rb_eval(self, n)
+ 	    ruby_frame = &frame;
+ 
+ 	    PUSH_SCOPE();
+-	    PUSH_TAG(PROT_NONE);
++	    PUSH_TAG(PROT_EMPTY);
+ 	    if (node->nd_rval) {
+ 		saved_cref = ruby_cref;
+ 		ruby_cref = (NODE*)node->nd_rval;
+@@ -4195,7 +4196,7 @@ module_setup(module, n)
+     }
+ 
+     PUSH_CREF(module);
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if ((state = EXEC_TAG()) == 0) {
+ 	EXEC_EVENT_HOOK(RUBY_EVENT_CLASS, n, ruby_cbase,
+ 			ruby_frame->last_func, ruby_frame->last_class);
+@@ -4602,7 +4603,7 @@ rb_longjmp(tag, mesg)
+ 	VALUE e = ruby_errinfo;
+ 	int status;
+ 
+-	PUSH_TAG(PROT_NONE);
++	PUSH_TAG(PROT_EMPTY);
+ 	if ((status = EXEC_TAG()) == 0) {
+ 	    StringValue(e);
+ 	    warn_printf("Exception `%s' at %s:%d - %s\n",
+@@ -4974,7 +4975,7 @@ rb_yield_0(val, self, klass, flags, avalue)
+     node = block->body;
+ 
+     if (block->var) {
+-	PUSH_TAG(PROT_NONE);
++	PUSH_TAG(PROT_EMPTY);
+ 	if ((state = EXEC_TAG()) == 0) {
+ 	    if (block->var == (NODE*)1) { /* no parameter || */
+ 		if (lambda && RARRAY(val)->len != 0) {
+@@ -5032,7 +5033,7 @@ rb_yield_0(val, self, klass, flags, avalue)
+     ruby_current_node = node;
+ 
+     PUSH_ITER(block->iter);
+-    PUSH_TAG(lambda ? PROT_NONE : PROT_YIELD);
++    PUSH_TAG(lambda ? PROT_EMPTY : PROT_YIELD);
+     if ((state = EXEC_TAG()) == 0) {
+       redo:
+ 	if (nd_type(node) == NODE_CFUNC || nd_type(node) == NODE_IFUNC) {
+@@ -5430,7 +5431,7 @@ rb_rescue2(b_proc, data1, r_proc, data2, va_alist)
+     VALUE eclass;
+     va_list args;
+ 
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     switch (state = EXEC_TAG()) {
+       case TAG_RETRY:
+ 	if (!handle) break;
+@@ -5488,7 +5489,7 @@ rb_protect(proc, data, state)
+     VALUE result = Qnil;	/* OK */
+     int status;
+ 
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     cont_protect = (VALUE)rb_node_newnode(NODE_MEMO, cont_protect, 0, 0);
+     if ((status = EXEC_TAG()) == 0) {
+ 	result = (*proc)(data);
+@@ -5516,7 +5517,7 @@ rb_ensure(b_proc, data1, e_proc, data2)
+     volatile VALUE result = Qnil;
+     VALUE retval;
+ 
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if ((state = EXEC_TAG()) == 0) {
+ 	result = (*b_proc)(data1);
+     }
+@@ -5543,7 +5544,7 @@ rb_with_disable_interrupt(proc, data)
+ 	int thr_critical = rb_thread_critical;
+ 
+ 	rb_thread_critical = Qtrue;
+-	PUSH_TAG(PROT_NONE);
++	PUSH_TAG(PROT_EMPTY);
+ 	if ((status = EXEC_TAG()) == 0) {
+ 	    result = (*proc)(data);
+ 	}
+@@ -6230,7 +6231,7 @@ rb_funcall_rescue(recv, mid, n, va_alist)
+ 
+     va_init_list(ar, n);
+ 
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if ((status = EXEC_TAG()) == 0) {
+ 	result = vafuncall(recv, mid, n, &ar);
+     }
+@@ -6499,7 +6500,7 @@ eval(self, src, scope, file, line)
+     if (TYPE(ruby_class) == T_ICLASS) {
+ 	ruby_class = RBASIC(ruby_class)->klass;
+     }
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if ((state = EXEC_TAG()) == 0) {
+ 	NODE *node;
+ 
+@@ -6658,7 +6659,7 @@ exec_under(func, under, cbase, args)
+ 
+     mode = scope_vmode;
+     SCOPE_SET(SCOPE_PUBLIC);
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if ((state = EXEC_TAG()) == 0) {
+ 	val = (*func)(args);
+     }
+@@ -6889,7 +6890,7 @@ rb_load(fname, wrap)
+     PUSH_SCOPE();
+     /* default visibility is private at loading toplevel */
+     SCOPE_SET(SCOPE_PRIVATE);
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     state = EXEC_TAG();
+     last_func = ruby_frame->last_func;
+     last_node = ruby_current_node;
+@@ -6948,7 +6949,7 @@ rb_load_protect(fname, wrap, state)
+ {
+     int status;
+ 
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if ((status = EXEC_TAG()) == 0) {
+ 	rb_load(fname, wrap);
+     }
+@@ -7269,7 +7270,7 @@ rb_require_safe(fname, safe)
+     saved.node = ruby_current_node;
+     saved.func = ruby_frame->last_func;
+     saved.safe = ruby_safe_level;
+-    PUSH_TAG(PROT_NONE);
++    PUSH_TAG(PROT_EMPTY);
+     if ((state = EXEC_TAG()) == 0) {
+ 	VALUE feature, path;
+ 	long handle;
+@@ -7977,7 +7978,7 @@ rb_exec_end_proc()
+ 	tmp_end_procs = link = ephemeral_end_procs;
+ 	ephemeral_end_procs = 0;
+ 	while (link) {
+-	    PUSH_TAG(PROT_NONE);
++	    PUSH_TAG(PROT_EMPTY);
+ 	    if ((status = EXEC_TAG()) == 0) {
+ 		ruby_safe_level = link->safe;
+ 		(*link->func)(link->data);
+@@ -7995,7 +7996,7 @@ rb_exec_end_proc()
+ 	tmp_end_procs = link = end_procs;
+ 	end_procs = 0;
+ 	while (link) {
+-	    PUSH_TAG(PROT_NONE);
++	    PUSH_TAG(PROT_EMPTY);
+ 	    if ((status = EXEC_TAG()) == 0) {
+ 		ruby_safe_level = link->safe;
+ 		(*link->func)(link->data);
+@@ -8654,7 +8655,7 @@ proc_invoke(proc, args, self, klass)
+     ruby_block = &_block;
+     PUSH_ITER(ITER_CUR);
+     ruby_frame->iter = ITER_CUR;
+-    PUSH_TAG(pcall ? PROT_LAMBDA : PROT_NONE);
++    PUSH_TAG(pcall ? PROT_LAMBDA : PROT_EMPTY);
+     state = EXEC_TAG();
+     if (state == 0) {
+ 	proc_set_safe_level(proc);
+@@ -9896,6 +9897,7 @@ win32_set_exception_list(p)
+ int rb_thread_pending = 0;
+ 
+ VALUE rb_cThread;
++static unsigned int rb_thread_stack_size;
+ 
+ extern VALUE rb_last_status;
+ 
+@@ -10123,12 +10125,20 @@ thread_mark(th)
+     rb_gc_mark(th->thread);
+     if (th->join) rb_gc_mark(th->join->thread);
+ 
+-    rb_gc_mark(th->klass);
+-    rb_gc_mark(th->wrapper);
+-    rb_gc_mark((VALUE)th->cref);
++    if (curr_thread == th) {
++      rb_gc_mark(ruby_class);
++      rb_gc_mark(ruby_wrapper);
++      rb_gc_mark((VALUE)ruby_cref);
++      rb_gc_mark((VALUE)ruby_scope);
++      rb_gc_mark((VALUE)ruby_dyna_vars);
++    } else {
++      rb_gc_mark(th->klass);
++      rb_gc_mark(th->wrapper);
++      rb_gc_mark((VALUE)th->cref);
++      rb_gc_mark((VALUE)th->scope);
++      rb_gc_mark((VALUE)th->dyna_vars);
++    }
+ 
+-    rb_gc_mark((VALUE)th->scope);
+-    rb_gc_mark((VALUE)th->dyna_vars);
+     rb_gc_mark(th->errinfo);
+     rb_gc_mark(th->last_status);
+     rb_gc_mark(th->last_line);
+@@ -10138,11 +10148,11 @@ thread_mark(th)
+     rb_gc_mark_maybe(th->sandbox);
+ 
+     /* mark data in copied stack */
+-    if (th == curr_thread) return;
++    if (th == main_thread) return;
+     if (th->status == THREAD_KILLED) return;
+     if (th->stk_len == 0) return;  /* stack not active, no need to mark. */
+-    if (th->stk_ptr) {
+-	rb_gc_mark_locations(th->stk_ptr, th->stk_ptr+th->stk_len);
++    if (th->stk_ptr && th != curr_thread) {
++      rb_gc_mark_locations(th->stk_pos, th->stk_base);
+ #if defined(THINK_C) || defined(__human68k__)
+ 	rb_gc_mark_locations(th->stk_ptr+2, th->stk_ptr+th->stk_len+2);
+ #endif
+@@ -10152,24 +10162,30 @@ thread_mark(th)
+ 	}
+ #endif
+     }
+-    frame = th->frame;
++
++    if (curr_thread == th)
++      frame = ruby_frame;
++    else
++      frame = th->frame;
++
+     while (frame && frame != top_frame) {
+-	frame = ADJ(frame);
+ 	rb_gc_mark_frame(frame);
+ 	if (frame->tmp) {
+ 	    struct FRAME *tmp = frame->tmp;
+-
+ 	    while (tmp && tmp != top_frame) {
+-		tmp = ADJ(tmp);
+ 		rb_gc_mark_frame(tmp);
+ 		tmp = tmp->prev;
+ 	    }
+ 	}
+ 	frame = frame->prev;
+     }
+-    block = th->block;
++
++    if (curr_thread == th)
++      block = ruby_block;
++    else
++      block = th->block;
++
+     while (block) {
+-	block = ADJ(block);
+ 	rb_gc_mark_frame(&block->frame);
+ 	block = block->prev;
+     }
+@@ -10232,7 +10248,7 @@ static inline void
+ stack_free(th)
+     rb_thread_t th;
+ {
+-    if (th->stk_ptr) free(th->stk_ptr);
++  if (th->stk_ptr) munmap(th->stk_ptr, th->stk_size);
+     th->stk_ptr = 0;
+ #ifdef __ia64
+     if (th->bstr_ptr) free(th->bstr_ptr);
+@@ -10293,35 +10309,8 @@ rb_thread_save_context(th)
+     static VALUE tval;
+ 
+     len = ruby_stack_length(&pos);
+-    th->stk_len = 0;
+-    th->stk_pos = pos;
+-    if (len > th->stk_max) {
+-	VALUE *ptr = realloc(th->stk_ptr, sizeof(VALUE) * len);
+-	if (!ptr) rb_memerror();
+-	th->stk_ptr = ptr;
+-	th->stk_max = len;
+-    }
+     th->stk_len = len;
+-    FLUSH_REGISTER_WINDOWS;
+-    MEMCPY(th->stk_ptr, th->stk_pos, VALUE, th->stk_len);
+-#ifdef __ia64
+-    th->bstr_pos = rb_gc_register_stack_start;
+-    len = (VALUE*)rb_ia64_bsp() - th->bstr_pos;
+-    th->bstr_len = 0;
+-    if (len > th->bstr_max) {
+-        VALUE *ptr = realloc(th->bstr_ptr, sizeof(VALUE) * len);
+-        if (!ptr) rb_memerror();
+-        th->bstr_ptr = ptr;
+-        th->bstr_max = len;
+-    }
+-    th->bstr_len = len;
+-    rb_ia64_flushrs();
+-    MEMCPY(th->bstr_ptr, th->bstr_pos, VALUE, th->bstr_len);
+-#endif
+-#ifdef SAVE_WIN32_EXCEPTION_LIST
+-    th->win32_exception_list = win32_get_exception_list();
+-#endif
+-
++    th->stk_pos = pos;
+     th->frame = ruby_frame;
+     th->scope = ruby_scope;
+     ruby_scope->flags |= SCOPE_DONT_RECYCLE;
+@@ -10431,11 +10420,6 @@ rb_thread_restore_context_0(rb_thread_t th, int exit)
+ #endif
+     tmp = th;
+     ex = exit;
+-    FLUSH_REGISTER_WINDOWS;
+-    MEMCPY(tmp->stk_pos, tmp->stk_ptr, VALUE, tmp->stk_len);
+-#ifdef __ia64
+-    MEMCPY(tmp->bstr_pos, tmp->bstr_ptr, VALUE, tmp->bstr_len);
+-#endif
+ 
+     tval = rb_lastline_get();
+     rb_lastline_set(tmp->last_line);
+@@ -10526,8 +10510,8 @@ rb_thread_restore_context(th, exit)
+     rb_thread_t th;
+     int exit;
+ {
+-    if (!th->stk_ptr) rb_bug("unsaved context");
+-    stack_extend(th, exit);
++    if (!th->stk_ptr && th != main_thread) rb_bug("unsaved context");
++    rb_thread_restore_context_0(th, exit);
+ }
+ 
+ static void
+@@ -10546,7 +10530,6 @@ rb_thread_die(th)
+ {
+     th->thgroup = 0;
+     th->status = THREAD_KILLED;
+-    stack_free(th);
+ }
+ 
+ static void
+@@ -11822,6 +11805,7 @@ rb_thread_group(thread)
+ \
+     th->stk_ptr = 0;\
+     th->stk_len = 0;\
++    th->stk_size = 0;\
+     th->stk_max = 0;\
+     th->wait_for = 0;\
+     IA64_INIT(th->bstr_ptr = 0);\
+@@ -11869,6 +11853,48 @@ rb_thread_alloc(klass)
+     THREAD_ALLOC(th);
+     th->thread = Data_Wrap_Struct(klass, thread_mark, thread_free, th);
+ 
++    /* if main_thread != NULL, then this is NOT the main thread, so
++     * we create a heap-stack
++     */
++    if (main_thread) {
++      /* Allocate stack, don't forget to add 1 extra word because of the MATH below */
++      unsigned int pagesize = getpagesize();
++      unsigned int total_size = rb_thread_stack_size + pagesize + sizeof(int);
++      void *stack_area = NULL;
++
++      stack_area = mmap(NULL, total_size, PROT_READ | PROT_WRITE | PROT_EXEC,
++			MAP_PRIVATE | MAP_ANON, -1, 0);
++
++      if (stack_area == MAP_FAILED) {
++	fprintf(stderr, "Thread stack allocation failed!\n");
++	rb_memerror();
++      }
++
++      th->stk_ptr = th->stk_pos = stack_area;
++      th->stk_size = total_size;
++
++      if (mprotect(th->stk_ptr, pagesize, PROT_NONE) == -1) {
++	fprintf(stderr, "Failed to create thread guard region: %s\n", strerror(errno));
++	rb_memerror();
++      }
++
++      th->guard = th->stk_ptr + (pagesize/sizeof(VALUE *));
++
++      /* point stk_base at the top of the stack */
++      /* ASSUMPTIONS:
++       * 1.) The address returned by malloc is "suitably aligned" for anything on this system
++       * 2.) Adding a value that is "aligned" for this platform should not unalign the address
++       *     returned from malloc.
++       * 3.) Don't push anything on to the stack, otherwise it'll get unaligned.
++       * 4.) x86_64 ABI says aligned AFTER arguments have been pushed. You *must* then do a call[lq]
++       *     or push[lq] something else on to the stack if you inted to do a ret.
++       */
++      th->stk_base = th->stk_ptr + ((total_size - sizeof(int))/sizeof(VALUE *));
++      th->stk_len = rb_thread_stack_size;
++    } else {
++      th->stk_ptr = th->stk_pos = rb_gc_stack_start;
++    }
++
+     for (vars = th->dyna_vars; vars; vars = vars->next) {
+ 	if (FL_TEST(vars, DVAR_DONT_RECYCLE)) break;
+ 	FL_SET(vars, DVAR_DONT_RECYCLE);
+@@ -12014,17 +12040,22 @@ rb_thread_cancel_timer()
+ }
+ #endif
+ 
++struct thread_start_args {
++  VALUE (*fn)();
++  void *arg;
++  rb_thread_t th;
++} new_th;
++
++static VALUE
++rb_thread_start_2();
++
+ static VALUE
+ rb_thread_start_0(fn, arg, th)
+     VALUE (*fn)();
+     void *arg;
+     rb_thread_t th;
+ {
+-    volatile rb_thread_t th_save = th;
+     volatile VALUE thread = th->thread;
+-    struct BLOCK *volatile saved_block = 0;
+-    enum rb_thread_status status;
+-    int state;
+ 
+     if (OBJ_FROZEN(curr_thread->thgroup)) {
+ 	rb_raise(rb_eThreadError,
+@@ -12054,16 +12085,41 @@ rb_thread_start_0(fn, arg, th)
+ 	return thread;
+     }
+ 
+-    if (ruby_block) {		/* should nail down higher blocks */
+-	struct BLOCK dummy;
++    new_th.fn = fn;
++    new_th.arg = arg;
++    new_th.th = th;
++
++#if defined(__i386__)
++    __asm__ __volatile__ ("movl %0, %%esp\n\t"
++                          "calll *%1\n"
++                          :: "r" (th->stk_base),
++                             "r" (rb_thread_start_2));
++#elif defined(__x86_64__)
++    __asm__ __volatile__ ("movq %0, %%rsp\n\t"
++                          "callq *%1\n"
++                          :: "r" (th->stk_base),
++                             "r" (rb_thread_start_2));
++#else
++    #error unsupported architecture!
++#endif
++    /* NOTREACHED */
++    return 0;
++}
+ 
+-	dummy.prev = ruby_block;
+-	blk_copy_prev(&dummy);
+-	saved_block = ruby_block = dummy.prev;
+-    }
+-    scope_dup(ruby_scope);
++static VALUE
++rb_thread_start_2()
++{
++   volatile rb_thread_t th = new_th.th;
++   volatile rb_thread_t th_save = th;
++   volatile VALUE thread = th->thread;
++   struct BLOCK *volatile saved_block = 0;
++   enum rb_thread_status status;
++   int state;
++   struct tag *tag;
++   struct RVarmap *vars;
++   struct FRAME dummy_frame;
+ 
+-    if (!th->next) {
++   if (!th->next) {
+ 	/* merge in thread list */
+ 	th->prev = curr_thread;
+ 	curr_thread->next->prev = th;
+@@ -12071,13 +12127,27 @@ rb_thread_start_0(fn, arg, th)
+ 	curr_thread->next = th;
+ 	th->priority = curr_thread->priority;
+ 	th->thgroup = curr_thread->thgroup;
++   }
++   curr_thread = th;
++
++   dummy_frame = *ruby_frame;
++   dummy_frame.prev = top_frame;
++   ruby_frame = &dummy_frame;
++
++   if (ruby_block) {		/* should nail down higher blocks */
++	struct BLOCK dummy;
++
++	dummy.prev = ruby_block;
++	blk_copy_prev(&dummy);
++	saved_block = ruby_block = dummy.prev;
+     }
+ 
++    scope_dup(ruby_scope);
++
+     PUSH_TAG(PROT_THREAD);
+     if ((state = EXEC_TAG()) == 0) {
+ 	if (THREAD_SAVE_CONTEXT(th) == 0) {
+-	    curr_thread = th;
+-	    th->result = (*fn)(arg, th);
++	    th->result = (*new_th.fn)(new_th.arg, th);
+ 	}
+ 	th = th_save;
+     }
+@@ -12414,6 +12484,43 @@ rb_thread_cleanup()
+     END_FOREACH_FROM(curr, th);
+ }
+ 
++/*
++ * call-seq:
++ *    Thread.stack_size    => fixnum
++ *
++ * Returns the thread stack size in bytes
++ */
++static VALUE
++rb_thread_stacksize_get()
++{
++  return INT2FIX(rb_thread_stack_size);
++}
++
++/*
++ * call-seq:
++ *    Thread.stack_size= fixnum => Qnil
++ *
++ * Sets the global thread stacksize and returns Qnil.
++ */
++static VALUE
++rb_thread_stacksize_set(obj, val)
++     VALUE obj;
++     VALUE val;
++{
++
++  unsigned int size = FIX2UINT(val);
++
++  /* 16byte alignment works for both x86 and x86_64 */
++  if (size & (~0xf)) {
++    size += 0x10;
++    size = size & (~0xf);
++  }
++
++  rb_thread_stack_size = size;
++
++  return Qnil;
++}
++
+ int rb_thread_critical;
+ 
+ 
+@@ -13167,6 +13274,8 @@ Init_Thread()
+ {
+     VALUE cThGroup;
+ 
++    rb_thread_stack_size = (1024 * 1024);
++
+     rb_eThreadError = rb_define_class("ThreadError", rb_eStandardError);
+     rb_cThread = rb_define_class("Thread", rb_cObject);
+     rb_undef_alloc_func(rb_cThread);
+@@ -13190,6 +13299,9 @@ Init_Thread()
+     rb_define_singleton_method(rb_cThread, "abort_on_exception", rb_thread_s_abort_exc, 0);
+     rb_define_singleton_method(rb_cThread, "abort_on_exception=", rb_thread_s_abort_exc_set, 1);
+ 
++    rb_define_singleton_method(rb_cThread, "stack_size", rb_thread_stacksize_get, 0);
++    rb_define_singleton_method(rb_cThread, "stack_size=", rb_thread_stacksize_set, 1);
++
+     rb_define_method(rb_cThread, "run", rb_thread_run, 0);
+     rb_define_method(rb_cThread, "wakeup", rb_thread_wakeup, 0);
+     rb_define_method(rb_cThread, "kill", rb_thread_kill, 0);
+diff --git a/gc.c b/gc.c
+index 318e24c..0746834 100644
+--- a/gc.c
++++ b/gc.c
+@@ -466,12 +466,12 @@ stack_end_address(VALUE **stack_end_p)
+ # define STACK_END (stack_end)
+ #endif
+ #if STACK_GROW_DIRECTION < 0
+-# define STACK_LENGTH  (rb_gc_stack_start - STACK_END)
++# define STACK_LENGTH(start)  ((start) - STACK_END)
+ #elif STACK_GROW_DIRECTION > 0
+-# define STACK_LENGTH  (STACK_END - rb_gc_stack_start + 1)
++# define STACK_LENGTH(start)  (STACK_END - (start) + 1)
+ #else
+-# define STACK_LENGTH  ((STACK_END < rb_gc_stack_start) ? rb_gc_stack_start - STACK_END\
+-                                           : STACK_END - rb_gc_stack_start + 1)
++# define STACK_LENGTH(start)  ((STACK_END < (start)) ? (start) - STACK_END\
++                                           : STACK_END - (start) + 1)
+ #endif
+ #if STACK_GROW_DIRECTION > 0
+ # define STACK_UPPER(x, a, b) a
+@@ -494,27 +494,36 @@ stack_grow_direction(addr)
+ 
+ #define GC_WATER_MARK 512
+ 
+-#define CHECK_STACK(ret) do {\
++#define CHECK_STACK(ret, start) do {\
+     SET_STACK_END;\
+-    (ret) = (STACK_LENGTH > STACK_LEVEL_MAX + GC_WATER_MARK);\
++    (ret) = (STACK_LENGTH(start) > STACK_LEVEL_MAX + GC_WATER_MARK);\
+ } while (0)
+ 
+ size_t
+ ruby_stack_length(p)
+     VALUE **p;
+ {
+-    SET_STACK_END;
+-    if (p) *p = STACK_UPPER(STACK_END, rb_gc_stack_start, STACK_END);
+-    return STACK_LENGTH;
++  SET_STACK_END;
++  VALUE *start;
++  if (rb_curr_thread == rb_main_thread) {
++    start = rb_gc_stack_start;
++  } else {
++    start = rb_curr_thread->stk_base;
++  }
++  if (p) *p = STACK_UPPER(STACK_END, start, STACK_END);
++  return STACK_LENGTH(start);
+ }
+ 
+ int
+ ruby_stack_check()
+ {
+-    int ret;
+-
+-    CHECK_STACK(ret);
+-    return ret;
++  int ret;
++  if (rb_curr_thread == rb_main_thread) {
++    CHECK_STACK(ret, rb_gc_stack_start);
++  } else {
++    CHECK_STACK(ret, rb_curr_thread->stk_base);
++  }
++  return ret;
+ }
+ 
+ #define MARK_STACK_MAX 1024
+@@ -1404,10 +1413,13 @@ garbage_collect()
+ 
+     init_mark_stack();
+ 
+-    gc_mark((VALUE)ruby_current_node, 0);
+-
+     /* mark frame stack */
+-    for (frame = ruby_frame; frame; frame = frame->prev) {
++    if (rb_curr_thread == rb_main_thread)
++      frame = ruby_frame;
++    else
++      frame = rb_main_thread->frame;
++
++    for (; frame; frame = frame->prev) {
+ 	rb_gc_mark_frame(frame);
+ 	if (frame->tmp) {
+ 	    struct FRAME *tmp = frame->tmp;
+@@ -1417,16 +1429,35 @@ garbage_collect()
+ 	    }
+ 	}
+     }
+-    gc_mark((VALUE)ruby_scope, 0);
+-    gc_mark((VALUE)ruby_dyna_vars, 0);
++
++    if (rb_curr_thread == rb_main_thread) {
++      gc_mark((VALUE)ruby_current_node, 0);
++      gc_mark((VALUE)ruby_scope, 0);
++      gc_mark((VALUE)ruby_dyna_vars, 0);
++    } else {
++      gc_mark((VALUE)rb_main_thread->node, 0);
++      gc_mark((VALUE)rb_main_thread->scope, 0);
++      gc_mark((VALUE)rb_main_thread->dyna_vars, 0);
++
++      /* scan the current thread's stack */
++      rb_gc_mark_locations((VALUE*)STACK_END, rb_curr_thread->stk_base);
++    }
++
+     if (finalizer_table) {
+-	mark_tbl(finalizer_table, 0);
++      mark_tbl(finalizer_table, 0);
+     }
+ 
+     FLUSH_REGISTER_WINDOWS;
+     /* This assumes that all registers are saved into the jmp_buf (and stack) */
+     setjmp(save_regs_gc_mark);
+     mark_locations_array((VALUE*)save_regs_gc_mark, sizeof(save_regs_gc_mark) / sizeof(VALUE *));
++
++    /* If this is not the main thread, we need to scan the C stack, so
++     * set STACK_END to the end of the C stack.
++     */
++    if (rb_curr_thread != rb_main_thread)
++      STACK_END = rb_main_thread->stk_pos;
++
+ #if STACK_GROW_DIRECTION < 0
+     rb_gc_mark_locations((VALUE*)STACK_END, rb_gc_stack_start);
+ #elif STACK_GROW_DIRECTION > 0
+@@ -1446,6 +1477,7 @@ garbage_collect()
+     rb_gc_mark_locations((VALUE*)((char*)STACK_END + 2),
+ 			 (VALUE*)((char*)rb_gc_stack_start + 2));
+ #endif
++
+     rb_gc_mark_threads();
+ 
+     /* mark protected global variables */
+diff --git a/lib/logger.rb b/lib/logger.rb
+index e9ab171..2564c33 100644
+--- a/lib/logger.rb
++++ b/lib/logger.rb
+@@ -170,7 +170,7 @@ require 'monitor'
+ 
+ class Logger
+   VERSION = "1.2.6"
+-  id, name, rev = %w$Id$
++  id, name, rev = %w$Id logger.rb 1234$
+   ProgName = "#{name.chomp(",v")}/#{rev}"
+ 
+   class Error < RuntimeError; end
+diff --git a/node.h b/node.h
+index 476a826..ecdc053 100644
+--- a/node.h
++++ b/node.h
+@@ -411,8 +411,11 @@ struct rb_thread {
+ 
+     size_t stk_len;
+     size_t stk_max;
++    size_t stk_size;
+     VALUE *stk_ptr;
+     VALUE *stk_pos;
++    VALUE *stk_base;
++    VALUE *guard;
+ #ifdef __ia64
+     size_t bstr_len;
+     size_t bstr_max;
+diff --git a/signal.c b/signal.c
+index b6cad9d..116ac05 100644
+--- a/signal.c
++++ b/signal.c
+@@ -14,6 +14,7 @@
+ 
+ #include "ruby.h"
+ #include "rubysig.h"
++#include "node.h"
+ #include <signal.h>
+ #include <stdio.h>
+ 
+@@ -425,15 +426,22 @@ typedef RETSIGTYPE (*sighandler_t)_((int));
+ static sighandler_t
+ ruby_signal(signum, handler)
+     int signum;
+-    sighandler_t handler;
++    void *handler;
+ {
+     struct sigaction sigact, old;
+ 
+     rb_trap_accept_nativethreads[signum] = 0;
+ 
+-    sigact.sa_handler = handler;
++    if (signum == SIGSEGV || signum == SIGBUS) {
++      sigact.sa_sigaction = handler;
++      sigact.sa_flags = (SA_ONSTACK | SA_RESETHAND | SA_SIGINFO);
++    } else {
++      sigact.sa_handler = handler;
++      sigact.sa_flags = 0;
++    }
++
+     sigemptyset(&sigact.sa_mask);
+-    sigact.sa_flags = 0;
++
+ # ifdef SA_NOCLDWAIT
+     if (signum == SIGCHLD && handler == SIG_IGN)
+ 	sigact.sa_flags |= SA_NOCLDWAIT;
+@@ -596,7 +604,132 @@ sighandler(sig)
+     }
+ }
+ 
++#include <stdio.h>
++#ifdef HAVE_STDARG_PROTOTYPES
++#include <stdarg.h>
++#define va_init_list(a,b) va_start(a,b)
++#else
++#include <varargs.h>
++#define va_init_list(a,b) va_start(a)
++#endif
++
++void
++#ifdef HAVE_STDARG_PROTOTYPES
++sig_printf(const char *fmt, ...)
++#else
++  sig_printf(fmt, va_alist)
++     const char *fmt;
++    va_dcl
++#endif
++{
++  char buf[BUFSIZ];
++  va_list args;
++  FILE *out = stderr;
++
++  va_init_list(args, fmt);
++  vfprintf(out, fmt, args);
++  va_end(args);
++  fprintf(out, "\n");
++}
++
++static void
++dump_machine_state(uc)
++     ucontext_t *uc;
++{
++  const char *dump64 =
++    " ----------------- Register state dump ----------------------\n"
++    "rax = 0x%.16x  rbx    = 0x%.16x  rcx = 0x%.16x  rdx = 0x%.16x\n"
++    "rdi = 0x%.16x  rsi    = 0x%.16x  rbp = 0x%.16x  rsp = 0x%.16x\n"
++    "r8  = 0x%.16x  r9     = 0x%.16x  r10 = 0x%.16x  r11 = 0x%.16x\n"
++    "r12 = 0x%.16x  r13    = 0x%.16x  r14 = 0x%.16x  r15 = 0x%.16x\n"
++    "rip = 0x%.16x  rflags = 0x%.16x  cs  = 0x%.16x  fs  = 0x%.16x\n"
++    "gs  = 0x%.16x";
++
++  const char *dump32 =
++    " ----------------- Register state dump -------------------\n"
++    "eax = 0x%.8x  ebx    = 0x%.8x  ecx = 0x%.8x  edx = 0x%.8x\n"
++    "edi = 0x%.8x  esi    = 0x%.8x  ebp = 0x%.8x  esp = 0x%.8x\n"
++    "ss  = 0x%.8x  eflags = 0x%.8x  eip = 0x%.8x  cs  = 0x%.8x\n"
++    "ds  = 0x%.8x  es     = 0x%.8x  fs  = 0x%.8x  gs  = 0x%.8x\n";
++
++#if defined(__LP64__) && defined(__APPLE__)
++  sig_printf(dump64, uc->uc_mcontext->__ss.__rax, uc->uc_mcontext->__ss.__rbx,
++	     uc->uc_mcontext->__ss.__rcx, uc->uc_mcontext->__ss.__rdx, uc->uc_mcontext->__ss.__rdi,
++	     uc->uc_mcontext->__ss.__rsi, uc->uc_mcontext->__ss.__rbp, uc->uc_mcontext->__ss.__rsp,
++	     uc->uc_mcontext->__ss.__r8, uc->uc_mcontext->__ss.__r9, uc->uc_mcontext->__ss.__r10,
++	     uc->uc_mcontext->__ss.__r11, uc->uc_mcontext->__ss.__r12, uc->uc_mcontext->__ss.__r13,
++	     uc->uc_mcontext->__ss.__r14, uc->uc_mcontext->__ss.__r15, uc->uc_mcontext->__ss.__rip,
++	     uc->uc_mcontext->__ss.__rflags, uc->uc_mcontext->__ss.__cs, uc->uc_mcontext->__ss.__fs,
++	     uc->uc_mcontext->__ss.__gs);
++#elif !defined(__LP64__) && defined(__APPLE__)
++  sig_printf(dump32, uc->uc_mcontext->__ss.__eax, uc->uc_mcontext->__ss.__ebx,
++	     uc->uc_mcontext->__ss.__ecx, uc->uc_mcontext->__ss.__edx,
++	     uc->uc_mcontext->__ss.__edi, uc->uc_mcontext->__ss.__esi,
++	     uc->uc_mcontext->__ss.__ebp, uc->uc_mcontext->__ss.__esp,
++	     uc->uc_mcontext->__ss.__ss, uc->uc_mcontext->__ss.__eflags,
++	     uc->uc_mcontext->__ss.__eip, uc->uc_mcontext->__ss.__cs,
++	     uc->uc_mcontext->__ss.__ds, uc->uc_mcontext->__ss.__es,
++	     uc->uc_mcontext->__ss.__fs, uc->uc_mcontext->__ss.__gs);
++#elif defined(__i386__)
++  sig_printf(dump32, uc->uc_mcontext.gregs[REG_EAX], uc->uc_mcontext.gregs[REG_EBX],
++	     uc->uc_mcontext.gregs[REG_ECX], uc->uc_mcontext.gregs[REG_EDX],
++	     uc->uc_mcontext.gregs[REG_EDI], uc->uc_mcontext.gregs[REG_ESI],
++	     uc->uc_mcontext.gregs[REG_EBP], uc->uc_mcontext.gregs[REG_ESP],
++	     uc->uc_mcontext.gregs[REG_SS], uc->uc_mcontext.gregs[REG_EFL],
++	     uc->uc_mcontext.gregs[REG_EIP], uc->uc_mcontext.gregs[REG_EIP],
++	     uc->uc_mcontext.gregs[REG_DS], uc->uc_mcontext.gregs[REG_ES],
++	     uc->uc_mcontext.gregs[REG_FS], uc->uc_mcontext.gregs[REG_FS]);
++#elif defined(__x86_64__)
++  sig_printf(dump64, uc->uc_mcontext.gregs[REG_RAX], uc->uc_mcontext.gregs[REG_RBX],
++	     uc->uc_mcontext.gregs[REG_RCX], uc->uc_mcontext.gregs[REG_RDX],
++	     uc->uc_mcontext.gregs[REG_RDI], uc->uc_mcontext.gregs[REG_RSI],
++	     uc->uc_mcontext.gregs[REG_RBP], uc->uc_mcontext.gregs[REG_RSP],
++	     uc->uc_mcontext.gregs[REG_R8], uc->uc_mcontext.gregs[REG_R9],
++	     uc->uc_mcontext.gregs[REG_R10], uc->uc_mcontext.gregs[REG_R11],
++	     uc->uc_mcontext.gregs[REG_R12], uc->uc_mcontext.gregs[REG_R13],
++	     uc->uc_mcontext.gregs[REG_R14], uc->uc_mcontext.gregs[REG_R15],
++	     uc->uc_mcontext.gregs[REG_RIP], uc->uc_mcontext.gregs[REG_EFL],
++	     uc->uc_mcontext.gregs[REG_CSGSFS]);
++#else
++#endif
++}
++
++static int
++check_guard(caddr_t fault_addr, rb_thread_t th) {
++  if(fault_addr <= (caddr_t)rb_curr_thread->guard &&
++     fault_addr >= (caddr_t)rb_curr_thread->stk_ptr) {
++    return 1;
++  }
++  return 0;
++}
++
+ #ifdef SIGBUS
++#ifdef POSIX_SIGNAL
++static void sigbus _((int, siginfo_t*, void*));
++static void
++sigbus(sig, ip, context)
++     int sig;
++     siginfo_t *ip;
++     void *context;
++{
++#if defined(HAVE_NATIVETHREAD) && defined(HAVE_NATIVETHREAD_KILL)
++  if (!is_ruby_native_thread() && !rb_trap_accept_nativethreads[sig]) {
++    sigsend_to_ruby_thread(sig);
++    return;
++  }
++#endif
++
++  dump_machine_state(context);
++  if (check_guard((caddr_t)ip->si_addr, rb_curr_thread)) {
++    /* we hit the guard page, print out a warning to help app developers */
++    rb_bug("Thread stack overflow! Try increasing it!");
++  } else {
++    rb_bug("Bus Error");
++  }
++}
++
++#else /* !defined(POSIX_SIGNAL) */
++
+ static RETSIGTYPE sigbus _((int));
+ static RETSIGTYPE
+ sigbus(sig)
+@@ -612,8 +745,36 @@ sigbus(sig)
+     rb_bug("Bus Error");
+ }
+ #endif
++#endif
++
+ 
+ #ifdef SIGSEGV
++#ifdef POSIX_SIGNAL
++static void sigsegv _((int, siginfo_t*, void*));
++static void
++sigsegv(sig, ip, context)
++     int sig;
++     siginfo_t *ip;
++     void *context;
++{
++#if defined(HAVE_NATIVETHREAD) && defined(HAVE_NATIVETHREAD_KILL)
++  if (!is_ruby_native_thread() && !rb_trap_accept_nativethreads[sig]) {
++    sigsend_to_ruby_thread(sig);
++    return;
++  }
++#endif
++
++  dump_machine_state(context);
++  if (check_guard((caddr_t)ip->si_addr, rb_curr_thread)) {
++    /* we hit the guard page, print out a warning to help app developers */
++    rb_bug("Thread stack overflow! Try increasing it!");
++  } else {
++    rb_bug("Segmentation fault");
++  }
++}
++
++#else /* !defined(POSIX_SIGNAL) */
++
+ static RETSIGTYPE sigsegv _((int));
+ static RETSIGTYPE
+ sigsegv(sig)
+@@ -629,6 +790,7 @@ sigsegv(sig)
+     rb_bug("Segmentation fault");
+ }
+ #endif
++#endif
+ 
+ #ifdef SIGPIPE
+ static RETSIGTYPE sigpipe _((int));
+@@ -698,7 +860,8 @@ static VALUE
+ trap(arg)
+     struct trap_arg *arg;
+ {
+-    sighandler_t func, oldfunc;
++    sighandler_t oldfunc;
++    void *func;
+     VALUE command, oldcmd;
+     int sig = -1;
+     char *s;
+@@ -945,6 +1108,20 @@ sig_list()
+ }
+ 
+ static void
++create_sigstack()
++{
++  stack_t ss;
++  ss.ss_size = SIGSTKSZ;
++  ss.ss_sp = malloc(ss.ss_size);
++  ss.ss_flags = 0;
++  if (sigaltstack(&ss, NULL) < 0) {
++    free(ss.ss_sp);
++    fprintf(stderr, "Couldn't create signal stack! Error %d: %s\n", errno, strerror(errno));
++    exit(1);
++  }
++}
++
++static void
+ install_sighandler(signum, handler)
+     int signum;
+     sighandler_t handler;
+@@ -953,7 +1130,7 @@ install_sighandler(signum, handler)
+ 
+     old = ruby_signal(signum, handler);
+     if (old != SIG_DFL) {
+-	ruby_signal(signum, old);
++       ruby_signal(signum, old);
+     }
+ }
+ 
+@@ -1080,6 +1257,8 @@ Init_signal()
+     rb_alias(rb_eSignal, rb_intern("signm"), rb_intern("message"));
+     rb_define_method(rb_eInterrupt, "initialize", interrupt_init, 1);
+ 
++    create_sigstack();
++
+     install_sighandler(SIGINT, sighandler);
+ #ifdef SIGHUP
+     install_sighandler(SIGHUP, sighandler);

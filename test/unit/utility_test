@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+source ./test/setup
+initialize_rvm
+
+heat 'match "a" "a"'
+assert number_eq 0 $result
+
+heat 'match "snark" "a"'
+assert number_eq 0 $result
+
+heat 'match "snark" "^s"'
+assert number_eq 0 $result
+
+heat 'match "snark" "k$"'
+assert number_eq 0 $result
+
+heat 'match "snark" "s$"'
+assert number_eq 1 $result
+
+heat 'match "snark" "^k"'
+assert number_eq 1 $result
+
+heat 'match "1.9.1" "[0-9]\.[0-9]*"'
+assert number_eq 0 $result
+
+heat 'match "snark.rb" "*\.rb$"'
+assert number_eq 0 $result
+
+heat 'match "snark.gems" "*\.gems$"'
+assert number_eq 0 $result
+
+heat 'match "snark.gem" "*\.gem$"'
+assert number_eq 0 $result
+
+heat 'match "1.9.1${rvm_gemset_separator:-"@"}snark" "*${rvm_gemset_separator:-"@"}*"'
+assert number_eq 0 $result
+
+heat 'match "1.9.1" "*${rvm_gemset_separator:-"@"}*"'
+assert number_eq 1 $result
+
+heat '
+  output=$(
+    mkdir /tmp/rvm-trust-test
+    echo "trusted=TRUSTED" > /tmp/rvm-trust-test/.rvmrc
+    rvm rvmrc trust /tmp/rvm-trust-test > /dev/null
+    cd /tmp/rvm-trust-test
+
+    echo "trusted=UNTRUSTED" > /tmp/rvm-trust-test/.rvmrc
+    rvm rvmrc untrust /tmp/rvm-trust-test > /dev/null
+    cd /tmp; cd /tmp/rvm-trust-test
+
+    echo $trusted
+    rm -rf /tmp/rvm-trust-test
+  )'
+
+assert string_eq "$output" "TRUSTED"
+
+if [[ -z "$rvm_teset_suite_flag" ]] ; then btu_summary ; fi
+

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+if [[ -n "${ZSH_VERSION:-}" ]]
+then
+  __array_start=1
+else
+  __array_start=0
+fi
+
+# Usage: contains "a_string" "${an_array[@]}"
+array_contains()
+{
+  local pattern="$1" ; shift
+  local index list
+  list=("$@")
+  for index in "${!list[@]}" ; do
+    [[ ${list[index]} = $pattern ]] && { echo $index ; return 0 ; }
+  done
+  echo -1 ; return 1
+}
+
+array_length()
+{
+  array=$1
+  eval "length=\${#${array}[*]}"
+  echo $length
+  return $length
+}
+
+array_push()
+{
+  array=$1 ; item=$2
+  # TODO: allow loop over more arguments.
+  eval "index=\$((\${#${array}[*]} + $__array_start))"
+  eval "${array}[${index}]=${item}"
+}
+

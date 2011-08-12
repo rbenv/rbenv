@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+__rvm_load_rvmrc()
+{
+  local _file
+  if (( ${rvm_ignore_rvmrc:=0} == 1 ))
+  then
+    return 0
+  fi
+
+  for _file in /etc/rvmrc "$HOME/.rvmrc"
+  do
+    if [[ -s "$_file" ]]
+    then
+      if command grep '^\s*rvm .*$' "$_file" >/dev/null 2>&1
+      then
+        rvm_error "
+$_file is for rvm settings only.
+rvm CLI may NOT be called from within $_file.
+Skipping the loading of $_file
+"
+        return 1
+      else
+        source "$_file"
+      fi
+    fi
+  done
+
+  return 0
+}
+
+# Initialize rvm, ensuring that the path and directories are as expected.
+__rvm_initialize()
+{
+  rvm_ruby_load_path="."
+  rvm_ruby_require=""
+
+  true ${rvm_scripts_path:="$rvm_path/scripts"}
+  source "$rvm_scripts_path/base"
+
+  __rvm_clean_path
+  __rvm_conditionally_add_bin_path
+  export PATH
+
+  if [[ ! -d "${rvm_tmp_path:-/tmp}" ]]
+  then
+    command mkdir -p "${rvm_tmp_path}"
+  fi
+
+  return 0
+}

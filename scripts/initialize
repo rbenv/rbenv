@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+# Set shell options that RVM cannot live without,
+# see __rvm_setup and __rvm_teardown for further settings.
+if [[ -n "${BASH_VERSION:-}" ]]
+then
+  shopt -s extglob
+elif [[ -n "${ZSH_VERSION:-}" ]]
+then
+  setopt extendedglob
+  setopt kshglob
+  setopt no_glob_subst
+else
+  printf "%s\n" "What the heck kind of shell are you running here???"
+fi
+
+export rvm_path="${rvm_path%%+(\/)}"
+
+true ${rvm_scripts_path:="$rvm_path/scripts"}
+
+# Ensure that /etc/rvmrc and $HOME/.rvmrc values take precedence.
+command -v __rvm_load_rvmrc >/dev/null 2>&1 || \
+  source "$rvm_scripts_path/functions/init"
+
+#
+# Setup RVM Environment variables.  Each RVM internal path is intended to be
+# configurable by the end users for whatever their needs may be.
+# They should be set in /etc/rvmrc and then $HOME/.rvmrc
+#
+if [[ -z "${rvm_user_install_flag:-}" ]]
+then
+  if (( UID == 0 )) ||
+    [[ -n "${rvm_prefix:-}" && "${rvm_prefix:-}" != "${HOME}" ]]
+  then
+    true "${rvm_bin_path:="${rvm_prefix}/bin"}"
+    true "${rvm_man_path:="${rvm_prefix}/share/man"}"
+    true "${rvm_rc_files:=("/etc/profile" "/etc/zshenv")}"
+    rvm_user_install_flag=0
+  else
+    rvm_user_install_flag=1
+  fi
+fi
+
+: \
+  ${rvm_rc_files:=("$HOME/.bash_profile" "$HOME/.bashrc" "$HOME/.zshenv")} \
+  ${rvm_bin_path:="$rvm_path/bin"} \
+  ${rvm_man_path:="$rvm_path/man"} \
+  ${rvm_archives_path:="$rvm_path/archives"} \
+  ${rvm_config_path:="$rvm_path/config"} \
+  ${rvm_docs_path:="$rvm_path/docs"} \
+  ${rvm_environments_path:="$rvm_path/environments"} \
+  ${rvm_examples_path:="$rvm_path/examples"} \
+  ${rvm_gems_path:="$rvm_path/gems"} \
+  ${rvm_gemsets_path:="$rvm_path/gemsets"} \
+  ${rvm_help_path:="$rvm_path/help"} \
+  ${rvm_hooks_path:="$rvm_path/hooks"} \
+  ${rvm_lib_path:="$rvm_path/lib"} \
+  ${rvm_log_path:="$rvm_path/log"} \
+  ${rvm_patches_path:="$rvm_path/patches"} \
+  ${rvm_repos_path:="$rvm_path/repos"} \
+  ${rvm_rubies_path:="$rvm_path/rubies"} \
+  ${rvm_rubygems_path:="$rvm_path/rubygems"} \
+  ${rvm_src_path:="$rvm_path/src"} \
+  ${rvm_tmp_path:="$rvm_path/tmp"} \
+  ${rvm_user_path:="$rvm_path/user"} \
+  ${rvm_usr_path:="$rvm_path/usr"} \
+  ${rvm_wrappers_path:="$rvm_path/wrappers"} \
+  ${rvm_verbose_flag:=0} \
+  ${rvm_debug_flag:=0}
+
+if [[ -n "${rvm_archflags:-}" ]]
+then
+  rvm_make_flags_flag=1
+fi
+
+rvm_gems_cache_path="${rvm_gems_cache_path:-"${rvm_gems_path:-"$rvm_path/gems"}/cache"}"
+
+if (( ${rvm_trace_flag:-0} > 0 ))
+then
+  export rvm_trace_flag=1
+
+  set -o xtrace
+  # set -o errexit
+
+  if [[ -z "${ZSH_VERSION:-}" ]]
+  then
+    #  set -o errtrace
+    #  set -o pipefail
+
+    PS4="+ \${BASH_SOURCE##\${rvm_path:-}} : \${FUNCNAME[0]:+\${FUNCNAME[0]}()}  \${LINENO} > "
+    export PS4
+  fi
+elif [[ ${rvm_debug_flag:-0} > 0 ]]
+then
+  rvm_debug_flag=0
+fi
+
+export rvm_action rvm_alias_expanded rvm_archflags rvm_archive_extension rvm_archives_path rvm_bin_flag rvm_bin_path rvm_clang_flag rvm_config_path rvm_configure_flags rvm_debug_flag rvm_default_flag rvm_delete_flag rvm_docs_path rvm_docs_type rvm_dump_environment_flag rvm_environments_path rvm_error_message rvm_examples_path rvm_expanding_aliases rvm_file_name rvm_gemdir_flag rvm_gems_cache_path rvm_gems_path rvm_gemset_name rvm_gemset_separator rvm_gemsets_path rvm_gemstone_package_file rvm_gemstone_url rvm_head_flag rvm_help_path rvm_hook rvm_install_args rvm_install_on_use_flag rvm_lib_path rvm_llvm_flag rvm_loaded_flag rvm_log_path rvm_make_flags rvm_niceness rvm_nightly_flag rvm_only_path_flag rvm_parse_break rvm_patch_names rvm_patch_original_pwd rvm_patches_path rvm_path rvm_pretty_print_flag rvm_prior_cc rvm_proxy rvm_quiet_flag rvm_ree_options rvm_reload_flag rvm_remove_flag rvm_repos_path rvm_rubies_path rvm_ruby_alias rvm_ruby_aliases rvm_ruby_args rvm_ruby_binary rvm_ruby_bits rvm_ruby_configure rvm_ruby_file rvm_ruby_gem_home rvm_ruby_gem_path rvm_ruby_global_gems_path rvm_ruby_home rvm_ruby_interpreter rvm_ruby_irbrc rvm_ruby_load_path rvm_ruby_major_version rvm_ruby_make rvm_ruby_make_install rvm_ruby_minor_version rvm_ruby_mode rvm_ruby_name rvm_ruby_package_file rvm_ruby_package_name rvm_ruby_patch rvm_ruby_patch_level rvm_ruby_release_version rvm_ruby_repo_url rvm_ruby_require rvm_ruby_revision rvm_ruby_selected_flag rvm_ruby_sha rvm_ruby_string rvm_ruby_strings rvm_ruby_tag rvm_ruby_url rvm_ruby_user_tag rvm_ruby_version rvm_script_name rvm_scripts_path rvm_sdk rvm_user_install_flag rvm_silent_flag rvm_src_path rvm_sticky_flag rvm_system_flag rvm_tmp_path rvm_token rvm_trace_flag rvm_use_flag rvm_user_flag rvm_user_path rvm_usr_path rvm_verbose_flag rvm_wrapper_name rvm_wrappers_path rvm_ruby_repo_branch rvm_man_path
+

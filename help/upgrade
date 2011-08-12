@@ -1,0 +1,21 @@
+
+Usage:
+
+  rvm upgrade [source ruby] [destination ruby]
+
+Description:
+
+  Upgrades the specified (already installed) source ruby to the
+  given destination ruby version. Will migrate gemsets, wrappers, aliases
+  and environment files.
+
+  The process will prompt you at each stage - if the versions look incorrect,
+  please cancel and perform it manually.
+
+
+Examples:
+
+  $ rvm upgrade 1.9.2-p136 1.9.2-p180
+
+  $ rvm upgrade ree-2011.01 ree-2011-02
+

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+. "${rvm_path}/scripts/functions/hooks/jruby"
+
+if [[ "${rvm_ruby_string}" =~ "jruby" ]]
+then
+  jruby_ngserver_start
+  jruby_options_append "--ng" "${PROJECT_JRUBY_OPTS[@]}"
+else
+  jruby_options_remove "--ng" "${PROJECT_JRUBY_OPTS[@]}"
+  jruby_clean_project_options
+fi

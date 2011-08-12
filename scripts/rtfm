@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+rvm_url="https://rvm.beginrescueend.com/"
+
+source "$rvm_path/scripts/functions/logging"
+
+if command -v open >/dev/null ; then
+
+  open "$rvm_url"
+
+elif command -v xdg-open >/dev/null ; then
+
+  xdg-open "$rvm_url"
+
+else
+
+  rvm_log "Please RTFM at the URL $rvm_url"
+
+fi
+
+exit $?
