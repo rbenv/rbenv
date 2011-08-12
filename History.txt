@@ -1,0 +1,5 @@
+=== 1.2.6 / 2011-02-07
+
+* 1 major enhancement
+
+  * Switched from jeweler to hoe. No clue what other changes are in here.

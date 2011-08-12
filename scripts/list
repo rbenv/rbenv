@@ -1,0 +1,359 @@
+#!/usr/bin/env bash
+
+rvm_base_except="selector"
+
+source "$rvm_scripts_path/base"
+
+usage()
+{
+  printf "
+  Usage:
+
+    rvm list [action]
+
+  Actions:
+
+  {help,known,gemsets,default [string],rubies,strings,known_strings,ruby_svn_tags}
+
+"
+
+  return 0
+}
+
+list_gemsets()
+{
+  local all_rubies version versions ruby_version_name current_ruby selected system_ruby system_version string binary
+
+  if [[ "${1:-""}" = "strings" ]]
+  then
+    list_gemset_strings
+    return 0
+  fi
+
+  current_ruby="$(__rvm_environment_identifier)"
+
+  all_rubies="$(list_strings)"
+
+  printf "\nrvm gemsets\n"
+
+  versions=($(
+  builtin cd "${rvm_gems_path:-"$rvm_path/gems"}/"
+  find . -maxdepth 1 -mindepth 1 -type d -print 2> /dev/null | \
+    awk '/[a-z]*-.*/ {print $NF}'
+  ))
+
+  for version in "${versions[@]//.\/}"
+  do
+    ruby_version_name="$(echo "$version" | awk -F"${rvm_gemset_separator:-"@"}" '{print $1}')"
+
+    if [[ "$all_rubies" != *"$ruby_version_name"* ]]
+    then
+      continue
+    fi
+
+    if printf "$version" | grep '^jruby-' >/dev/null 2>&1
+    then
+      string="[ $("$rvm_rubies_path/$ruby_version_name/bin/ruby" -v | awk '{print $NF}' | sed -e 's/\[//' -e 's/\]//') ]"
+
+    elif [[ -n "$(echo "$version" | awk '/^maglev-|^macruby-/')" ]]
+    then
+      string="[ x86_64 ]"
+    else
+      string="[ $(file "$rvm_rubies_path/$ruby_version_name/bin/ruby" | awk '/x86.64/ {print "x86_64"} /386/ {print "i386"} /ppc/ {print "ppc"}' | tr "\n" ' ')]"
+    fi
+
+    printf "\n"
+
+    if [[ "$version" = "$current_ruby" ]]
+    then
+      printf "=> "
+    else
+      printf "   "
+    fi
+
+    if (( ${rvm_pretty_print_flag:=0} == 1 ))
+    then
+      printf "$(tput setaf 2)$version$(tput sgr0) $string"
+    else
+      printf "$version $string"
+    fi
+
+  done
+
+  if [[ -f "$rvm_config_path/default" && -s "$rvm_config_path/default" ]]
+  then
+    version=$(
+    grep 'MY_RUBY_HOME' "$rvm_config_path/default" | head -1 | awk -F"'" '{print $2}' | xargs basename --
+    )
+
+    if [[ -n "$version" ]]
+    then
+      printf "\nDefault Ruby (for new shells)\n"
+
+      string="[ $(file "$rvm_rubies_path/$version/bin/ruby" | awk '/x86.64/ {print "x86_64"} /386/ {print "i386"} /ppc/ {print "ppc"}' | tr "\n" ' ')]"
+
+      if (( ${rvm_pretty_print_flag:=0} == 1 ))
+      then
+        printf "\n  $(tput setaf 2)$version$(tput sgr0) $string\n"
+      else
+        printf "\n  $version $string\n"
+      fi
+    fi
+  fi
+
+  printf "\n\n"
+
+  return 0
+}
+
+list_default()
+{
+  local version string
+
+  if [[ "${args[0]:-""}" = "string" ]]
+  then
+    "$rvm_scripts_path/alias" show default 2>/dev/null | \
+      awk -F"${rvm_gemset_separator:-"@"}" '{print $1}' | \
+      xargs basename --
+
+  else
+    if [[ -L "$rvm_rubies_path/default" ]]
+    then
+      version=$(
+      "$rvm_scripts_path/alias" show default 2>/dev/null | \
+        awk -F"${rvm_gemset_separator:-"@"}" '{print $1}' | \
+        xargs basename --
+      )
+
+      if [[ -n "$version" ]]
+      then
+        printf "\nDefault Ruby (for new shells)\n"
+
+        string="[ $(file "$rvm_rubies_path/$version/bin/ruby" | awk '/x86.64/ {print "x86_64"} /386/ {print "i386"} /ppc/ {print "ppc"}' | \tr "\n" ' ')]"
+
+        if (( ${rvm_pretty_print_flag:=0} == 1 ))
+        then
+          printf "\n   $(tput setaf 2)$version$(tput sgr0) $string\n"
+        else
+          printf "\n   $version $string\n"
+        fi
+      fi
+    fi
+  fi
+
+  printf "\n"
+
+  return 0
+}
+
+list_ruby_svn_tags()
+{
+  local prefix tag
+
+  while read -r tag
+  do
+    prefix="$(
+    echo ${tag/\//} | \
+      sed 's#^v1_##' | \
+      awk -F'_' '{print "(ruby-)1."$1"."$2}' | \
+      sed 's#p$##'
+    )"
+
+    echo "${prefix}-t${tag/\//}"
+
+  done < <(svn list http://svn.ruby-lang.org/repos/ruby/tags/ | \
+    awk '/^v1_[8|9]/')
+
+  return 0
+}
+
+# Query for valid rvm ruby strings
+# This is meant to be used with scripting.
+list_strings()
+{
+  (
+  builtin cd "$rvm_rubies_path"
+  find . -maxdepth 1 -mindepth 1 -type d | sed -e 's#./##g'
+  )
+
+  return $?
+}
+
+# This is meant to be used with scripting.
+list_gemset_strings()
+{
+  local all_rubies ruby_name gemset gemsets
+
+  all_rubies="$(list_strings)"
+
+  gemsets=($(
+    builtin cd "${rvm_gems_path:-"$rvm_path/gems"}"
+    find . -maxdepth 1 -mindepth 1 -type d 2>/dev/null | \
+      xargs -n1 basename -- | \
+      command grep -v '^\(@\|doc$\|cache$\|system$\)' | sort
+    ))
+
+  for gemset in "${gemsets[@]//.\/}"
+  do
+    ruby_name="${gemset//${rvm_gemset_separator:-"@"}*}"
+
+    if [[ "$all_rubies" != *"$ruby_name"* ]]
+    then
+      continue
+    fi
+    echo "$gemset"
+  done
+
+  return 0
+}
+
+# This is meant to be used with scripting.
+list_known_strings()
+{
+  sed -e 's/#.*$//g' -e 's#\[##g' -e 's#\]##g' < "$rvm_config_path/known" | \
+    sort -r | uniq
+
+  return $?
+}
+
+list_known()
+{
+  if [[ "${1:-""}" = "strings" ]]
+  then
+    list_known_strings
+    return 0
+  fi
+
+  if [[ -t 0 ]]
+  then
+    eval "${PAGER:-cat -v} '$rvm_config_path/known'"
+  else
+    cat "$rvm_config_path/known"
+  fi
+
+  return $?
+}
+
+list_rubies_strings()
+{
+  (
+  builtin cd "$rvm_rubies_path"
+  find -maxdepth 0 -type d | tail -n+2 | xargs -n1 basename -- |  __rvm_strip
+  )
+
+  return $?
+}
+
+list_rubies()
+{
+  local current_ruby rubies version selected system_ruby system_version \
+    string binary
+
+  if [[ "${1:-""}" = "strings" ]]
+  then
+    list_rubies_strings
+    return 0
+  fi
+
+  current_ruby="$(
+  __rvm_environment_identifier | \
+    awk -F"${rvm_gemset_separator:-"@"}" '{print $1}'
+  )"
+
+  printf "\nrvm rubies\n"
+
+  rubies=($(
+  builtin cd "$rvm_rubies_path/"
+  find . -maxdepth 1 -mindepth 1 -type d 2> /dev/null | \
+    awk '/[a-z]*-.*/ {print $NF}'
+  ))
+
+  for version in "${rubies[@]//.\/}"
+  do
+    if [[ ! -x "$rvm_rubies_path/$version/bin/ruby" ]]
+    then
+      continue
+    fi
+
+    if echo "$version" | grep '^jruby-' >/dev/null 2>&1
+    then
+      string="[ $("$rvm_rubies_path/$version/bin/ruby" -v | awk '{print $NF}' | sed -e 's/\[//' -e 's/\]//') ]"
+
+    elif [[ ! -z "$(echo "$version" | awk '/^maglev-|^macruby-/')" ]] ; then
+      string="[ x86_64 ]"
+
+    else
+      string="[ $(file "$rvm_rubies_path/$version/bin/ruby" | awk '/x86.64/ {print "x86_64"} /386/ {print "i386"} /ppc/ {print "ppc"}' | tr "\n" ' ')]"
+    fi
+
+    printf "\n"
+
+    if [[ "$version" = "$current_ruby" ]]; then
+      printf "=> "
+    else
+      printf "   "
+    fi
+
+    # TODO: Only use tput for interactive terminal sessions.
+    if (( ${rvm_pretty_print_flag:=0} == 1 ))
+    then
+      printf "$(tput setaf 2)$version$(tput sgr0) $string"
+    else
+      printf "$version $string"
+    fi
+
+  done
+
+  if [[ -f "$rvm_config_path/default" && -s "$rvm_config_path/default" ]]
+  then
+    version=$(
+    grep 'MY_RUBY_HOME' "$rvm_config_path/default" | head -n 1 | awk -F"'" '{print $2}' | xargs basename --
+    )
+
+    if [[ -n "$version" ]]
+    then
+      printf "Default Ruby (for new shells)\n"
+
+      string="[ $(file "$rvm_rubies_path/$version/bin/ruby" | awk '/x86.64/ {print "x86_64"} /386/ {print "i386"} /ppc/ {print "ppc"}' | \tr "\n" ' ')]"
+
+      if (( ${rvm_pretty_print_flag:=0} == 1 ))
+      then
+        printf "  $(tput setaf 2)$version$(tput sgr0) $string\n"
+      else
+        printf "  $version $string\n"
+      fi
+    fi
+  fi
+
+  printf "\n\n"
+
+  return 0
+}
+
+# List all rvm installed rubies, default ruby and system ruby.
+# Display the rubies, indicate their architecture and indicate which is currently used.
+# This is not meant to be used with scripting. This is for interactive mode usage only.
+args=($*)
+action="${args[0]:-""}"
+args=${args[@]:1} # Strip trailing / leading / extra spacing.
+
+
+if [[ -z "$action" ]]
+then
+  list_rubies
+  exit 0
+fi
+
+case "$action" in
+  known)         list_known           ;;
+  known_strings) list_known_strings   ;;
+  gemsets)       list_gemsets "$args" ;;
+  default)       list_default         ;;
+  rubies)        list_rubies "$args"  ;;
+  strings)       list_strings         ;;
+  ruby_svn_tags) list_ruby_svn_tags   ;;
+  help)          usage                ;;
+  *)             usage ; exit 1       ;;
+esac
+
+exit $?

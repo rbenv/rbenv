@@ -1,0 +1,147 @@
+--- a/gc.c	(revision 32826)
++++ b/gc.c	(working copy)
+@@ -309,16 +309,12 @@
+     struct gc_list *next;
+ };
+ 
+-#define CALC_EXACT_MALLOC_SIZE 0
+-
+ typedef struct rb_objspace {
+     struct {
+ 	size_t limit;
+ 	size_t increase;
+-#if CALC_EXACT_MALLOC_SIZE
+ 	size_t allocated_size;
+ 	size_t allocations;
+-#endif
+     } malloc_params;
+     struct {
+ 	size_t increment;
+@@ -715,10 +711,6 @@
+     }
+     if (size == 0) size = 1;
+ 
+-#if CALC_EXACT_MALLOC_SIZE
+-    size += sizeof(size_t);
+-#endif
+-
+     if ((ruby_gc_stress && !ruby_disable_gc_stress) ||
+ 	(malloc_increase+size) > malloc_limit) {
+ 	garbage_collect_with_gvl(objspace);
+@@ -731,13 +723,9 @@
+ vm_malloc_fixup(rb_objspace_t *objspace, void *mem, size_t size)
+ {
+     malloc_increase += size;
+-
+-#if CALC_EXACT_MALLOC_SIZE
++    
+     objspace->malloc_params.allocated_size += size;
+     objspace->malloc_params.allocations++;
+-    ((size_t *)mem)[0] = size;
+-    mem = (size_t *)mem + 1;
+-#endif
+ 
+     return mem;
+ }
+@@ -776,11 +764,7 @@
+     if (ruby_gc_stress && !ruby_disable_gc_stress)
+ 	garbage_collect_with_gvl(objspace);
+ 
+-#if CALC_EXACT_MALLOC_SIZE
+-    size += sizeof(size_t);
+     objspace->malloc_params.allocated_size -= size;
+-    ptr = (size_t *)ptr - 1;
+-#endif
+ 
+     mem = realloc(ptr, size);
+     if (!mem) {
+@@ -792,12 +776,8 @@
+         }
+     }
+     malloc_increase += size;
+-
+-#if CALC_EXACT_MALLOC_SIZE
++    
+     objspace->malloc_params.allocated_size += size;
+-    ((size_t *)mem)[0] = size;
+-    mem = (size_t *)mem + 1;
+-#endif
+ 
+     return mem;
+ }
+@@ -805,14 +785,6 @@
+ static void
+ vm_xfree(rb_objspace_t *objspace, void *ptr)
+ {
+-#if CALC_EXACT_MALLOC_SIZE
+-    size_t size;
+-    ptr = ((size_t *)ptr) - 1;
+-    size = ((size_t*)ptr)[0];
+-    objspace->malloc_params.allocated_size -= size;
+-    objspace->malloc_params.allocations--;
+-#endif
+-
+     free(ptr);
+ }
+ 
+@@ -3368,7 +3340,6 @@
+ }
+ 
+ 
+-#if CALC_EXACT_MALLOC_SIZE
+ /*
+  *  call-seq:
+  *     GC.malloc_allocated_size -> Integer
+@@ -3378,8 +3349,8 @@
+  *  It returns the allocated size by malloc().
+  */
+ 
+-static VALUE
+-gc_malloc_allocated_size(VALUE self)
++VALUE
++rb_gc_malloc_allocated_size(VALUE self)
+ {
+     return UINT2NUM((&rb_objspace)->malloc_params.allocated_size);
+ }
+@@ -3393,12 +3364,11 @@
+  *  It returns the number of allocated memory object by malloc().
+  */
+ 
+-static VALUE
+-gc_malloc_allocations(VALUE self)
++VALUE
++rb_gc_malloc_allocations(VALUE self)
+ {
+     return UINT2NUM((&rb_objspace)->malloc_params.allocations);
+ }
+-#endif
+ 
+ static VALUE
+ gc_profile_record_get(void)
+@@ -3583,6 +3553,8 @@
+     rb_define_singleton_method(rb_mGC, "start", rb_gc_start, 0);
+     rb_define_singleton_method(rb_mGC, "enable", rb_gc_enable, 0);
+     rb_define_singleton_method(rb_mGC, "disable", rb_gc_disable, 0);
++    rb_define_singleton_method(rb_mGC, "malloc_allocated_size", rb_gc_malloc_allocated_size, 0);
++    rb_define_singleton_method(rb_mGC, "malloc_allocations", rb_gc_malloc_allocations, 0);
+     rb_define_singleton_method(rb_mGC, "stress", gc_stress_get, 0);
+     rb_define_singleton_method(rb_mGC, "stress=", gc_stress_set, 1);
+     rb_define_singleton_method(rb_mGC, "count", gc_count, 0);
+@@ -3597,6 +3569,7 @@
+     rb_define_singleton_method(rb_mProfiler, "result", gc_profile_result, 0);
+     rb_define_singleton_method(rb_mProfiler, "report", gc_profile_report, -1);
+     rb_define_singleton_method(rb_mProfiler, "total_time", gc_profile_total_time, 0);
++    rb_define_singleton_method(rb_mProfiler, "data", gc_profile_record_get, 0);
+ 
+     rb_mObSpace = rb_define_module("ObjectSpace");
+     rb_define_module_function(rb_mObSpace, "each_object", os_each_obj, -1);
+@@ -3616,9 +3589,4 @@
+     rb_define_method(rb_mKernel, "object_id", rb_obj_id, 0);
+ 
+     rb_define_module_function(rb_mObSpace, "count_objects", count_objects, -1);
+-
+-#if CALC_EXACT_MALLOC_SIZE
+-    rb_define_singleton_method(rb_mGC, "malloc_allocated_size", gc_malloc_allocated_size, 0);
+-    rb_define_singleton_method(rb_mGC, "malloc_allocations", gc_malloc_allocations, 0);
+-#endif
+ }

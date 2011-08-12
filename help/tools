@@ -1,0 +1,22 @@
+
+∴ rvm tools {identifier,path-identifier,strings}
+
+Provides generic tools related to rvm environments for getting information
+about your current environment. Primarily used for scripting rvm.
+
+Examples:
+
+To get the expanded ruby string of the current environment, we'd run:
+
+  ∴ rvm tools identifier
+
+To get the identifier for a folder (taking into account rvmrc files and the like),
+we're instead run:
+
+  ∴ rvm tools path-identifier ~/path/to/directory
+
+Lastly, we can example ruby strings. E.g., to get the current ree version, we'd
+run:
+
+  ∴ rvm tools strings ree
+

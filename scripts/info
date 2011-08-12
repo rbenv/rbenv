@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+
+if [[ "$rvm_trace_flag" -eq 2 ]] ; then set -x ; export rvm_trace_flag ; fi
+
+source "$rvm_scripts_path/base"
+source "$rvm_scripts_path/version"
+
+version_for()
+{
+  local binary=${1:-""}
+
+  if command -v "$binary" >/dev/null ; then
+    $binary --version | head -n1
+  else
+    echo "not installed"
+  fi
+
+  return 0
+}
+
+info_system()
+{
+  rvm_info="
+  system:
+    uname:       \"$(uname -a)\"
+    bash:        \"$(command -v bash) => $(version_for bash)\"
+    zsh:         \"$(command -v zsh) => $(version_for zsh)\"
+"
+}
+
+info_rvm()
+{
+  rvm_info="
+  rvm:
+    version:      \"$(__rvm_version | \tr "\n" ' ' | __rvm_strip)\"
+"
+
+}
+
+info_ruby()
+{
+  [[ "$(__rvm_environment_identifier)" == "system" ]] && return
+  ruby=$(command -v ruby)
+  if [[ $? -eq 0 ]] && [[ -x "$ruby" ]] ; then full_version="$($ruby -v)" ; fi
+  rvm_info="
+  ruby:
+    interpreter:  \"$(printf "${full_version}" | awk '{print $1}')\"
+    version:      \"$(printf "${full_version}" | awk '{print $2}')\"
+    date:         \"$(printf "${full_version}" | sed 's/^.*(\([0-9]\{4\}\(-[0-9][0-9]\)\{2\}\).*$/\1/')\"
+    platform:     \"$(printf "${full_version}" | sed 's/^.*\[//' | sed 's/\].*$//')\"
+    patchlevel:   \"$(printf "${full_version}" | sed 's/^.*(//' | sed 's/).*$//')\"
+    full_version: \"${full_version}\"
+"
+
+}
+
+info_homes()
+{
+  rvm_info="
+  homes:
+    gem:          \"${GEM_HOME:-"not set"}\"
+    ruby:         \"${MY_RUBY_HOME:-"not set"}\"
+"
+}
+
+info_binaries()
+{
+  rvm_info="
+  binaries:
+    ruby:         \"$(command -v ruby)\"
+    irb:          \"$(command -v irb)\"
+    gem:          \"$(command -v gem)\"
+    rake:         \"$(command -v rake)\"
+"
+}
+
+info_environment()
+{
+  rvm_info="
+  environment:
+    PATH:         \"${PATH:-""}\"
+    GEM_HOME:     \"${GEM_HOME:-""}\"
+    GEM_PATH:     \"${GEM_PATH:-""}\"
+    MY_RUBY_HOME: \"${MY_RUBY_HOME:-""}\"
+    IRBRC:        \"${IRBRC:-""}\"
+    RUBYOPT:      \"${RUBYOPT:-""}\"
+    gemset:       \"$(__rvm_current_gemset)\"\n
+"
+
+  if [[ -n "${MAGLEV_HOME:-""}" ]] ; then
+    rvm_info="$rvm_info\n  MAGLEV_HOME: \"$MAGLEV_HOME\""
+  fi
+
+  rvm_info="$rvm_info\n"
+}
+
+info_debug()
+{
+  rvm_info="
+
+$(__rvm_version)
+  $("$rvm_scripts_path/info" "$rvm_ruby_string" "" )
+  PATH:\n$(printf "$PATH" | awk -F":" '{print $1":"$2":"$3":"$4":"$5}' )
+  uname -a: $(uname -a)
+  permissions: $(\ls -la "$rvm_path" "$rvm_rubies_path")
+"
+
+  if [[ "Darwin" = "$(uname)" ]] ; then
+    rvm_info="$rvm_info
+  uname -r: $(uname -r)
+  uname -m: $(uname -m)
+  sw_vers: $(sw_vers | \tr "\n" ',')
+  ARCHFLAGS: ${ARCHFLAGS:-""}
+  LDFLAGS: ${LDFLAGS:-""}
+  CFLAGS: ${CFLAGS:-""}
+  /Developer/SDKs/*:$(/usr/bin/basename -a /Developer/SDKs/* | \tr "\n" ',')
+"
+  fi
+
+  for file_name in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshenv" ; do
+    if [[ -s "$file_name" ]] ; then
+      rvm_info="$rvm_info\n$file_name:\n$(\grep 'rvm' "$file_name" 2>/dev/null || true)"
+    fi
+  done
+
+  if (( ${rvm_user_install_flag:=0} == 0 ))
+  then
+    debug_files=("$rvm_config_path/alias" "$rvm_config_path/system" "$rvm_config_path/db" "/etc/rvmrc" "/etc/gemrc")
+  else
+    debug_files=("$rvm_config_path/alias" "$rvm_config_path/system" "$rvm_config_path/db" "$HOME/.rvmrc" "$HOME/.gemrc")
+  fi
+
+  for file_name in "${debug_files[@]}" ; do
+    if [[ -f "$file_name" && -s "$file_name" ]] ; then
+      rvm_info="$rvm_info\n$file_name \(filtered\):\n$(awk '!/assword|_key/' "$file_name" )\n"
+    fi
+  done
+
+  rvm_info="$rvm_info\ngem sources:\n$(gem sources | awk '/gems/')\n\n"
+}
+
+info_sections()
+{
+
+  for section in $(printf "${sections//,/ }") ; do
+
+    rvm_info=""
+
+    "info_${section}"
+
+    printf "$rvm_info"
+
+  done
+
+}
+
+rvm_ruby_gem_home="${rvm_ruby_gem_home:-${GEM_HOME:-""}}"
+
+if [[ ! -d "$rvm_ruby_gem_home" ]] && command -v gem > /dev/null 2>&1; then
+  rvm_ruby_gem_home="$(gem env home)"
+fi
+
+rvm_info=""
+
+args=($*)
+
+ruby_strings="${args[$__array_start]// /}"
+args[$__array_start]=""
+args=(${args[@]})
+
+sections="${args// /}"
+all_sections="system rvm ruby homes binaries environment"
+
+# TODO: Figure out what was the thought here and remove external match script
+#       dependency
+if "$rvm_scripts_path/match" "$all_sections debug" "${ruby_strings/,*/}" ; then
+  sections="$ruby_strings"
+  ruby_strings=""
+fi
+
+if [[ -z "${sections// /}" ]] ; then
+  sections="$all_sections"
+fi
+
+if [[ -z "$ruby_strings" ]] ; then
+
+  printf "\n$(__rvm_environment_identifier):\n"
+
+  info_sections
+
+else
+
+  for ruby_string in $(printf ${ruby_strings//,/ }) ; do
+
+    __rvm_become "$ruby_string"
+
+    printf "\n$(__rvm_environment_identifier):\n"
+
+    info_sections
+
+  done
+
+fi
+
+exit 0

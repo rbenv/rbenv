@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+__rvm_current_gemset()
+{
+  # Fetch the current gemset via GEM_HOME
+  local current_gemset="${GEM_HOME:-}"
+
+  # We only care about the stuff to the right of the separator.
+  current_gemset="${current_gemset##*${rvm_gemset_separator:-@}}"
+
+  if [[ "${current_gemset}" = "${GEM_HOME:-}" ]] ; then
+    echo ''
+  else
+    echo "${current_gemset}"
+  fi
+}
+
+__rvm_using_gemset_globalcache()
+{
+  "$rvm_scripts_path/db" "$rvm_user_path/db" \
+    "use_gemset_globalcache" | \grep '^true$' >/dev/null 2>&1
+  return $?
+}
+
+__rvm_current_gemcache_dir()
+{
+  if __rvm_using_gemset_globalcache; then
+    echo "$rvm_gems_cache_path"
+  else
+    echo "${rvm_ruby_gem_home:-"$GEM_HOME"}/cache"
+  fi
+  return 0
+}
+

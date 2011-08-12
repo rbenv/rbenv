@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+source "$rvm_scripts_path/base"
+
+rvm_ruby_gem_home="${rvm_ruby_gem_home:-$GEM_HOME}"
+
+if [[ ! -d "$rvm_ruby_gem_home" ]] && command -v gem > /dev/null 2>&1; then rvm_ruby_gem_home="$(gem env home)" ; fi
+
+usage()
+{
+  printf "
+
+  Usage:
+
+    rvm default [ruby] [environment_id]
+
+  Action:
+
+    {import,export,create,copy,empty,delete,name,dir,list,gemdir,install,pristine,clear,use,update,globalcache}
+
+  Description:
+
+    Commands for working with and manipulating gemsets within RVM.
+
+  Examples:
+    rvm default                # *uses* the default ruby
+    rvm default 1.9.2          # Sets the 'global' default to 1.9.2
+    rvm default list 1.9.2     # displays the environment_id for the current 1.9.2 default
+    rvm default 1.9.2 1.9.2-p0 # sets the default for 'rvm 1.9.2' to p0
+    rvm default clear 1.9.2    # clears the set default for 1.9.2
+    rvm default clear          # removes the current global default
+
+"
+}
+
+default_list()
+{
+  :
+}
+
+default_clear()
+{
+  :
+}
+
+
+args=($*)
+action="${args[0]}"
+args=${args[@]:1}
+
+if [[ "list" = "$action" ]] ; then
+  default_list
+
+elif [[ "clear" = "$action" ]] ; then
+  default_clear
+
+elif [[ "help" = "$action" ]] ; then
+  usage ; exit 0
+
+else
+  usage ; exit 1
+fi
+
+exit $?

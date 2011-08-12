@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+true ${rvm_scripts_path:="$rvm_path/scripts"}
+true ${rvm_environments_path:="$rvm_path/environments"}
+
+if [[ -n "$rvm_path" && -s "$rvm_scripts_path/rvm" ]]; then
+  source "$rvm_scripts_path/rvm" > /dev/null 2>&1
+
+elif [[ -s "$HOME/.rvm/scripts/rvm" ]]; then
+  source "$HOME/.rvm/scripts/rvm" > /dev/null 2>&1
+
+elif [[ -s "/usr/local/rvm/scripts/rvm" ]]; then
+  source "/usr/local/rvm/scripts/rvm" > /dev/null 2>&1
+
+else
+  echo "Unable to detect rvm, please manually set the rvm_path env variable." >&2
+  exit 1
+fi
+
+[[ -s "$rvm_environments_path/default" ]] && source "$rvm_environments_path/default"
+
+rvm_promptless=1 rvm rvmrc load > /dev/null 2>&1
+
+exec ruby "$@"

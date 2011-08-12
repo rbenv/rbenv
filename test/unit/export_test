@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+source ./test/setup
+initialize_rvm
+
+
+# check that 'export' works ?!
+heat 'output=$(export XYZ=1; echo "$XYZ")'
+assert string_eq "$output" "1"
+
+# check that 'rvm export' works
+heat 'output=$(rvm export XYZ=2; echo "$XYZ")'
+assert string_eq "$output" "2"
+
+# check that 'rvm unexport' will unset unused vars
+heat 'output=$(rvm export XYZ=3; rvm unexport; echo "$XYZ")'
+assert string_eq "$output" ""
+
+# check that 'rvm unexport' will restore used vars
+heat 'output=$(export XYZ=4; rvm export XYZ=5; rvm unexport; echo "$XYZ")'
+assert string_eq "$output" "4"
+
+# check that 'rvm reset' will unexport
+heat 'output=$(rvm export XYZ=6; rvm reset; echo "$XYZ")'
+assert string_eq "$output" ""
+
+
+# check that reading vars from an rvmrc works
+heat '
+  output=$(
+    mkdir /tmp/rvm-export-test
+    echo "rvm export XYZ=7" > /tmp/rvm-export-test/.rvmrc
+    rvm rvmrc trust /tmp/rvm-export-test > /dev/null
+    cd /tmp/rvm-export-test
+    echo "$XYZ"
+    rm -rf /tmp/rvm-export-test
+  )'
+
+assert string_eq "$output" "7"
+
+
+if [[ -z "$rvm_teset_suite_flag" ]] ; then btu_summary ; fi

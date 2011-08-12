@@ -1,0 +1,544 @@
+#!/usr/bin/env bash
+
+# Project: btu - Bash Test::Unit - "The Heat"
+# Author:  Wayne E. Seguin
+# Version: 0.0.1
+
+#
+# Public Methods
+#
+
+[[ -z "${ZSH_VERSION:-}" ]] ; array_start=$?
+
+btu_push() {
+  array=$1 ; shift ; item=$2
+  # TODO: allow loop over more arguments.
+  eval "index=\$((\${#${array}[*]} + $__array_start))"
+  eval "${array}[${index}]=${item}"
+}
+
+# Mock a command making it safe, the command will simply echo's back what it is called with.
+# btu_mock ssh echo
+btu_mock() {
+  # TODO: Implement this.
+  command="$1" ; action="$2" ; echo_value="$3" ; return_value="$4"
+
+  if [[ -n "$command" ]] ; then
+    \mkdir -p /tmp/btu/$$
+    echo '!#/bin/bash' > /tmp/btu/$$/$command
+    printf "\necho called: \$(basename \$0) \"\$@\"\nexit 0" > /tmp/btu/$$/$command
+    chmod +x /tmp/btu/$$/$command
+    PATH=/tmp/btu/$$:$PATH ; export PATH
+  fi
+
+  return 0
+}
+
+btu_init() {
+  __btu_runs=() ; __btu_assertions=() ; __btu_passed=() ; __btu_failed=()
+}
+
+btu_summary() {
+  local failure_count
+
+  printf "\n$(scripts/color "cyan")${#__btu_runs[*]}$(scripts/color "none") commands, ${#__btu_assertions[*]} assertions, $(scripts/color "green")${#__btu_passed[*]}$(scripts/color) passed, $(scripts/color "red")${#__btu_failed[*]}$(scripts/color) failed\n"
+
+  failure_count=${#__btu_failed[*]}
+
+  [[ "$failure_count" != "0" ]] && failure_count=1
+
+  unset __btu_runs __btu_assertions __btu_passed __btu_failed
+
+  return $failure_count
+}
+
+heat() {
+  __btu_log "run" "$*"
+
+  btu_push __btu_runs "$*"
+
+  eval "$*"
+
+  result="$?"
+}
+
+assert() {
+  local result assertion
+
+  key="$1" ; first="$2" ; second="$3"
+
+  assertion="__btu_assert_${key} \"$first\" \"$second\""
+
+  btu_push __btu_assertions $assertion
+
+  eval "$assertion"
+  result=$?
+
+  if [[ $result -eq 0 ]] ; then
+
+    btu_push __btu_passed $assertion
+
+  else
+    btu_push __btu_failed $assertion
+  fi
+
+  return $result
+}
+
+#
+# Private Methods
+#
+scripts/color() {
+
+  case "$1" in
+    # regular colors
+    black)    tput setaf 0 ;;
+    red)      tput setaf 1 ;;
+    green)    tput setaf 2 ;;
+    yellow)   tput setaf 3 ;;
+    blue)     tput setaf 4 ;;
+    magenta)  tput setaf 5 ;;
+    cyan)     tput setaf 6 ;;
+    white)    tput setaf 7 ;;
+
+    # emphasized (bolded) colors
+    eblack)   tput bold ; tput setaf 0 ;;
+    ered)     tput bold ; tput setaf 1 ;;
+    egreen)   tput bold ; tput setaf 2 ;;
+    eyellow)  tput bold ; tput setaf 3 ;;
+    eblue)    tput bold ; tput setaf 4 ;;
+    emagenta) tput bold ; tput setaf 5 ;;
+    ecyan)    tput bold ; tput setaf 6 ;;
+    ewhite)   tput bold ; tput setaf 7 ;;
+
+    # underlined colors
+    ublack)   set smul unset rmul ; tput setaf 0 ;;
+    ured)     set smul unset rmul ; tput setaf 1 ;;
+    ugreen)   set smul unset rmul ; tput setaf 2 ;;
+    uyellow)  set smul unset rmul ; tput setaf 3 ;;
+    ublue)    set smul unset rmul ; tput setaf 4 ;;
+    umagenta) set smul unset rmul ; tput setaf 5 ;;
+    ucyan)    set smul unset rmul ; tput setaf 6 ;;
+    uwhite)   set smul unset rmul ; tput setaf 7 ;;
+
+    # background colors
+    bblack)   tput setab 0 ;;
+    bred)     tput setab 1 ;;
+    bgreen)   tput setab 2 ;;
+    byellow)  tput setab 3 ;;
+    bblue)    tput setab 4 ;;
+    bmagenta) tput setab 5 ;;
+    bcyan)    tput setab 6 ;;
+    bwhite)   tput setab 7 ;;
+
+    # Defaults
+    default)  tput setaf 9 ;;
+    bdefault) tput setab 9 ;;
+    none)     tput sgr0    ;;
+    *)        tput sgr0    # Reset
+  esac
+}
+
+__btu_log() {
+
+  local result level message
+
+  result=0
+
+  if [[ ! -z "$1" ]] ; then level=$1 ; shift ; else level="info" ; fi
+
+  message="$*"
+
+  case "$level" in
+    run)  echo -n -e "\n$(tput setaf 6)run: $message $(tput sgr0)\n" ; unset message ;;
+    debug) echo -n -e "  $(tput setaf 5)debug: $(tput sgr0)" ;;
+    pass)  echo -n -e "  $(tput setaf 2)pass:  $(tput sgr0)" ;;
+    pend)  echo -n -e "  $(tput setaf 3)pend:  $(tput sgr0)" ;;
+    error) echo -n -e "  $(tput setaf 1)error: $(tput sgr0)" ; result=1 ;;
+    fail)  echo -n -e "  $(tput setaf 1)fail:  $(tput sgr0)" ; result=1 ;;
+  esac
+
+  if [[ ! -z "$message" ]] ; then echo -n -e "$*\n" ; fi
+
+  return $result
+}
+
+__btu_db() {
+  local db_file key value
+
+  db_file=$1 ; shift ; \touch $db_file
+
+  key="$1" ; shift
+
+  if [[ -z "$key" ]] ; then
+
+    __btu_log "fail" "__btu_db must be called with at least two arguments: __btu_db file key [value]"
+
+  else
+    value="$*"
+
+    if [[ "unset" = "$value" ]] || [[ "delete" = "$value" ]] ; then
+
+      sed -i.tmp "s/^$key=.*$//" $db_file
+
+    else
+      if [[ -z "$value" ]] ; then # get
+
+        awk -F'=' "/^$key/{\$1=NULL ; print ; exit}" $db_file
+
+      else # set
+        if [[ -z "$(awk -F'=' "/^$key/{print ; exit}" $db_file)" ]] ; then # append
+
+          echo "$key=$value" >> $db_file
+
+        else # overwrite
+          sed -i.tmp "s/^$key=.*$/$key=$value/" $db_file
+        fi
+      fi
+    fi
+  fi
+
+  return 0
+}
+
+# Assert that string 1 is found in string 2
+__btu_assert_match() {
+
+  regex=$(echo ${1:-""} | sed -e 's#/#\/#g')
+
+  #if [[ ! -z $(echo "$2" | awk "/$regex/") ]] ; then
+  if [[ ${2:-""} =~ $regex  ]] ; then
+
+    __btu_log "pass" "/$regex/ $(scripts/color "green")matches$(scripts/color "none") '$2'"
+
+  else
+
+    __btu_log "fail" "/$regex/ $(scripts/color "red")does not match$(scripts/color "none") '$2'"
+
+  fi
+
+  return $?
+}
+
+__btu_assert_no_match() {
+  regex=$(echo ${1:-""} | sed -e 's#/#\/#g')
+
+  if [[ ! ${2:-} =~ $regex ]] ; then
+
+    __btu_log "pass" "/$regex/ $(scripts/color "green")does not match$(scripts/color "none") '$2'"
+
+  else
+
+    __btu_log "fail" "/$regex/ $(scripts/color "red")matches$(scripts/color "none") '$2'"
+
+  fi
+
+  return $?
+}
+
+__btu_assert_file_contains() {
+  regex=$(echo "$1" | sed 's/\//\\\//g')
+  if [[ -n "$(awk "/$regex/" "$2")" ]] ; then
+    __btu_log "pass" "/$regex/ $(scripts/color "green")is in$(scripts/color "none") '$2'"
+  else
+    __btu_log "fail" "/$regex/ $(scripts/color "red")is not in$(scripts/color "none") '$2'"
+  fi ; return $?
+}
+
+__btu_assert_file_does_not_contain() {
+  regex=$(echo "$1" | sed 's/\//\\\//g')
+  if [[ -z "$(awk '/'$regex'/' "$2")" ]] ; then
+    __btu_log "pass" "/$regex/ $(scripts/color "green")is not in$(scripts/color "none") '$2'"
+  else
+    __btu_log "fail" "/$regex/ $(scripts/color "red")is in$(scripts/color "none") '$2'"
+  fi ; return $?
+}
+
+__btu_assert_block_special_file() {
+  if [[ -b "$1" ]] ; then
+    __btu_log "pass" "'$1' exists and is a block special file."
+  else
+    __btu_log "fail" "'$1' is not a block special file."
+  fi ; return $?
+}
+
+__btu_assert_character_special_file() {
+  if [[ -c "$1" ]] ; then
+    __btu_log "pass" "'$1' exists and is a character special file."
+  else
+    __btu_log "fail" "'$1' is not a character special file."
+  fi ; return $?
+}
+
+__btu_assert_directory() {
+  if [[ -d "$1" ]] ; then
+    __btu_log "pass" "'$1' exists and is a directory."
+  else
+    __btu_log "fail" "'$1' does not exist and is not a directory."
+  fi ; return $?
+}
+
+__btu_assert_no_directory() {
+  if [[ ! -d "$1" ]] ; then
+    __btu_log "pass" "'$1' does not exist."
+  else
+    __btu_log "fail" "'$1' exists and is a directory."
+  fi ; return $?
+}
+
+__btu_assert_file_exists() {
+  if [[ -e "$1" ]] ; then
+    __btu_log "pass" "'$1' exists."
+  else
+    __btu_log "fail" "'$1' does not exist."
+  fi ; return $?
+}
+
+__btu_assert_file_does_not_exist() {
+  if [[ ! -e "$1" ]] ; then
+    __btu_log "pass" "'$1' does not exist."
+  else
+    __btu_log "fail" "'$1' exists."
+  fi ; return $?
+}
+
+__btu_assert_regular_file() {
+  if [[ -f "$1" ]] ; then
+    __btu_log "pass" "'$1' exists and is a regular file."
+  else
+    __btu_log "fail" "'$1' is not a regular file."
+  fi ; return $?
+}
+
+__btu_assert_group_id_set() {
+  if [[ -g "$1" ]] ; then
+    __btu_log "pass" "'$1' exists and its set group ID flag is set."
+  else
+    __btu_log "fail" "'$1' does not have it's group id set."
+  fi ; return $?
+}
+
+__btu_assert_symbolic_link() {
+  if [[ -L "$1" ]] ; then
+    __btu_log "pass" "'$1' exists and is a symbolic link."
+  else
+    __btu_log "fail" "'$1' is not a symbolic link."
+  fi ; return $?
+}
+
+__btu_assert_sticky_bit_set() {
+  if [[ -k "$1" ]] ; then
+    __btu_log "pass" "'$1' exists and its sticky bit is set."
+  else
+    __btu_log "fail" "'$1' does not have it's sticky bit set."
+  fi ; return $?
+}
+
+__btu_assert_named_pipe() {
+  if [[ -p "$1" ]] ; then
+    __btu_log "pass" "'$1' is a named pipe (FIFO)."
+  else
+    __btu_log "fail" "'$1' is not a named pipe."
+  fi ; return $?
+}
+
+__btu_assert_readable_file() {
+  if [[ -r "$1" ]] ; then
+    __btu_log "pass" "'$1' exists and is readable."
+  else
+    __btu_log "fail" "'$1' is not readable."
+  fi ; return $?
+}
+
+__btu_assert_non_empty_file() {
+  if [[ -s "$1" ]] ; then
+    __btu_log "pass" "'$1' exists and has a size greater than zero."
+  else
+    __btu_log "fail" "'$1' has zero size."
+  fi ; return $?
+}
+
+__btu_assert_terminal() {
+  if [[ -t "$1" ]] ; then
+    __btu_log "pass" "'$1' is open and is associated with a terminal."
+  else
+    __btu_log "fail" "'$1' is not a terminal."
+  fi ; return $?
+}
+
+__btu_assert_user_id_set() {
+  if [[ -u "$1" ]] ; then
+    __btu_log "pass" "'$1' exists and its set user ID flag is set."
+  else
+    __btu_log "fail" "'$1' does not have setuid bit set."
+  fi ; return $?
+}
+
+__btu_assert_writable() {
+  if [[ -w "$1" ]] ; then
+    __btu_log "pass" "'$1' has write flag set."
+  else
+    __btu_log "fail" "'$1' is not writable."
+  fi ; return $?
+}
+
+__btu_assert_executable() {
+  if [[ -x "$1" ]] ; then
+    __btu_log "pass" "'$1' has execute flag set."
+  else
+    __btu_log "fail" "'$1' is not executable."
+  fi ; return $?
+}
+
+__btu_assert_string_empty() {
+  if [[ -z "$1" ]] ; then
+    __btu_log "pass" "the length of string is zero."
+  else
+    __btu_log "fail" "'$1' is non-empty."
+  fi ; return $?
+}
+
+__btu_assert_file_effective_user_set() {
+  if [[ -O "$1" ]] ; then
+    __btu_log "pass" "'$1' file exists and its owner matches the effective user id of this process."
+  else
+    __btu_log "fail" "'$1' owner does not match effective user id of current process."
+  fi ; return $?
+}
+
+__btu_assert_file_effective_group_set() {
+  if [[ -G "$1" ]] ; then
+    __btu_log "pass" "'$1' file exists and its group matches the effective group id of this process."
+  else
+    __btu_log "fail" "'$1' group does not match effective group id of current process."
+  fi ; return $?
+}
+
+__btu_assert_file_is_socket() {
+  if [[ -S "$1" ]] ; then
+    __btu_log "pass" "'$1' file exists and is a socket."
+  else
+    __btu_log "fail" "'$1' is not a socket."
+  fi ; return $?
+}
+
+__btu_assert_files_newer_than() {
+  if [[ "$1" -nt "$2" ]] ; then
+    __btu_log "pass" "'$1' file1 exists and is newer than file2."
+  else
+    __btu_log "fail" "'$1' is not newer than '$2'."
+  fi ; return $?
+}
+
+__btu_assert_files_older_than() {
+  if [[ "$1" -ot "$2" ]] ; then
+    __btu_log "pass" "'$1' file1 exists and is older than file2."
+  else
+    __btu_log "fail" "'$1' is not older than '$2'."
+  fi ; return $?
+}
+
+__btu_assert_files_identical() {
+  if [[ "$1" -ef "$2" ]] ; then
+    __btu_log "pass" "'$1' file1 and file2 exist and refer to the same file."
+  else
+    __btu_log "fail" "'$1' and '$2' are not the same file."
+  fi ; return $?
+}
+
+__btu_assert_string_non_empty() {
+  if [[ -n "$1" ]] ; then
+    __btu_log "pass" "'$1' has non-zero length."
+  else
+    __btu_log "fail" "'$1' has zero length."
+  fi ; return $?
+}
+
+__btu_assert_string_not_null() {
+  if [[ ! -z "$1" ]] ; then
+    __btu_log "pass" "'$1' is not the null string."
+  else
+    __btu_log "fail" "is the null string."
+  fi ; return $?
+}
+
+__btu_assert_string_eq() {
+  if [[ "$1" = "$2" ]] ; then
+    __btu_log "pass"  "'$1' $(scripts/color "green") equals $(scripts/color "none") '$2'."
+  else
+    __btu_log "fail" "'$1' $(scripts/color "red")is not equal to$(scripts/color "none") '$2'."
+  fi ; return $?
+}
+
+__btu_assert_string_ne() {
+  if [[ "$1" != "$2" ]] ; then
+    __btu_log "pass" "'$1' and '$2' $(scripts/color "green")are equal$(scripts/color "none")."
+  else
+    __btu_log "fail" "'$1' $(scripts/color "red")is equal to$(scripts/color "none") '$2'."
+  fi ; return $?
+}
+
+__btu_assert_string_lt() {
+  if [[ "$1" < "$2" ]] ; then
+    __btu_log "pass" "'$1' is less than '$2' ( ASCII )"
+  else
+    __btu_log "fail" "'$1' is not less than '$2' ( ASCII )"
+  fi ; return $?
+}
+
+__btu_assert_string_gt() {
+  if [[ "$1" > "$2" ]] ; then
+    __btu_log "pass"  "'$1' is greater than '$2' ( ASCII )"
+  else
+    __btu_log "fail" "'$1' is not greater than '$2' ( ASCII )"
+  fi ; return $?
+}
+
+__btu_assert_number_eq() {
+  if [[ $1 -eq $2 ]] ; then
+    __btu_log "pass" "'$1' is equal to '$2'."
+  else
+    __btu_log "fail" "'$1' is not equal to '$2'."
+  fi ; return $?
+}
+
+__btu_assert_number_ne() {
+  if [[ $1 -ne $2 ]] ; then
+    __btu_log "pass" "'$1' is not equal to '$2'."
+  else
+    __btu_log "fail" "'$1' is equal to '$2'."
+  fi ; return $?
+}
+
+__btu_assert_number_gt() {
+  if [[ $1 -gt $2 ]] ; then
+    __btu_log "pass" "'$1' is greater than '$2'."
+  else
+    __btu_log "fail" "'$1' is not greater than '$2'."
+  fi ; return $?
+}
+
+__btu_assert_number_ge() {
+  if [[ $1 -ge $2 ]] ; then
+    __btu_log "pass" "'$1' is greater than or equal to '$2'."
+  else
+    __btu_log "fail" "'$1' is not greater than or equal to '$2'."
+  fi ; return $?
+}
+
+__btu_assert_number_lt() {
+  if [[ $1 -lt $2 ]] ; then
+    __btu_log "pass" "the integer '$1' is algebraically less than the integer '$2'."
+  else
+    __btu_log "fail" "'$1' is not less than '$2'."
+  fi ; return $?
+}
+
+__btu_assert_number_le() {
+  if [[ $1 -le $2 ]] ; then
+    __btu_log "pass" "the integer '$1' is algebraically less than or equal to the integer '$2'."
+  else
+    __btu_log "fail" "'$1' is not less than or equal to '$2'."
+  fi ; return $?
+}
+

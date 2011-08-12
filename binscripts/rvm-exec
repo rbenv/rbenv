@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+export HOME="${HOME%%+(\/)}" # Remove trailing slashes if they exist on HOME
+
+if (( ${rvm_ignore_rvmrc:=0} == 0 ))
+then
+  for rvmrc in /etc/rvmrc "$HOME/.rvmrc"
+  do
+    if [[ -f "$rvmrc" ]]
+    then
+      if grep '^\s*rvm .*$' "$rvmrc" >/dev/null 2>&1
+      then
+        printf "\n  Error:
+    $rvmrc is for rvm settings only.
+    rvm CLI may NOT be called from within $rvmrc.
+    Skipping the loading of $rvmrc
+"
+        exit 1
+      else
+        source "$rvmrc"
+      fi
+    fi
+  done
+fi
+
+if (( ${rvm_user_install_flag:-0} == 0 ))
+then
+  if (( UID == 0 )) || [[ "${rvm_prefix:-}" != "$HOME" ]]
+  then
+    rvm_user_install_flag=0
+  else
+    rvm_user_install_flag=1
+  fi
+fi
+
+if [[ -z "${rvm_prefix:-""}" ]]
+then
+  if (( ${rvm_user_install_flag:=0} == 0 ))
+  then
+    rvm_prefix="/usr/local"
+  else
+    rvm_prefix="$HOME"
+  fi
+fi
+
+if [[ -z "${rvm_path:-""}" ]]
+then
+  if [[ "$rvm_prefix" = "$HOME" ]]
+  then
+    rvm_path="${rvm_prefix}/.rvm"
+  else
+    rvm_path="${rvm_prefix}/rvm"
+  fi
+fi
+
+true ${rvm_scripts_path:="$rvm_path/scripts"}
+
+__rvm_shell_lookup_script() {
+  local relative_scripts_dir
+  relative_scripts_dir="$(dirname -- "$(dirname -- "$0")")/scripts"
+  for directory in "$rvm_scripts_path" "$HOME/.rvm/scripts" "/usr/local/rvm/scripts" "$relative_scripts_dir"; do
+    if [[ -d "$directory" && -s "$directory/rvm" ]]; then
+      echo "$directory/rvm"
+      return
+    fi
+  done
+}
+
+if [[ -n "$1" && ! -f "$1" && -n "$(echo "$1" | \grep -v '^-')" ]]; then
+  rvm_shell_ruby_string="$1"
+  shift
+fi
+
+rvm_shell_rvm_path="$(__rvm_shell_lookup_script)"
+if [[ -n "$rvm_shell_rvm_path" ]]; then
+  source "$rvm_shell_rvm_path"
+  # Setup as expected.
+  if [[ -n "$rvm_shell_ruby_string" ]]; then
+      rvm "$rvm_shell_ruby_string"
+      if [[ "$?" -gt 0 ]]; then
+        echo "Error: RVM was unable to use '$rvm_shell_ruby_string'" 1>&2
+        exit 1
+      fi
+  else
+    rvm rvmrc load >/dev/null 2>&1
+  fi
+fi
+
+exec "$@"
+

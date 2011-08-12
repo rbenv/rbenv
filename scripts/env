@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+unset rvm_default_flag # Recursive loops, oh my!
+
+source "$rvm_scripts_path/base"
+
+usage()
+{
+  printf "
+  Usage:
+
+    rvm env [ruby_string] [--path]
+
+"
+}
+
+args=($*)
+environment_name="${args[0]}"
+
+if [[ -z "$environment_name" ]]; then
+  usage ; exit 1
+fi
+
+# Exit when we encounter an unknown environment name.
+__rvm_become "$environment_name"
+
+if [[ "$?" = 0 ]]; then
+  __rvm_use
+  environment_file_path="$rvm_environments_path/$(__rvm_environment_identifier)"
+  # Echo the path or environment file.
+  if [[ -n "$rvm_path_flag" ]]; then
+    echo "$environment_file_path"
+  else
+    cat "$environment_file_path"
+  fi
+  unset environment_file_path
+  result=0
+else
+  result=1
+fi
+
+unset rvm_ruby_string environment_name
+__rvm_unset_ruby_variables
+
+exit $result
+

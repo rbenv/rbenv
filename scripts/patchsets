@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+rvm_base_except="selector"
+
+source "$rvm_scripts_path/base"
+source "$rvm_scripts_path/patches"
+
+lookup_patchset()
+{
+
+  local paths lookup_path
+
+  if [[ -z "$1" ]]; then
+    echo "Usage: rvm patchset show name"
+    return 1
+  fi
+
+  paths=($(__rvm_ruby_string_paths_under "$rvm_path/patchsets"))
+
+  for lookup_path in "${paths[@]}" ; do
+
+    if [[ -s "$lookup_path/$1" ]]; then
+
+      cat "$lookup_path/$1"
+
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+# Return the full patch for a given patch.
+__rvm_lookup_full_patch_path()
+{
+
+  local directory directories extension patch_path
+
+  directories=($(__rvm_patch_lookup_path))
+
+  # Absolute path, pwd and then finally the rvm patches path.
+  for directory in "${directories[@]}" ; do
+
+    for extension in {"",.patch,.diff}; do
+
+      patch_path="${directory}${1}${extension}"
+
+      if [[ -s "$patch_path" ]]; then
+        echo "$patch_path"
+        return
+      fi
+
+    done
+
+  done
+
+  return 1
+}
+
+usage()
+{
+  printf "
+
+  Usage:
+
+    rvm patchset {show,lookup} [patchset]
+
+  Description:
+
+    Tools for manipulating patchsets.
+
+"
+  return 1
+}
+
+args=($*)
+action="${args[0]}"
+patchset="${args[1]}"
+args="$(echo ${args[@]:2}) " # Strip trailing / leading / extra spacing.
+
+case "$action" in
+  show|lookup) lookup_patchset "$patchset" ;;
+  *) usage ;;
+esac
+
+exit $?

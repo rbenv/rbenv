@@ -1,0 +1,31 @@
+diff --git a/ext/readline/extconf.rb b/ext/readline/extconf.rb
+index b820c0b..f299cba 100644
+--- a/ext/readline/extconf.rb
++++ b/ext/readline/extconf.rb
+@@ -59,6 +59,9 @@ have_func("rl_cleanup_after_signal")
+ have_func("rl_clear_signals")
+ have_func("rl_vi_editing_mode")
+ have_func("rl_emacs_editing_mode")
++# workaround for native windows.
++/mswin|bccwin|mingw/ !~ RUBY_PLATFORM && have_readline_var("rl_catch_sigwinch")
++/mswin|bccwin|mingw/ !~ RUBY_PLATFORM && have_readline_var("rl_catch_signals")
+ have_func("replace_history_entry")
+ have_func("remove_history")
+ create_makefile("readline")
+diff --git a/ext/readline/readline.c b/ext/readline/readline.c
+index c9acaad..637cb99 100644
+--- a/ext/readline/readline.c
++++ b/ext/readline/readline.c
+@@ -833,6 +833,12 @@ Init_readline()
+ #ifdef HAVE_RL_EVENT_HOOK
+     rl_event_hook = readline_event;
+ #endif
++#ifdef HAVE_RL_CATCH_SIGNALS
++    rl_catch_signals = 0;
++#endif
++#ifdef HAVE_RL_CATCH_SIGWINCH
++    rl_catch_sigwinch = 0;
++#endif
+ #ifdef HAVE_RL_CLEAR_SIGNALS
+     rl_clear_signals();
+ #endif

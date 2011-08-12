@@ -1,0 +1,232 @@
+From 46b84175dfac14a92fd6bcf3b03bc3c3715ab6cb Mon Sep 17 00:00:00 2001
+From: nahi <nahi@b2dd03c8-39d4-4d8f-98ff-823fe69b080e>
+Date: Sat, 6 Mar 2010 21:47:30 +0000
+Subject: [PATCH] backport the commit from trunk:
+ Sun Feb 28 11:49:35 2010  NARUSE, Yui  <naruse@ruby-lang.org>
+
+        * openssl/ossl.c (OSSL_IMPL_SK2ARY): for OpenSSL 1.0.
+          patched by Jeroen van Meeuwen at [ruby-core:25210]
+          fixed by Nobuyoshi Nakada [ruby-core:25238],
+          Hongli Lai [ruby-core:27417],
+          and Motohiro KOSAKI [ruby-core:28063]
+
+        * ext/openssl/ossl_ssl.c (ossl_ssl_method_tab),
+          (ossl_ssl_cipher_to_ary): constified.
+
+        * ext/openssl/ossl_pkcs7.c (pkcs7_get_certs, pkcs7_get_crls):
+          split pkcs7_get_certs_or_crls.
+
+
+git-svn-id: http://svn.ruby-lang.org/repos/ruby/branches/ruby_1_8@26838 b2dd03c8-39d4-4d8f-98ff-823fe69b080e
+---
+ ext/openssl/ossl.c          |    6 +++---
+ ext/openssl/ossl.h          |    7 +++++++
+ ext/openssl/ossl_pkcs7.c    |   40 ++++++++++++++++++++++++++++++----------
+ ext/openssl/ossl_ssl.c      |    4 ++--
+ ext/openssl/ossl_x509attr.c |    5 +++--
+ ext/openssl/ossl_x509crl.c  |    4 ++--
+ 6 files changed, 47 insertions(+), 19 deletions(-)
+
+diff --git a/ext/openssl/ossl.c b/ext/openssl/ossl.c
+index d4a2dc1..85ba654 100644
+--- a/ext/openssl/ossl.c
++++ b/ext/openssl/ossl.c
+@@ -92,7 +92,7 @@ ossl_x509_ary2sk(VALUE ary)
+ 
+ #define OSSL_IMPL_SK2ARY(name, type)	        \
+ VALUE						\
+-ossl_##name##_sk2ary(STACK *sk)			\
++ossl_##name##_sk2ary(STACK_OF(type) *sk)	\
+ {						\
+     type *t;					\
+     int i, num;					\
+@@ -102,7 +102,7 @@ ossl_##name##_sk2ary(STACK *sk)			\
+ 	OSSL_Debug("empty sk!");		\
+ 	return Qnil;				\
+     }						\
+-    num = sk_num(sk);				\
++    num = sk_##type##_num(sk);			\
+     if (num < 0) {				\
+ 	OSSL_Debug("items in sk < -1???");	\
+ 	return rb_ary_new();			\
+@@ -110,7 +110,7 @@ ossl_##name##_sk2ary(STACK *sk)			\
+     ary = rb_ary_new2(num);			\
+ 						\
+     for (i=0; i<num; i++) {			\
+-	t = (type *)sk_value(sk, i);		\
++	t = sk_##type##_value(sk, i);		\
+ 	rb_ary_push(ary, ossl_##name##_new(t));	\
+     }						\
+     return ary;					\
+diff --git a/ext/openssl/ossl.h b/ext/openssl/ossl.h
+index 9215dc4..d0edb7d 100644
+--- a/ext/openssl/ossl.h
++++ b/ext/openssl/ossl.h
+@@ -108,6 +108,13 @@ extern VALUE eOSSLError;
+ } while (0)
+ 
+ /*
++ * Compatibility
++ */
++#if OPENSSL_VERSION_NUMBER >= 0x10000000L
++#define STACK _STACK
++#endif
++
++/*
+  * String to HEXString conversion
+  */
+ int string2hex(const unsigned char *, int, char **, int *);
+diff --git a/ext/openssl/ossl_pkcs7.c b/ext/openssl/ossl_pkcs7.c
+index fe1ef7c..b0cc656 100644
+--- a/ext/openssl/ossl_pkcs7.c
++++ b/ext/openssl/ossl_pkcs7.c
+@@ -572,12 +572,11 @@ ossl_pkcs7_add_certificate(VALUE self, VALUE cert)
+     return self;
+ }
+ 
+-static STACK *
+-pkcs7_get_certs_or_crls(VALUE self, int want_certs)
++static STACK_OF(X509) *
++pkcs7_get_certs(VALUE self)
+ {
+     PKCS7 *pkcs7;
+     STACK_OF(X509) *certs;
+-    STACK_OF(X509_CRL) *crls;
+     int i;
+ 
+     GetPKCS7(self, pkcs7);
+@@ -585,17 +584,38 @@ pkcs7_get_certs_or_crls(VALUE self, int want_certs)
+     switch(i){
+     case NID_pkcs7_signed:
+         certs = pkcs7->d.sign->cert;
+-        crls = pkcs7->d.sign->crl;
+         break;
+     case NID_pkcs7_signedAndEnveloped:
+         certs = pkcs7->d.signed_and_enveloped->cert;
++        break;
++    default:
++        certs = NULL;
++    }
++
++    return certs;
++}
++
++static STACK_OF(X509_CRL) *
++pkcs7_get_crls(VALUE self)
++{
++    PKCS7 *pkcs7;
++    STACK_OF(X509_CRL) *crls;
++    int i;
++
++    GetPKCS7(self, pkcs7);
++    i = OBJ_obj2nid(pkcs7->type);
++    switch(i){
++    case NID_pkcs7_signed:
++        crls = pkcs7->d.sign->crl;
++        break;
++    case NID_pkcs7_signedAndEnveloped:
+         crls = pkcs7->d.signed_and_enveloped->crl;
+         break;
+     default:
+-        certs = crls = NULL;
++        crls = NULL;
+     }
+ 
+-    return want_certs ? certs : crls;
++    return crls;
+ }
+ 
+ static VALUE
+@@ -610,7 +630,7 @@ ossl_pkcs7_set_certificates(VALUE self, VALUE ary)
+     STACK_OF(X509) *certs;
+     X509 *cert;
+ 
+-    certs = pkcs7_get_certs_or_crls(self, 1);
++    certs = pkcs7_get_certs(self);
+     while((cert = sk_X509_pop(certs))) X509_free(cert);
+     rb_block_call(ary, rb_intern("each"), 0, 0, ossl_pkcs7_set_certs_i, self);
+ 
+@@ -620,7 +640,7 @@ ossl_pkcs7_set_certificates(VALUE self, VALUE ary)
+ static VALUE
+ ossl_pkcs7_get_certificates(VALUE self)
+ {
+-    return ossl_x509_sk2ary(pkcs7_get_certs_or_crls(self, 1));
++    return ossl_x509_sk2ary(pkcs7_get_certs(self));
+ }
+ 
+ static VALUE
+@@ -650,7 +670,7 @@ ossl_pkcs7_set_crls(VALUE self, VALUE ary)
+     STACK_OF(X509_CRL) *crls;
+     X509_CRL *crl;
+ 
+-    crls = pkcs7_get_certs_or_crls(self, 0);
++    crls = pkcs7_get_crls(self);
+     while((crl = sk_X509_CRL_pop(crls))) X509_CRL_free(crl);
+     rb_block_call(ary, rb_intern("each"), 0, 0, ossl_pkcs7_set_crls_i, self);
+ 
+@@ -660,7 +680,7 @@ ossl_pkcs7_set_crls(VALUE self, VALUE ary)
+ static VALUE
+ ossl_pkcs7_get_crls(VALUE self)
+ {
+-    return ossl_x509crl_sk2ary(pkcs7_get_certs_or_crls(self, 0));
++    return ossl_x509crl_sk2ary(pkcs7_get_crls(self));
+ }
+ 
+ static VALUE
+diff --git a/ext/openssl/ossl_ssl.c b/ext/openssl/ossl_ssl.c
+index 432ca21..facf6ca 100644
+--- a/ext/openssl/ossl_ssl.c
++++ b/ext/openssl/ossl_ssl.c
+@@ -1291,10 +1291,10 @@ ossl_ssl_get_peer_cert_chain(VALUE self)
+     }
+     chain = SSL_get_peer_cert_chain(ssl);
+     if(!chain) return Qnil;
+-    num = sk_num(chain);
++    num = sk_X509_num(chain);
+     ary = rb_ary_new2(num);
+     for (i = 0; i < num; i++){
+-	cert = (X509*)sk_value(chain, i);
++	cert = sk_X509_value(chain, i);
+ 	rb_ary_push(ary, ossl_x509_new(cert));
+     }
+ 
+diff --git a/ext/openssl/ossl_x509attr.c b/ext/openssl/ossl_x509attr.c
+index 1f817cd..2a4c481 100644
+--- a/ext/openssl/ossl_x509attr.c
++++ b/ext/openssl/ossl_x509attr.c
+@@ -218,8 +218,9 @@ ossl_x509attr_get_value(VALUE self)
+ 	ossl_str_adjust(str, p);
+     }
+     else{
+-	length = i2d_ASN1_SET_OF_ASN1_TYPE(attr->value.set, NULL,
+-			i2d_ASN1_TYPE, V_ASN1_SET, V_ASN1_UNIVERSAL, 0);
++	length = i2d_ASN1_SET_OF_ASN1_TYPE(attr->value.set,
++			(unsigned char **) NULL, i2d_ASN1_TYPE,
++			V_ASN1_SET, V_ASN1_UNIVERSAL, 0);
+ 	str = rb_str_new(0, length);
+ 	p = (unsigned char *)RSTRING_PTR(str);
+ 	i2d_ASN1_SET_OF_ASN1_TYPE(attr->value.set, &p,
+diff --git a/ext/openssl/ossl_x509crl.c b/ext/openssl/ossl_x509crl.c
+index 1be9640..818fdba 100644
+--- a/ext/openssl/ossl_x509crl.c
++++ b/ext/openssl/ossl_x509crl.c
+@@ -264,7 +264,7 @@ ossl_x509crl_get_revoked(VALUE self)
+     VALUE ary, revoked;
+ 
+     GetX509CRL(self, crl);
+-    num = sk_X509_CRL_num(X509_CRL_get_REVOKED(crl));
++    num = sk_X509_REVOKED_num(X509_CRL_get_REVOKED(crl));
+     if (num < 0) {
+ 	OSSL_Debug("num < 0???");
+ 	return rb_ary_new();
+@@ -272,7 +272,7 @@ ossl_x509crl_get_revoked(VALUE self)
+     ary = rb_ary_new2(num);
+     for(i=0; i<num; i++) {
+ 	/* NO DUP - don't free! */
+-	rev = (X509_REVOKED *)sk_X509_CRL_value(X509_CRL_get_REVOKED(crl), i);
++	rev = sk_X509_REVOKED_value(X509_CRL_get_REVOKED(crl), i);
+ 	revoked = ossl_x509revoked_new(rev);
+ 	rb_ary_push(ary, revoked);
+     }
+-- 
+1.7.0.3

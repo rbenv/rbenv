@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+
+shopt -s extglob
+PS4="+ \${BASH_SOURCE##\${rvm_path:-}} : \${FUNCNAME[0]:+\${FUNCNAME[0]}()}  \${LINENO} > "
+export PS4
+set -o errtrace
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin:$PATH"
+
+# Tracing, if asked for.
+if [[ "$*" =~ --trace ]] || (( ${rvm_trace_flag:-0} > 0 ))
+then
+  set -o xtrace
+  export rvm_trace_flag=1
+fi
+
+source "$PWD/scripts/functions/installer"
+# source "$PWD/scripts/rvm"
+
+#
+# RVM Installer
+#
+install_setup
+
+true ${DESTDIR:=}
+# Parse RVM Installer CLI arguments.
+while (( $# > 0 ))
+do
+  token="$1"
+  shift
+
+  case "$token" in
+    --auto)
+      rvm_auto_flag=1
+      ;;
+    --prefix)
+      rvm_prefix="$1"
+      shift
+      ;;
+    --path)
+      rvm_path="$1"
+      shift
+      ;;
+    --version)
+      rvm_path="${PWD%%+(\/)}"
+      __rvm_version
+      unset rvm_path
+      exit
+      ;;
+    --debug)
+      export rvm_debug_flag=1
+      set -o verbose
+      ;;
+    --trace)
+      set -o xtrace
+      export rvm_trace_flag=1
+      echo "$@"
+      env | grep '^rvm_'
+      export PS4="+ \${BASH_SOURCE##\${rvm_path:-}} : \${FUNCNAME[0]:+\${FUNCNAME[0]}()}  \${LINENO} > "
+      ;;
+    --help)
+      install_usage
+      exit 0
+      ;;
+    *)
+      echo "Unrecognized option: $token"
+      install_usage
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -n "${DESTDIR}" ]]
+then
+  rvm_prefix="${DESTDIR}"
+fi
+
+determine_install_path
+
+determine_install_or_upgrade
+
+if [[ -z "${rvm_path:-}" ]]
+then
+  echo "ERROR: rvm_path is empty, halting installation."
+  exit 1
+fi
+
+export rvm_prefix rvm_path rvm_debug_flag rvm_trace_flag
+
+create_install_paths
+
+print_install_header
+
+configure_installation
+
+cleanse_old_entities
+
+install_rvm_files
+
+install_rvm_hooks
+
+ensure_scripts_are_executable
+
+setup_configuration_files
+
+install_binscripts
+
+automatic_profile_setup
+
+install_gemsets
+
+install_patchsets
+
+cleanse_old_environments
+
+migrate_old_gemsets
+
+migrate_defaults
+
+correct_binary_permissions
+
+install_man_pages
+
+root_canal
+
+setup_rvmrc
+
+setup_user_profile
+
+cleanup_tmp_files
+
+display_notes
+
+display_thank_you
+
+exit 0

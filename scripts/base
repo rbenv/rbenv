@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+# Base is a collection of general files + commonly included setup functions.
+
+#
+# Setup environment parameters.
+#
+if [[ -n "${ZSH_VERSION:-}" ]]
+then
+  __array_start=1
+else
+  __array_start=0
+fi
+
+#
+# Load general scripts and functions
+#
+#
+# Load the general scripts.
+# Use rvm_base_except="selector", for example, to override the loading.
+#
+
+export rvm_path="${rvm_path%%+(\/)}"
+true ${rvm_scripts_path:="$rvm_path/scripts"}
+
+# Initialize all main RVM variables.
+source "$rvm_scripts_path/initialize"
+
+case "rvm_base_except" in
+  *selector*)
+    true # do not load.
+    ;;
+  *)
+    source "$rvm_scripts_path/selector"
+    ;;
+esac
+
+scripts=(
+logging utility init cleanup env rvmrc install environment gemset db bundler
+)
+for entry in ${scripts[@]} ; do
+  source "$rvm_scripts_path/functions/$entry"
+done
+
+unset scripts entry rvm_base_except
+
+if [[ ! -t 0 ]] && command -v __rvm_cleanup_tmp >/dev/null 2>&1
+then
+  # Cleanup RVM temporary files on exit if we are loaded from a script.
+  # Only cleanup if the function to do so is defined :)
+  trap "set +e; __rvm_cleanup_tmp '$$'" 0 1 2 3 15
+fi

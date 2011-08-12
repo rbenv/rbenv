@@ -1,0 +1,3 @@
+ruby_version=^ruby 1.8.6 (2009-06-12 patchlevel 174)
+gem_home=ree/1.8.6
+ruby_home=ree-1.8.6-head

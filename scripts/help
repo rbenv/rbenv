@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+rvm_base_except="selector"
+
+source "$rvm_scripts_path/base"
+
+args=($*)
+
+command="${args[$__array_start]}"
+args[$__array_start]=""
+args=(${args[@]})
+
+action="${args[$array_start]}"
+args[$__array_start]=""
+args=(${args[@]})
+pager="${PAGER:-cat -v}"
+
+if [[ -n "$command" && -s "${rvm_help_path}/${command}" ]] ; then
+
+  if [[ -n "$action" && -s "${rvm_help_path}/${command}/${action}" ]] ; then
+
+    eval "$pager '${rvm_help_path}/${command}/${action}'"
+
+  else
+
+    eval "$pager '${rvm_help_path}/${command}'"
+
+  fi
+
+else
+
+  eval "$pager '${rvm_path:-$HOME/.rvm}/README'"
+
+  rvm_log "Commands available with 'rvm help':\n\n    $(builtin cd "${rvm_help_path}" ; find . -maxdepth 1 -mindepth 1 -type f -print | \tr "\n" ' ' | sed -e 's#./##g')"
+fi
+
+rvm_log "For additional information please visit RVM's documentation website:\n\n    https://rvm.beginrescueend.com/"
+
+rvm_log "If you still cannot find what an answer to your question, find me 'wayneeseguin' in #rvm on irc.freenode.net:\n\n    http://webchat.freenode.net/?channels=rvm\n"
+
+exit $?

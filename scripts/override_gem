@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+if [[ ${rvm_leave_gem_alone:-0} -eq 0 ]]; then
+  function gem
+  {
+    local result
+
+    command gem "$@" ; result="$?"
+
+    hash -r
+
+    return $result
+  }
+fi

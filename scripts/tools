@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+source "$rvm_scripts_path/base"
+
+usage()
+{
+  echo "Usage: rvm tools {identifier,path-identifier,strings}" 1>&2
+  exit 1
+}
+
+# Return the identifier that's current in use.
+tools_identifier()
+{
+  __rvm_environment_identifier
+}
+
+tools_path_identifier()
+{
+  if [[ -z "$1" || ! -d "$1" ]]; then
+    echo "Usage: rvm tools path-identifier 'path-to-check'"
+    return 1
+  fi
+
+  source "$rvm_scripts_path/rvm" >/dev/null 2>&1
+  builtin cd "$1"
+  rvm_promptless=1 __rvm_project_rvmrc >/dev/null 2>&1
+  rvmrc_result="$?"
+  __rvm_environment_identifier
+  exit $rvmrc_result
+}
+
+tools_strings()
+{
+  for ruby_name in "$@"; do
+    __rvm_unset_ruby_variables
+    rvm_ruby_string="$ruby_name"
+    if { __rvm_ruby_string && __rvm_select; } >/dev/null 2>&1; then
+      basename "$rvm_ruby_gem_home"
+    else
+      echo ""
+    fi
+  done
+}
+
+args=($*)
+action="${args[0]}"
+args="$(echo ${args[@]:1})" # Strip trailing / leading / extra spacing.
+
+[[ -z "$action" ]] && usage
+
+case "$action" in
+  identifier)      tools_identifier ;;
+  path-identifier) tools_path_identifier "$args" ;;
+  strings)         tools_strings "$args" ;;
+  *)               usage ;;
+esac
+
+exit $?

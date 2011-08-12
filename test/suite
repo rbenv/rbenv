@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+source ./test/setup
+rvm_test_suite_flag=1
+for file in test/unit/*_test ; do
+  source $file
+done
+btu_summary
+exit $?

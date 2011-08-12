@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+__rvm_meta()
+{
+  rvm_meta_author="Wayne E. Seguin"
+  rvm_meta_author_email="wayneeseguin@gmail.com"
+  rvm_meta_website="https://rvm.beginrescueend.com/"
+  rvm_meta_version="${rvm_version}"
+}
+
+__rvm_version()
+{
+  __rvm_meta
+
+  echo -e "\nrvm ${rvm_meta_version} by ${rvm_meta_author} (${rvm_meta_author_email}) [${rvm_meta_website}]\n"
+}
+

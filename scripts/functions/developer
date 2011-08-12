@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+#
+# Switch between RVM installs.
+# Given a topic context name like "testing", looks for a directory named ".rvm.testing"
+# (installing a new copy of RVM in it if it doesn't already exist), then symlinks
+# .rvm to it.
+#
+# rvmselect testing
+rvmselect()
+{
+  if [[ -z "${1:-}" ]]
+  then
+    echo "No topic context name specified (example: work )"
+    return 0
+  fi
+
+  local name=$1
+
+  true ${rvm_path:=$HOME/.rvm}
+
+  if [[ ! -L "$rvm_path" && -d "$rvm_path" ]]
+  then
+    printf "ERROR: $rvm_path is a directory, rename it to .<somename> first."
+  fi
+
+  if [[ ! -d "${rvm_path}.${name}" ]]
+  then
+    bash < <(curl -s https://rvm.beginrescueend.com/install/rvm)
+    mv "${rvm_path}" "${rvm_path}.${name}"
+  fi
+
+  rm -f "${rvm_path}"
+
+  ln -fs "${rvm_path}.${name}" "${rvm_path}"
+
+  ls -al "$(basename "${rvm_path}")" | grep "$rvm_path" | awk '/rvm/{print "=> "$NF}'
+
+  return $?
+}

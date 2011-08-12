@@ -1,0 +1,12 @@
+diff --git a/ext/zlib/zlib.c b/ext/zlib/zlib.c
+index b87e691..5f701ab 100644
+--- a/ext/zlib/zlib.c
++++ b/ext/zlib/zlib.c
+@@ -610,6 +610,7 @@ zstream_append_input(z, src, len)
+ }
+ 
+ #define zstream_append_input2(z,v)\
++    RB_GC_GUARD(v),\
+     zstream_append_input((z), RSTRING(v)->ptr, RSTRING(v)->len)
+ 
+ static void

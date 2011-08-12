@@ -1,0 +1,192 @@
+diff -rux '*.o' ruby-1.8.7-p72/ChangeLog ruby-1.8.7-mbari/ChangeLog
+--- ruby-1.8.7-p72/ChangeLog	2008-12-17 23:46:07.000000000 -0800
++++ ruby-1.8.7-mbari/ChangeLog	2008-12-17 23:42:22.000000000 -0800
+@@ -1,3 +1,7 @@
++Tue Dec 17  4:15:36 2008  Brent Roman  <brent@mbari.org>
++
++        * eval.c:  streamlined rb_thread_restore_context() to ensure O(1) time
++
+ Tue Dec 15  9:15:36 2008  Brent Roman  <brent@mbari.org>
+ 
+         * eval.c:  factored rb_eval() into many separate non-inlined
+ 
+diff -rux '*.o' ruby-1.8.7-p72/eval.c ruby-1.8.7-mbari/eval.c
+--- ruby-1.8.7-p72/eval.c	2008-12-17 23:46:07.000000000 -0800
++++ ruby-1.8.7-mbari/eval.c	2008-12-17 23:44:48.000000000 -0800
+@@ -3,7 +3,7 @@
+   eval.c -
+ 
+   $Author: brent $
+-  $Date: 2008/12/17 07:28:08 $
++  $Date: 2008/12/18 07:44:48 $
+   created at: Thu Jun 10 14:22:17 JST 1993
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+@@ -10884,11 +10884,10 @@
+                   ruby_setjmp(rb_thread_save_context(th), (th)->context))))
+ 
+ NORETURN(static void rb_thread_restore_context _((rb_thread_t,int)));
+-NORETURN(NOINLINE(static void rb_thread_restore_context_0(rb_thread_t,int,void*)));
+-NORETURN(NOINLINE(static void stack_extend(rb_thread_t, int, VALUE *)));
++NORETURN(NOINLINE(static void rb_thread_restore_context_0(rb_thread_t,int)));
+ 
+ static void
+-rb_thread_restore_context_0(rb_thread_t th, int exit, void *vp)
++rb_thread_restore_context_0(rb_thread_t th, int exit)
+ {
+     static rb_thread_t tmp;
+     static int ex;
+@@ -10945,9 +10944,9 @@
+ static volatile int C(k), C(l), C(m), C(n), C(o);
+ static volatile int C(p), C(q), C(r), C(s), C(t);
+ int rb_dummy_false = 0;
+-NORETURN(NOINLINE(static void register_stack_extend(rb_thread_t, int, void *, VALUE *)));
++NORETURN(NOINLINE(static void register_stack_extend(rb_thread_t, int, VALUE *)));
+ static void
+-register_stack_extend(rb_thread_t th, int exit, void *vp, VALUE *curr_bsp)
++register_stack_extend(rb_thread_t th, int exit, VALUE *curr_bsp)
+ {
+     if (rb_dummy_false) {
+         /* use registers as much as possible */
+@@ -10961,52 +10960,68 @@
+         E(p) = E(q) = E(r) = E(s) = E(t) = 0;
+     }
+     if (curr_bsp < th->bstr_pos+th->bstr_len) {
+-        register_stack_extend(th, exit, &exit, (VALUE*)rb_ia64_bsp());
++        register_stack_extend(th, exit, (VALUE*)rb_ia64_bsp());
+     }
+-    rb_thread_restore_context_0(th, exit, &exit);
++    rb_thread_restore_context_0(th, exit);
+ }
+ #undef C
+ #undef E
+ #endif
+ 
+-# if defined(_MSC_VER) && _MSC_VER >= 1300
+-__declspec(noinline) static void stack_extend(rb_thread_t, int, VALUE*);
+-# endif
+-static void
+-stack_extend(rb_thread_t th, int exit, VALUE *addr_in_prev_frame)
+-{
+-#define STACK_PAD_SIZE 1024
+-    VALUE space[STACK_PAD_SIZE];
+-
+-#if STACK_GROW_DIRECTION < 0
+-    if (addr_in_prev_frame > th->stk_pos) stack_extend(th, exit, &space[0]);
+-#elif STACK_GROW_DIRECTION > 0
+-    if (addr_in_prev_frame < th->stk_pos + th->stk_len) stack_extend(th, exit, &space[STACK_PAD_SIZE-1]);
+-#else
+-    if (addr_in_prev_frame < rb_gc_stack_start) {
+-        /* Stack grows downward */
+-        if (addr_in_prev_frame > th->stk_pos) stack_extend(th, exit, &space[0]);
+-    }
+-    else {
+-        /* Stack grows upward */
+-        if (addr_in_prev_frame < th->stk_pos + th->stk_len) stack_extend(th, exit, &space[STACK_PAD_SIZE-1]);
+-    }
+-#endif
+-#ifdef __ia64
+-    register_stack_extend(th, exit, space, (VALUE*)rb_ia64_bsp());
+-#else
+-    rb_thread_restore_context_0(th, exit, space);
+-#endif
+-}
+ 
+ static void
+ rb_thread_restore_context(th, exit)
+     rb_thread_t th;
+     int exit;
+ {
++    VALUE *pos = th->stk_start;
++
++#if HAVE_ALLOCA  /* use alloca to grow stack in O(1) time */
+     VALUE v;
++    volatile VALUE *space;
++
+     if (!th->stk_ptr) rb_bug("unsaved context");
+-    stack_extend(th, exit, &v);
++#  if !STACK_GROW_DIRECTION  /* unknown at compile time */
++    if (rb_gc_stack_grow_direction < 0) {
++#  endif
++#  if STACK_GROW_DIRECTION <= 0
++      pos -= th->stk_len;
++      if (&v > pos) space=ALLOCA_N(VALUE, &v-pos);
++#  endif
++#  if !STACK_GROW_DIRECTION
++    }else
++#  endif
++#if STACK_GROW_DIRECTION >= 0  /* stack grows upward */
++      if (&v < pos + th->stk_len) space=ALLOCA_N(VALUE, pos+th->stk_len - &v);
++#  endif
++
++#else  /* recursive O(n/1024) if extending stack > 1024 VALUEs */
++
++    volatile VALUE v[1023];
++
++#  if !STACK_GROW_DIRECTION  /* unknown at compile time */
++    if (rb_gc_stack_grow_direction < 0) {
++#  endif
++#  if STACK_GROW_DIRECTION <= 0
++      pos -= th->stk_len;
++      if (v > pos) rb_thread_restore_context(th, exit);
++#  endif
++#  if !STACK_GROW_DIRECTION
++    }else
++#  endif
++#  if STACK_GROW_DIRECTION >= 0  /* stack grows upward */
++      if (v < pos + th->stk_len) rb_thread_restore_context(th, exit);
++#  endif
++    if (!th->stk_ptr) rb_bug("unsaved context");
++    
++#endif  /* stack now extended */
++
++
++#ifdef __ia64
++    register_stack_extend(th, exit, (VALUE*)rb_ia64_bsp());
++#else
++    rb_thread_restore_context_0(th, exit);
++#endif
+ }
+ 
+ static void
+diff -rux '*.o' ruby-1.8.7-p72/gc.c ruby-1.8.7-mbari/gc.c
+--- ruby-1.8.7-p72/gc.c	2008-12-20 22:34:10.000000000 -0800
++++ ruby-1.8.7-mbari/gc.c	2008-12-17 23:43:46.000000000 -0800
+@@ -3,7 +3,7 @@
+   gc.c -
+ 
+   $Author: brent $
+-  $Date: 2008/12/14 07:23:34 $
++  $Date: 2008/12/18 07:43:46 $
+   created at: Tue Oct  5 09:44:46 JST 1993
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+diff -rux '*.o' ruby-1.8.7-p72/version.h ruby-1.8.7-mbari/version.h
+--- ruby-1.8.7-p72/version.h	2008-12-17 23:46:07.000000000 -0800
++++ ruby-1.8.7-mbari/version.h	2008-12-17 22:32:11.000000000 -0800
+@@ -1,7 +1,7 @@
+ #define RUBY_VERSION "1.8.7"
+-#define RUBY_RELEASE_DATE "2008-12-16"
++#define RUBY_RELEASE_DATE "2008-12-17"
+ #define RUBY_VERSION_CODE 187
+-#define RUBY_RELEASE_CODE 20081216
++#define RUBY_RELEASE_CODE 20081217
+ #define RUBY_PATCHLEVEL 72
+ 
+ #define RUBY_VERSION_MAJOR 1
+@@ -9,7 +9,7 @@
+ #define RUBY_VERSION_TEENY 7
+ #define RUBY_RELEASE_YEAR 2008
+ #define RUBY_RELEASE_MONTH 12
+-#define RUBY_RELEASE_DAY 16
++#define RUBY_RELEASE_DAY 17
+ 
+ #ifdef RUBY_EXTERN
+ RUBY_EXTERN const char ruby_version[];
+@@ -25,7 +25,7 @@
+ #define RUBY_BIRTH_MONTH 2
+ #define RUBY_BIRTH_DAY 24
+ 
+-#define RUBY_RELEASE_STR "MBARI 4 on patchlevel"
++#define RUBY_RELEASE_STR "MBARI 5 on patchlevel"
+ #define RUBY_RELEASE_NUM RUBY_PATCHLEVEL

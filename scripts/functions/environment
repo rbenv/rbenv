@@ -1,0 +1,312 @@
+#!/usr/bin/env bash
+
+__rvm_environment_identifier()
+{
+  local path string
+
+  path="${GEM_HOME:-""}"
+
+  string="${path//*gems\//}"
+  string="${string//\/*/}"
+
+  printf "${string:-system}"
+}
+
+__rvm_expand_ruby_string()
+{
+  local string current_ruby
+
+  string="$1"
+
+  if [[ -z "$string" ]]
+  then
+    "$rvm_scripts_path/list" strings | tr ' ' "\n"
+    return $?
+  fi
+
+  case "$string" in
+
+    all)
+      "$rvm_scripts_path/list" strings | tr ' ' "\n"
+      ;;
+
+    all-gemsets)
+      "$rvm_scripts_path/list" gemsets strings
+      ;;
+
+    default-with-rvmrc|rvmrc)
+      "$rvm_scripts_path/tools" path-identifier "$PWD"
+      ;;
+
+    all-rubies|rubies)
+      "$rvm_scripts_path/list" rubies strings
+      ;;
+
+    current-ruby|gemsets)
+      current_ruby="$(__rvm_environment_identifier \
+        | awk -F"${rvm_gemset_separator:-"@"}" '{print $string}')"
+
+      rvm_silence_logging=1 "$rvm_scripts_path/gemsets" list \
+        | \sed "s/^/$current_ruby${rvm_gemset_separator:-"@"}/"
+      ;;
+
+    current)
+      __rvm_environment_identifier
+      ;;
+
+    aliases)
+      awk -F= '{print $string}' < "$rvm_config_path/alias"
+      ;;
+
+    *)
+      echo "$string" | tr "," "\n" | __rvm_strip
+      ;;
+
+  esac
+}
+
+__rvm_become()
+{
+  local string="$1"
+
+  [[ -n "$string" ]] && rvm_ruby_string="$string"
+
+  { __rvm_ruby_string && __rvm_select && __rvm_use; } > /dev/null 2>&1
+
+  return 0
+}
+
+__rvm_ensure_has_environment_files()
+{
+  local environment_id file_name directory identifier variable value variables
+
+  environment_id="$(__rvm_environment_identifier)"
+
+  file_name="${rvm_path}/environments/$environment_id"
+
+  if [[ ! -s "$file_name" ]]
+  then
+    \mkdir -p "$rvm_environments_path"
+
+    printf "export PATH=\"${rvm_ruby_gem_home}/bin:${rvm_ruby_global_gems_path}/bin:${rvm_ruby_home}/bin:${rvm_bin_path}:\$PATH\"\n" \
+      > "$file_name"
+
+    for variable in rvm_path RUBY_VERSION GEM_HOME GEM_PATH MY_RUBY_HOME IRBRC \
+      rvm_ruby_string rvm_gemset_name MAGLEV_HOME RBXOPT
+    do
+      eval "export $variable"
+      eval "value=\${${variable}:-""}"
+
+      if [[ -n "$value" ]]
+      then
+        printf "%s='%s' ; export %s\n" "${variable}" "${value}" "${variable}" \
+          >> "$file_name"
+      else
+        printf "%s\n" "unset ${variable}" >> "$file_name"
+      fi
+    done
+  fi
+
+  # Next, ensure we have default wrapper files. Also, prevent it from recursing.
+  if (( ${rvm_create_default_wrappers:=0} == 1 )) ||
+    [[ ! -f "$rvm_wrappers_path/$environment_id/ruby" ]]
+  then
+    # We need to generate wrappers for both the default gemset and the global gemset.
+    for identifier in "$environment_id" "${environment_id//@*/}@global"
+    do
+      rvm_create_default_wrappers=1
+
+      directory="$rvm_wrappers_path/$identifier"
+
+      if [[ ! -L "$directory" && ! -d "$directory" ]]; then
+        \mkdir -p "$directory"
+
+        "$rvm_scripts_path/wrapper" "$identifier" &> /dev/null
+      fi
+    done
+    rvm_create_default_wrappers=0
+  fi
+
+  return 0
+}
+
+# Dump the current environment to a file.
+__rvm_dump_environment()
+{
+  # Note: This assumes that there is a ','
+  local dump_environment_file dump_environment_type rvm_dump_environment_flag
+
+  dump_environment_file="${rvm_dump_environment_flag/,*/}"
+
+  dump_environment_type="${rvm_dump_environment_flag/*,/}"
+
+  if [[ -n "$dump_environment_file" && -n "$dump_environment_type" ]]
+  then
+    if [[ "$dump_environment_type" == "atheis"* && -f "$dump_environment_file" ]]
+    then
+      # TODO: Query Darcy about the ln.
+      \rm -f "$dump_environment_file" \
+        && ln -s /dev/null "$dump_environment_file" >/dev/null 2>&1
+    else
+      "$rvm_scripts_path/environment-convertor" "$dump_environment_type" \
+        "$(__rvm_environment_identifier)" > "$dump_environment_file"
+      if (( $? > 0 )) && [[ -f "$dump_environment_file" ]]
+      then
+        \rm -f "$dump_environment_file"
+      fi
+    fi
+  fi
+
+  return 0
+}
+
+# Loop over the currently installed rubies and refresh their binscripts.
+__rvm_bin_scripts()
+{
+  for rvm_ruby_binary in "$rvm_rubies_path"/*/bin/ruby
+  do
+    if [[ -x "$rvm_ruby_binary" ]]
+    then
+      rvm_ruby_string=$(
+        dirname "$rvm_ruby_binary" | xargs dirname | xargs basename
+      )
+
+      __rvm_select
+
+      __rvm_bin_script
+    fi
+  done
+  return 0
+}
+
+# Write the bin/ wrapper script for currently selected ruby.
+# TODO: Adjust binscript to be able to handle all rubies,
+#       not just the standard interpreteres.
+__rvm_bin_script()
+{
+  "$rvm_scripts_path/wrapper" "$rvm_ruby_string"
+}
+
+# Runs a command in a given env.
+__rvm_run_with_env()
+{
+  local name environment command message log path
+
+  name="${1:-""}"
+  environment="${2:-""}"
+  command="${3:-""}"
+  message="${4:-""}"
+
+  [[ -n "$environment" ]] || environment="$(__rvm_environment_identifier)"
+
+  if [[ -n "$message" ]] ; then rvm_log "$message" ; fi
+
+  if (( ${rvm_debug_flag:=0} == 1 ))
+  then
+    rvm_debug "Executing: $command in environment $environment"
+  fi
+
+  path="${rvm_log_path}/$rvm_ruby_string"
+
+  log="$path/$name.log"
+
+  if [[ ! -d "$path" ]]
+  then
+    command mkdir -p "$path"
+  fi
+
+  if [[ ! -f "$log" ]]
+  then
+    command touch "$log" # for zsh :(
+  fi
+
+  printf "[$(date +'%Y-%m-%d %H:%M:%S')] $command # under $environment\n" >> "${log}"
+
+  if (( ${rvm_niceness:=0} > 0 ))
+  then
+    command="nice -n $rvm_niceness $command"
+  fi
+
+  (
+    rvm_ruby_string="$environment"
+
+    __rvm_use
+
+    eval "$command" >> "${log}" 2>&1
+  )
+  result=$?
+
+  if (( result >  0 ))
+  then
+    rvm_error "Error running '$command' under $env_name,\nplease read $log"
+  fi
+
+  return ${result:-0}
+}
+
+# Set shell options that RVM needs temporarily, these are reverted by __rvm_teardown.
+# see the top of ./scripts/initialize for settings that are needed all the time.
+__rvm_setup()
+{
+  if [[ -n "${ZSH_VERSION:-}" ]]
+  then
+    # Set clobber for zsh users, for compatibility with bash's append operator ( >> file ) behavior
+    setopt | \grep -s '^noclobber$' >/dev/null 2>&1
+    rvm_zsh_clobber=$?
+    setopt clobber
+    # Set no_nomatch so globs that don't match any files don't print out a warning
+    setopt | \grep -s '^nonomatch$' >/dev/null 2>&1
+    rvm_zsh_nomatch=$?
+    setopt no_nomatch
+  fi
+}
+__rvm_teardown()
+{
+  if [[ -d "${rvm_tmp_path}/$$" ]]
+  then
+    __rvm_rm_rf "${rvm_tmp_path}/$$"
+  fi
+
+  if [[ -n "${ZSH_VERSION:-""}" ]]
+  then
+    # If rvm_zsh_clobber is 0 then "setopt" contained "noclobber" before rvm performed "setopt clobber".
+    (( rvm_zsh_clobber == 0 )) && setopt noclobber
+    # If rvm_zsh_nomatch is 0 then "setopt" contained "nonomatch" before rvm performed "setopt nonomatch".
+    (( rvm_zsh_nomatch == 0 )) || setopt nomatch
+
+    unset rvm_zsh_clobber rvm_zsh_nomatch
+  else
+    : # currently we are not doing any option setting for bash.
+  fi
+  # Ruby strings are scoped to their action.
+  # Hence, we ensure we remove them at in
+  # the cleanup phase.
+
+  # Clean up after CC switch
+  if (( ${rvm_clang_flag:=0} > 0 ))
+  then
+    if [[ -n "${rvm_prior_cc:-""}" ]]
+    then
+      export CC="$rvm_prior_cc"
+    else
+      unset CC
+    fi
+
+  fi
+
+  # TODO: create a cleanse array for this instead of the current hard coded
+  # method. The array will be appended to whenever variables are used that
+  # should be cleaned up when the current RVM commadn is done.
+  # Cleanse and purge! (may be some redundancy here)
+  unset rvm_ruby_strings rvm_head_flag rvm_prior_cc next_token rvm_bin_path rvm_error_message rvm_gems_cache_path rvm_gems_path rvm_gemset_name rvm_man_path rvm_parse_break rvm_rc_files rvm_ruby_binary rvm_ruby_gem_home rvm_ruby_gem_path rvm_ruby_home rvm_ruby_interpreter rvm_ruby_irbrc rvm_ruby_log_path rvm_ruby_major_version rvm_ruby_minor_version rvm_ruby_package_name rvm_ruby_patch_level rvm_ruby_release_version rvm_ruby_repo_url rvm_ruby_repo_branch rvm_ruby_revision rvm_ruby_selected_flag rvm_ruby_tag rvm_ruby_version rvm_user_install_flag rvm_token rvm_ruby_load_path rvm_path_flag rvm_ruby_require rvm_action rvm_ruby_package_file rvm_ruby_name rvm_static_flag rvm_export_args rvm_ruby_name rvm_ruby_args rvm_default_flag rvm_gems_cache_path rvm_gemset_separator rvm_archives_path rvm_bin_path rvm_config_path rvm_docs_path rvm_environments_path rvm_examples_path rvm_gems_path rvm_gemsets_path rvm_help_path rvm_lib_path rvm_log_path rvm_patches_path rvm_repos_path rvm_rubies_path rvm_scripts_path rvm_src_path rvm_tmp_path rvm_user_path rvm_usr_path rvm_wrappers_path rvm_expanding_aliases rvm_loaded_flag rvm_llvm_flag
+
+  if (( ${rvm_dump_environment_flag:=0} == 1 ))
+  then
+    __rvm_dump_environment
+  fi
+
+  trap - 0 1 2 3 15 # Clear all traps.
+
+  return 0
+}
+

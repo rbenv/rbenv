@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+jruby_ngserver_is_running()
+{
+  ps auxww | grep -q '[c]om.martiansoftware.nailgun.NGServer'
+}
+
+jruby_ngserver_start()
+{
+  if ! jruby_ngserver_is_running
+  then
+    (JRUBY_OPTS='' jruby --ng-server 2>&1 1>/dev/null)&
+  fi
+}
+
+jruby_options_export()
+{
+  JRUBY_OPTS="${JRUBY_OPTS## }"
+  JRUBY_OPTS="${JRUBY_OPTS%% }"
+  export JRUBY_OPTS
+}
+
+jruby_options_append()
+{
+  for param in "$@"
+  do
+    if ! [[ " ${JRUBY_OPTS} " =~ " $param " ]]
+    then
+      JRUBY_OPTS="${JRUBY_OPTS} $param"
+    fi
+  done
+  jruby_options_export
+}
+
+jruby_options_remove()
+{
+  JRUBY_OPTS=" ${JRUBY_OPTS} "
+  for param in "$@"
+  do
+    if [[ "${JRUBY_OPTS}" =~ " $param " ]]
+    then
+      JRUBY_OPTS="${JRUBY_OPTS// $param / }"
+    fi
+  done
+  jruby_options_export
+}
+
+jruby_clean_project_options()
+{
+  if [[ -n "${PROJECT_JRUBY_OPTS}" ]]
+  then
+    unset PROJECT_JRUBY_OPTS
+  fi
+}

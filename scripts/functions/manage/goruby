@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+
+goruby_install()
+{
+  if (( ${rvm_make_flags_flag:=0} > 0 ))
+  then
+    __rvm_make_flags
+  fi
+
+  unset GEM_HOME GEM_PATH MY_RUBY_HOME IRBRC
+
+  __rvm_remove_rvm_from_path
+
+  __rvm_conditionally_add_bin_path ; export PATH
+
+  builtin hash -r
+
+  rvm_ruby_home="$rvm_rubies_path/$rvm_ruby_interpreter"
+
+  __rvm_fetch_from_github "ruby" "trunk"
+
+  __rvm_apply_patches ; result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "There has been an error while trying to apply patches to goruby.  \nHalting the installation."
+    exit $result
+  fi
+
+  builtin cd "${rvm_src_path}/$rvm_ruby_string/configure"
+
+  if [[ ! -s "${rvm_src_path}/$rvm_ruby_string/configure" ]]
+  then
+    if command -v autoreconf &> /dev/null
+    then
+      __rvm_run "autoreconf" "autoreconf" "Running autoreconf"
+    else
+      rvm_error "rvm expects autoreconf to install this ruby interpreter, autoreconf was not found in PATH. \
+        \nHalting installation."
+      exit $result
+    fi
+  fi
+
+  if [[ -s ./Makefile && -z "$rvm_reconfigure_flag" ]]
+  then
+    if (( ${rvm_debug_flag:=0} > 0 ))
+    then
+      rvm_debug "Skipping configure step, Makefile exists so configure must have already been run."
+    fi
+  elif [[ -n "$rvm_ruby_configure" ]]
+  then
+    __rvm_run "configure" "$rvm_ruby_configure"
+    result=$?
+
+    if (( result > 0 ))
+    then
+      rvm_error "There has been an error while trying to configure the source.  \nHalting the installation."
+      exit $result
+    fi
+
+  elif [[ -s ./configure ]]
+  then
+    local configure_command="${rvm_configure_env:-""} ./configure --prefix=$rvm_ruby_home $rvm_configure_flags"
+
+    __rvm_run "configure" "$configure_command" \
+      "Configuring $rvm_ruby_string using $rvm_configure_flags, this may take a while depending on your cpu(s)..."
+    result=$?
+
+    if (( result > 0 ))
+    then
+      rvm_error "There has been an error while trying to configure the source.  \nHalting the installation."
+      exit $result
+    fi
+
+  else
+    rvm_error "Skipping configure step, 'configure' script does not exist, did autoreconf not run successfully?"
+  fi
+
+  rvm_ruby_make=${rvm_ruby_make:-"make"}
+
+  __rvm_run "make" "$rvm_ruby_make golf $rvm_make_flags" \
+    "Compiling $rvm_ruby_string, this may take a while depending on your cpu(s)..."
+  result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "There has been an error while trying to run make.  \nHalting the installation."
+    exit $result
+  fi
+
+  rvm_ruby_make_install=${rvm_ruby_make_install:-"make install"}
+
+  __rvm_run "install" "$rvm_ruby_make_install" "Installing $rvm_ruby_string"
+  result=$?
+
+  if (( result > 0 ))
+  then
+    rvm_error "There has been an error while trying to run make install.  \nHalting the installation."
+    exit $result
+  fi
+
+  rvm_log "Installation of $rvm_ruby_string is complete."
+
+  export GEM_HOME="$rvm_ruby_gem_home"
+  export GEM_PATH="$rvm_ruby_gem_path"
+
+  "$rvm_scripts_path/rubygems" latest
+
+  __rvm_bin_script
+
+  __rvm_run "chmod.bin" "chmod +x $rvm_ruby_home/bin/*"
+
+  __rvm_post_install
+
+  rm $rvm_ruby_home/bin/ruby
+  ln -s $rvm_ruby_home/bin/goruby $rvm_ruby_home/bin/ruby
+}

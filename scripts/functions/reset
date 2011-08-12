@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+# Reset any rvm gathered information about the system and its state.
+# rvm will refresh the stored information the next time it is called after reset.
+__rvm_reset()
+{
+  local flag flags file files config configs variable
+
+  __rvm_remove_rvm_from_path ; __rvm_conditionally_add_bin_path
+
+  export PATH
+
+  builtin hash -r
+
+  flags=( default passenger editor )
+
+  for flag in "${flags[@]}"; do
+
+    \rm -f "${rvm_bin_path}"/${flag}_*
+
+  done
+
+  for file in system default ; do
+
+    if [[ -f "$rvm_path/${file}" ]] ; then
+      \rm -f "$rvm_path/${file}"
+    fi
+
+    if [[ -f "$rvm_config_path/${file}" ]] ; then
+      \rm -f "$rvm_config_path/${file}"
+    fi
+
+    if [[ -f "$rvm_environments_path/${file}" ]] ; then
+      \rm -f "$rvm_environments_path/${file}"
+    fi
+
+  done
+
+  # Go back to a clean state.
+  __rvm_use_system
+
+  __rvm_unset_ruby_variables
+
+  __rvm_unset_exports
+
+  configs=(system_ruby system_gem_path system_user_gem_path)
+
+  for system_config in "${configs[@]}" ; do
+
+    "$rvm_scripts_path/db" "$rvm_user_path/db" "$system_config" "delete"
+
+  done
+
+  files=(ruby gem rake irb $(cd "${rvm_bin_path}" ; \
+    find . -mindepth 1 -maxdepth 1 -iname 'default*' -type f \
+    | \sed -e 's#./##g'))
+
+  for file in "${files[@]}"; do
+
+    if [[ -f "${rvm_bin_path}/$file" ]] ; then
+
+      \rm -f "${rvm_bin_path}/$file"
+
+    fi
+
+  done
+
+  return 0
+}
+

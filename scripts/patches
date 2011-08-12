@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+# General tools for manipulating patches
+# and dealing with patches.
+
+# Returns the path used to look for a patch given a specific name.
+__rvm_patch_lookup_path()
+{
+  echo "/"
+
+  [[ -n "${rvm_patch_original_pwd:-""}" ]] && echo "$rvm_patch_original_pwd/"
+
+  echo "$PWD/"
+
+  __rvm_ruby_string_paths_under "$rvm_patches_path" | sed 's/$/\//'
+
+  return $?
+}
+
+__rvm_expand_patch_name()
+{
+  local name expanded_patch_name
+
+  name="${1:-""}"
+
+  [[ -z "$name" ]] && return 0
+
+  expanded_patch_name="$("$rvm_scripts_path/patchsets" show "$name")"
+
+  if [[ "$?" == "0" ]]; then
+    echo "${expanded_patch_name}"
+
+  elif [[ "$name" != "default" ]]; then
+    echo "$name"
+  fi
+
+  return 0
+}
+
+# Return the full patch for a given patch.
+__rvm_lookup_full_patch_path()
+{
+  local extension patch_path directory directories
+
+  # Absolute path, pwd and then finally the rvm patches path.
+  directories=($(__rvm_patch_lookup_path))
+
+  for directory in "${directories[@]}" ; do
+
+    for extension in {"",.patch,.diff}; do
+
+      patch_path="${directory}${1}${extension}"
+
+      if [[ -s "$patch_path" ]]; then
+        echo "$patch_path"
+        return 0
+      fi
+
+    done
+
+  done
+
+  return 0
+}

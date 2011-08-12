@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+if (( ${rvm_trace_flag:=0} == 2 ))
+then
+  set -x
+  export rvm_trace_flag
+fi
+
+_archive="${1}"
+shift
+
+md5="${1}"
+shift
+
+# Swiped from BDSM
+if command_exists md5
+then
+  archive_md5=$(md5 -q "${_archive}")
+elif command_exists md5sum
+then
+  archive_md5=$(md5sum "${_archive}" | awk '{print $1')
+else
+  for _path in /sbin /bin /usr/bin /usr/sbin
+  do
+    if [[ -x "${_path}/md5" ]]
+    then
+      archive_md5=$(${_path}/md5 -q "${_archive}")
+    elif [[ -x "${_path}/md5sum" ]]
+    then
+      archive_md5=$(${_path}/md5sum "${_archive}" | awk '{print $1')
+    fi
+  done
+fi
+
+if [[ "${archive_md5}" == "${md5}" ]]
+then
+  exit 0
+else
+  exit 1
+fi
+

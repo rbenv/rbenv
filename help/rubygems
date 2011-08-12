@@ -1,0 +1,13 @@
+∴ rvm rubygems [version]
+
+Installs a specific rubygems version in the current ruby. If
+'current' is specified, the most current rubygems known to RVM
+will be installed.
+
+Currently compatible with only MRI 1.8.*, 1.9.* and Ruby 
+Enterprise Edition. If your system is not supported, running the
+command will generate an error message.
+
+MRI 1.9.* ships with a version of RubyGems. To revert to that version
+after installing a custom version via 'rvm rubygems' run 
+'rvm rubygems remove'.

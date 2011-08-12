@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+# Remove binaries.
+__rvm_implode_binaries()
+{
+  # Load inside a subshell to avoid polutting the current shells env.
+  (
+    source "$rvm_scripts_path/base"
+
+    rvm_log "Removing rvm-shipped binaries (rvm-prompt, rvm, rvm-sudom rvm-shell and rvm-auto-ruby)"
+    for entry in "$rvm_bin_path/"{rvm-prompt,rvm,rvmsudo,rvm-shell,rvm-auto-ruby} ; do
+      __rvm_rm_rf "$entry"
+    done
+
+    rvm_log "Removing rvm wrappers in $rvm_bin_path"
+    \find "$rvm_bin_path" -type l | while read symlinked_rvm_file; do
+      if [[ "$(readlink "$symlinked_rvm_file")" = "$rvm_wrappers_path/"* ]]; then
+        __rvm_rm_rf "$symlinked_rvm_file"
+      fi
+    done
+    unset symlinked_rvm_file
+  )
+}
+
+# Implode removes the entire rvm installation under $rvm_path, including removing wrappers.
+__rvm_implode()
+{
+  while : ; do
+
+    rvm_warn "Are you SURE you wish for rvm to implode?\
+      \nThis will recursively remove $rvm_path and other rvm traces?\
+      \n(type 'yes' or 'no')> "
+
+    read response
+
+    if [[ "yes" = "$response" ]] ; then
+
+      if [[ "/" = "$rvm_path" ]] ; then
+
+        rvm_error "remove '/' ?!... Ni!"
+
+      else
+
+        if [[ -d "$rvm_path" ]] ; then
+
+          __rvm_implode_binaries
+
+
+          rvm_log "Hai! Removing $rvm_path"
+
+          __rvm_rm_rf "$rvm_path/"
+
+          echo "$rvm_path has been removed."
+
+          if [[ "$rvm_path" = "/usr/local/rvm"* && -f "/usr/local/lib/rvm" ]]; then
+            rvm_log "Removing the rvm loader at /usr/local/lib/rvm"
+          fi
+
+          printf "rvm has been fully removed. Note you may need to manually remove /etc/rvmrc and ~/.rvmrc if they exist still."
+
+        else
+
+          rvm_log "It appears that $rvm_path is already non existant."
+
+        fi
+      fi
+      break
+
+    elif [[ "no" = "$response" ]] ; then
+
+      rvm_log "Psycologist intervened, cancelling implosion, crisis avoided :)"
+      break
+
+    fi
+  done
+
+  return 0
+}
+

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+source ./test/setup
+initialize_rvm
+
+#for ruby in $rubies ; do
+#  rvm_ruby_string=$ruby ; __rvm_select ; __rvm_use
+#  for binary in ruby rake gem irb ; do
+#    value=$(__btu_db "test/rubies/$ruby" $binary)
+#    assert_match $value "$(command -v $binary)"
+#  done
+#  unset $rvm_ruby_selected_flag
+#done
+
+if [[ -z "$rvm_teset_suite_flag" ]] ; then btu_summary ; fi
+

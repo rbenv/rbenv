@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+unset GREP_OPTIONS
+source "$rvm_scripts_path/base"
+
+usage()
+{
+  printf "
+
+  Usage:
+
+    rvm upgrade [source ruby] [destination ruby]
+
+  Description:
+
+    Upgrades the specified (already installed) source ruby given to the
+    given destination ruby version. Will migrate gemsets, wrappers, aliases
+    and environment files.
+
+  Examples:
+
+    $ rvm upgrade 1.9.2-p136 1.9.2-p180
+
+    $ rvm upgrade ree-2011.01 ree-2011-02
+
+"
+}
+
+confirm()
+{
+
+  local confirmation_response
+
+  printf "$1 (Y/n): "
+
+  read -r confirmation_response
+
+  if [[ -n "$confirmation_response" ]] ; then
+    echo $confirmation_response | \grep -i '^y\|^Y' >/dev/null 2>&1
+  fi
+}
+
+die_with_error()
+{
+  rvm_error "$1"
+  exit "${2:-1}"
+}
+
+expand_ruby_name()
+{
+  "$rvm_scripts_path/tools" strings "$1" \
+    | awk -F"${rvm_gemset_separator:-"@"}" '{print $1}'
+}
+
+expand_existing_ruby()
+{
+  local prefix ruby_name
+
+  prefix="$(expand_ruby_name "$1" | awk -F'-' '{print $1"-"$2}')"
+
+  while read -r ruby_name; do
+
+    if [[ "$ruby_name" != "$expanded_destination"* ]]; then
+      echo "$ruby_name" ; return 0
+    fi
+
+  done < <("$rvm_scripts_path/list" strings | tr ' ' '\n'  \
+    | sort -ur | \grep "^$prefix" | \grep -v '-head$' | head -n1)
+
+  return 1
+}
+
+upgrade_ruby()
+{
+
+  if [[ -z "$source_ruby" ]] ; then
+    die_with_error "Unable to find a source ruby. Please manually provide one."
+  fi
+
+  expanded_source="$(expand_ruby_name "$source_ruby")"
+
+  if [[ -z "$expanded_source" ]] ; then
+    die_with_error "The source ruby was not a valid ruby string."
+  fi
+
+  if ! confirm "Are you sure you wish to upgrade from $expanded_source to \
+    $expanded_destination?" ; then
+    die_with_error "Cancelling upgrade."
+  fi
+
+  if [[ ! -d "$rvm_rubies_path/$expanded_destination" ]]; then
+
+    rvm_log "Installing new ruby $expanded_destination"
+
+    "${rvm_bin_path}/rvm" install "$expanded_destination"
+
+    result="$?"
+
+    if [[ "$result" -gt 0 ]] ; then
+      die_with_error "Unable to install ruby $expanded_destination. \
+        Please install it manually to continue." "$result"
+    fi
+
+  fi
+
+  rvm_log "Migrating gems from $expanded_source to $expanded_destination"
+
+  "$rvm_scripts_path/migrate" "$expanded_source" "$expanded_destination"
+  result="$?"
+
+  [[ "$result" -gt 0 ]] && die_with_error "Error migrating gems." "$result"
+
+  rvm_log "Upgrade complete!"
+}
+
+args=($*)
+
+source_ruby="${args[$__array_start]:-"$(expand_existing_ruby "$destination_ruby")"}"
+args[$__array_start]=""
+args=(${args[@]})
+
+destination_ruby="${args[$__array_start]}"
+args[$__array_start]=""
+args=(${args[@]})
+
+
+if [[ -z "${source_ruby:-""}" ]] ; then
+  usage >&2
+  exit 1
+fi
+
+if [[ "help" = "$source_ruby" ]] ; then
+  usage
+  exit 0
+fi
+
+expanded_destination="$(expand_ruby_name "$destination_ruby")"
+
+if [[ -z "$source_ruby" ]] ; then
+  die_with_error \
+    "Source ruby was either not a recognized ruby string or not installed."
+fi
+
+if [[ -z "$expanded_destination" ]] ; then
+  die_with_error \
+    "Destination ruby is not a known ruby string."
+fi
+
+upgrade_ruby
+
+exit $?

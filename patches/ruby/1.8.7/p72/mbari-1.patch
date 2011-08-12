@@ -1,0 +1,441 @@
+diff -ru ruby-1.8.7-p72/ChangeLog ruby-1.8.7-mbari/ChangeLog
+--- ruby-1.8.7-p72/ChangeLog	2008-08-10 17:37:21.000000000 -0700
++++ ruby-1.8.7-mbari/ChangeLog	2008-12-09 01:24:37.000000000 -0800
+@@ -1,3 +1,20 @@
++Tue Dec  9  8:11:36 2008  Brent Roman  <brent@mbari.org>
++
++     * eval.c:  added Continuation.thread method
++        * cc_mark frees the continuation's stack if its thread is dead
++          avoids recursive gc that segfaults [see Dec 5th, 2007 ruby-core]
++
++        * added cast in PUSH_FRAME() to eliminate gcc 4.2 compiler warnings    
++                   
++        * THREAD_DATA() replaces rb_thread_check() in most contexts
++        
++        * rb_thread_check now complains when passed a Continuation
++          (no longer need redundant check in thgroup_add()
++        
++        * rb_callcc() assigns th->thread before scope_dup()
++          this avoids segfaults if this scope_dup() triggers a gc pass
++        
++
+ Fri Aug  8 10:53:52 2008  Tanaka Akira  <akr@fsij.org>
+ 
+ 	* lib/resolv.rb: randomize source port and transaction id.
+diff -ru ruby-1.8.7-p72/eval.c ruby-1.8.7-mbari/eval.c
+--- ruby-1.8.7-p72/eval.c	2008-08-03 20:24:26.000000000 -0700
++++ ruby-1.8.7-mbari/eval.c	2008-12-10 20:42:40.000000000 -0800
+@@ -2,8 +2,8 @@
+ 
+   eval.c -
+ 
+-  $Author: shyouhei $
+-  $Date: 2008-08-04 12:24:26 +0900 (Mon, 04 Aug 2008) $
++  $Author: brent $
++  $Date: 2008/12/11 04:42:40 $
+   created at: Thu Jun 10 14:22:17 JST 1993
+ 
+   Copyright (C) 1993-2003 Yukihiro Matsumoto
+@@ -766,11 +766,11 @@
+     _frame.argc = 0;			\
+     _frame.flags = 0;			\
+     _frame.uniq = frame_unique++;	\
+-    ruby_frame = &_frame
++    ruby_frame = (struct FRAME *)&_frame
+ 
+ #define POP_FRAME()  			\
+     ruby_current_node = _frame.node;	\
+-    ruby_frame = _frame.prev;		\
++    ruby_frame = _frame.prev;           \
+ } while (0)
+ 
+ struct BLOCK {
+@@ -10485,16 +10485,57 @@
+     } END_FOREACH_FROM(main_thread, th);
+ }
+ 
+-static void
+-thread_free(th)
++
++static inline void
++stack_free(th)
+     rb_thread_t th;
+ {
+-    if (th->stk_ptr) free(th->stk_ptr);
+-    th->stk_ptr = 0;
++    if (th->stk_ptr) {
++      free(th->stk_ptr);
++      th->stk_ptr = 0;
++    }
+ #ifdef __ia64
+-    if (th->bstr_ptr) free(th->bstr_ptr);
+-    th->bstr_ptr = 0;
++    if (th->bstr_ptr) {
++      free(th->bstr_ptr);
++      th->bstr_ptr = 0;
++    }
+ #endif
++}
++
++static void
++rb_thread_die(th)
++    rb_thread_t th;
++{
++    th->thgroup = 0;
++    th->status = THREAD_KILLED;
++    stack_free(th);
++}
++
++#define THREAD_DATA(threadObject)  ((rb_thread_t)RDATA(threadObject)->data)
++
++static inline void
++cc_purge(cc)
++    rb_thread_t cc;
++{  /* free continuation's stack if it has just died */
++  if (cc->thread != Qnil && THREAD_DATA(cc->thread)->status == THREAD_KILLED) {
++    cc->thread = Qnil;
++    rb_thread_die(cc);  /* can't possibly activate this stack */
++  }  
++}
++
++static void
++cc_mark(cc)
++    rb_thread_t cc;
++{  /* mark this continuation's stack only if its parent thread is still alive */
++  cc_purge(cc);
++  thread_mark(cc);
++}
++
++static void
++thread_free(th)
++    rb_thread_t th;
++{
++    stack_free(th);
+     if (th->locals) st_free_table(th->locals);
+     if (th->status != THREAD_KILLED) {
+ 	if (th->prev) th->prev->next = th->next;
+@@ -10511,7 +10552,7 @@
+ 	rb_raise(rb_eTypeError, "wrong argument type %s (expected Thread)",
+ 		 rb_obj_classname(data));
+     }
+-    return (rb_thread_t)RDATA(data)->data;
++    return THREAD_DATA(data);
+ }
+ 
+ static VALUE rb_thread_raise _((int, VALUE*, rb_thread_t));
+@@ -10782,16 +10823,6 @@
+ }
+ 
+ static void
+-rb_thread_die(th)
+-    rb_thread_t th;
+-{
+-    th->thgroup = 0;
+-    th->status = THREAD_KILLED;
+-    if (th->stk_ptr) free(th->stk_ptr);
+-    th->stk_ptr = 0;
+-}
+-
+-static void
+ rb_thread_remove(th)
+     rb_thread_t th;
+ {
+@@ -11454,7 +11485,7 @@
+ {
+     VALUE limit;
+     double delay = DELAY_INFTY;
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+ 
+     rb_scan_args(argc, argv, "01", &limit);
+     if (!NIL_P(limit)) delay = rb_num2dbl(limit);
+@@ -11566,7 +11597,7 @@
+ rb_thread_wakeup_alive(thread)
+     VALUE thread;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+ 
+     if (th->status == THREAD_KILLED)
+ 	return Qnil;
+@@ -11641,7 +11672,7 @@
+ rb_thread_kill(thread)
+     VALUE thread;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+ 
+     rb_kill_thread(th, 0);
+     return thread;
+@@ -11665,7 +11696,7 @@
+ rb_thread_kill_bang(thread)
+     VALUE thread;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+     rb_kill_thread(th, THREAD_NO_ENSURE);
+     return thread;
+ }
+@@ -11837,7 +11868,7 @@
+ rb_thread_priority(thread)
+     VALUE thread;
+ {
+-    return INT2NUM(rb_thread_check(thread)->priority);
++    return INT2NUM(THREAD_DATA(thread)->priority);
+ }
+ 
+ 
+@@ -11871,7 +11902,7 @@
+     rb_thread_t th;
+ 
+     rb_secure(4);
+-    th = rb_thread_check(thread);
++    th = THREAD_DATA(thread);
+ 
+     th->priority = NUM2INT(prio);
+     rb_thread_schedule();
+@@ -11897,7 +11928,7 @@
+ {
+     rb_thread_t th;
+ 
+-    th = rb_thread_check(thread);
++    th = THREAD_DATA(thread);
+     if (th == curr_thread) {
+ 	return INT2NUM(ruby_safe_level);
+     }
+@@ -11974,7 +12005,7 @@
+ rb_thread_abort_exc(thread)
+     VALUE thread;
+ {
+-    return rb_thread_check(thread)->abort?Qtrue:Qfalse;
++    return THREAD_DATA(thread)->abort?Qtrue:Qfalse;
+ }
+ 
+ 
+@@ -11992,7 +12023,7 @@
+     VALUE thread, val;
+ {
+     rb_secure(4);
+-    rb_thread_check(thread)->abort = RTEST(val);
++    THREAD_DATA(thread)->abort = RTEST(val);
+     return val;
+ }
+ 
+@@ -12011,7 +12042,7 @@
+ rb_thread_group(thread)
+     VALUE thread;
+ {
+-    VALUE group = rb_thread_check(thread)->thgroup;
++    VALUE group = THREAD_DATA(thread)->thgroup;
+     if (!group) {
+ 	group = Qnil;
+     }
+@@ -12397,7 +12428,7 @@
+     if (!rb_block_given_p()) {
+ 	rb_raise(rb_eThreadError, "must be called with a block");
+     }
+-    th = rb_thread_check(thread);
++    th = THREAD_DATA(thread);
+     if (th->stk_max) {
+ 	NODE *node = th->node;
+ 	if (!node) {
+@@ -12446,7 +12477,7 @@
+ rb_thread_value(thread)
+     VALUE thread;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+ 
+     while (!rb_thread_join(th, DELAY_INFTY));
+ 
+@@ -12481,7 +12512,7 @@
+ rb_thread_status(thread)
+     VALUE thread;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+ 
+     if (rb_thread_dead(th)) {
+ 	if (!NIL_P(th->errinfo) && (th->flags & RAISED_EXCEPTION))
+@@ -12509,7 +12540,7 @@
+ rb_thread_alive_p(thread)
+     VALUE thread;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+ 
+     if (rb_thread_dead(th)) return Qfalse;
+     return Qtrue;
+@@ -12532,7 +12563,7 @@
+ rb_thread_stop_p(thread)
+     VALUE thread;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+ 
+     if (rb_thread_dead(th)) return Qtrue;
+     if (th->status == THREAD_STOPPED) return Qtrue;
+@@ -12766,7 +12797,7 @@
+     VALUE *argv;
+     VALUE thread;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+ 
+     if (ruby_safe_level > th->safe) {
+ 	rb_secure(4);
+@@ -12783,7 +12814,7 @@
+     rb_thread_t th;
+     VALUE val;
+ 
+-    th = rb_thread_check(thread);
++    th = THREAD_DATA(thread);
+     if (ruby_safe_level >= 4 && th != curr_thread) {
+ 	rb_raise(rb_eSecurityError, "Insecure: thread locals");
+     }
+@@ -12829,7 +12860,7 @@
+     ID id;
+     VALUE val;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+ 
+     if (ruby_safe_level >= 4 && th != curr_thread) {
+ 	rb_raise(rb_eSecurityError, "Insecure: can't modify thread locals");
+@@ -12882,7 +12913,7 @@
+ rb_thread_key_p(thread, id)
+     VALUE thread, id;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+ 
+     if (!th->locals) return Qfalse;
+     if (st_lookup(th->locals, rb_to_id(id), 0))
+@@ -12918,7 +12949,7 @@
+ rb_thread_keys(thread)
+     VALUE thread;
+ {
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+     VALUE ary = rb_ary_new();
+ 
+     if (th->locals) {
+@@ -12939,7 +12970,7 @@
+     VALUE thread;
+ {
+     const char *cname = rb_obj_classname(thread);
+-    rb_thread_t th = rb_thread_check(thread);
++    rb_thread_t th = THREAD_DATA(thread);
+     const char *status = thread_status_name(th->status);
+     VALUE str;
+     size_t len = strlen(cname)+7+16+9+1;
+@@ -13044,14 +13075,15 @@
+     struct RVarmap *vars;
+ 
+     THREAD_ALLOC(th);
+-    cont = Data_Wrap_Struct(rb_cCont, thread_mark, thread_free, th);
++    /* must finish th initialization before any possible gc */
++    th->thread = curr_thread->thread;    /* brent@mbari.org */
++    th->thgroup = cont_protect;
++    cont = Data_Wrap_Struct(rb_cCont, cc_mark, thread_free, th);
+ 
+     scope_dup(ruby_scope);
+     for (tag=prot_tag; tag; tag=tag->prev) {
+ 	scope_dup(tag->scope);
+     }
+-    th->thread = curr_thread->thread;
+-    th->thgroup = cont_protect;
+ 
+     for (vars = ruby_dyna_vars; vars; vars = vars->next) {
+ 	if (FL_TEST(vars, DVAR_DONT_RECYCLE)) break;
+@@ -13088,7 +13120,7 @@
+     VALUE *argv;
+     VALUE cont;
+ {
+-    rb_thread_t th = rb_thread_check(cont);
++    rb_thread_t th = THREAD_DATA(cont);
+ 
+     if (th->thread != curr_thread->thread) {
+ 	rb_raise(rb_eRuntimeError, "continuation called across threads");
+@@ -13112,6 +13144,30 @@
+     return Qnil;
+ }
+ 
++
++/*
++ *  call-seq:
++ *     cont.thread
++ *  
++ *  Returns the thread on which this continuation can be called
++ *              (or nil if that thread has died)
++ *
++ *     t = Thread.new {callcc{|c| $x=c}; sleep 5}
++ *     sleep 1
++ *     $x.thread                             #=> t
++ *     sleep 10
++ *     $x.thread                             #=> nil
++ */
++static VALUE
++rb_cont_thread(cont)
++  VALUE cont;
++{
++  rb_thread_t th = THREAD_DATA(cont);
++  cc_purge(th);
++  return th->thread;
++}
++
++
+ struct thgroup {
+     int enclosed;
+     VALUE group;
+@@ -13264,10 +13320,6 @@
+ 
+     rb_secure(4);
+     th = rb_thread_check(thread);
+-    if (!th->next || !th->prev) {
+-	rb_raise(rb_eTypeError, "wrong argument type %s (expected Thread)",
+-		 rb_obj_classname(thread));
+-    }
+ 
+     if (OBJ_FROZEN(group)) {
+       rb_raise(rb_eThreadError, "can't move to the frozen thread group");
+@@ -13469,6 +13521,7 @@
+     rb_undef_method(CLASS_OF(rb_cCont), "new");
+     rb_define_method(rb_cCont, "call", rb_cont_call, -1);
+     rb_define_method(rb_cCont, "[]", rb_cont_call, -1);
++    rb_define_method(rb_cCont, "thread", rb_cont_thread, 0);
+     rb_define_global_function("callcc", rb_callcc, 0);
+     rb_global_variable(&cont_protect);
+ 
+diff -ru ruby-1.8.7-p72/version.h ruby-1.8.7-mbari/version.h
+--- ruby-1.8.7-p72/version.h	2008-08-10 17:37:21.000000000 -0700
++++ ruby-1.8.7-mbari/version.h	2008-12-09 00:40:58.000000000 -0800
+@@ -1,15 +1,15 @@
+ #define RUBY_VERSION "1.8.7"
+-#define RUBY_RELEASE_DATE "2008-08-11"
++#define RUBY_RELEASE_DATE "2008-12-09"
+ #define RUBY_VERSION_CODE 187
+-#define RUBY_RELEASE_CODE 20080811
++#define RUBY_RELEASE_CODE 20081209
+ #define RUBY_PATCHLEVEL 72
+ 
+ #define RUBY_VERSION_MAJOR 1
+ #define RUBY_VERSION_MINOR 8
+ #define RUBY_VERSION_TEENY 7
+ #define RUBY_RELEASE_YEAR 2008
+-#define RUBY_RELEASE_MONTH 8
+-#define RUBY_RELEASE_DAY 11
++#define RUBY_RELEASE_MONTH 12
++#define RUBY_RELEASE_DAY 9
+ 
+ #ifdef RUBY_EXTERN
+ RUBY_EXTERN const char ruby_version[];
+@@ -25,7 +25,7 @@
+ #define RUBY_BIRTH_MONTH 2
+ #define RUBY_BIRTH_DAY 24
+ 
+-#define RUBY_RELEASE_STR "patchlevel"
++#define RUBY_RELEASE_STR "MBARI 1 on patchlevel"
+ #define RUBY_RELEASE_NUM RUBY_PATCHLEVEL
+ 
+ 

@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+# Source a .rvmrc file in a directory after changing to it, if it exists.
+# To disable this fature, set export rvm_project_rvmrc=0 in $HOME/.rvmrc
+if (( ${rvm_project_rvmrc:-1} > 0 ))
+then
+  __rvm_after_cd()
+  {
+    rvm_hook="after_cd"
+    if [[ -n "${rvm_scripts_path}" || -n "${rvm_path}" ]]
+    then # TODO: figure out why TF this if is necessary...
+      source "${rvm_scripts_path:-"$rvm_path/scripts"}/hook"
+    fi
+    #__rvm_unset_exports
+  }
+
+  if [[ -n "${ZSH_VERSION:-}" ]]
+  then
+    autoload is-at-least
+    if is-at-least 4.3.4 >/dev/null 2>&1; then
+      # On zsh, use chpwd_functions
+      chpwd_functions=( "${chpwd_functions[@]}" __rvm_project_rvmrc __rvm_after_cd )
+    else
+      cd()
+      {
+        builtin cd "$@"
+        local result=$?
+        __rvm_project_rvmrc
+        __rvm_after_cd
+        return $result
+      }
+    fi
+  else
+    cd()
+    {
+      builtin cd "$@"
+      local result=$?
+      __rvm_project_rvmrc
+      __rvm_after_cd
+      return $result
+    }
+
+    # This functionality is opt-in by setting rvm_cd_complete_flag=1 in ~/.rvmrc
+    # Generic bash cd completion seems to work great for most, so this is only
+    # for those that have some issues with that.
+    if (( ${rvm_cd_complete_flag:-0} == 1 ))
+    then
+      # If $CDPATH is set, bash should tab-complete based on directories in those paths,
+      # but with the cd function above, the built-in tab-complete ignores $CDPATH. This
+      # function returns that functionality.
+      _rvm_cd_complete ()
+      {
+        local directory current matches item index sep
+        sep="${IFS}"
+        declare -x IFS=$'\n'
+        COMPREPLY=()
+        current="${COMP_WORDS[COMP_CWORD]}"
+        if [[ -n "$CDPATH" && ${current:0:1} != "/" ]] ; then
+          index=0
+          # The change to IFS above means that the tr below should replace ':'
+          # with a newline rather than a space. A space would be ignored, breaking
+          # TAB completion based on CDPATH again
+          for directory in $(printf "%s" "$CDPATH" | tr -s ':' '\n') ; do
+            for item in $( compgen -d "$directory/$current" ) ; do
+              COMPREPLY[index++]=${item#$directory/}
+            done
+          done
+        else
+          COMPREPLY=( $(compgen -d ${current}) )
+        fi
+        declare -x IFS="${sep}";
+      }
+      complete -o bashdefault -o default -o filenames -o dirnames -o nospace -F _rvm_cd_complete cd
+    fi
+  fi
+
+  popd ()
+  {
+    builtin popd
+    if [[ -s "$PWD/.rvmrc" ]]
+    then
+      source "$PWD/.rvmrc"
+    fi
+  }
+
+fi
+

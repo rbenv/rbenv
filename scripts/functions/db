@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# Query the rvm key-value database for a specific key
+# Allow overrides from user specifications in $rvm_user_path/db
+__rvm_db()
+{
+  local value key variable
+
+  key=${1:-""}
+  variable=${2:-""}
+
+  if [[ -f "$rvm_user_path/db" ]] ; then
+    value="$("$rvm_scripts_path/db" "$rvm_user_path/db" "$key")"
+  fi
+
+  if [[ -z "$value" ]] ; then
+    value="$("$rvm_scripts_path/db" "$rvm_config_path/db" "$key")"
+  fi
+
+  if [[ -n "$value" ]] ; then
+    if [[ -z "$variable" ]] ; then
+      echo $value
+    else
+      eval "$variable='$value'"
+    fi
+  fi
+
+  return 0
+}

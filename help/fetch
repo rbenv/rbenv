@@ -1,0 +1,5 @@
+Fetch
+
+  Performs an archive / src fetch of the current selected ruby.
+
+Usage: ∴ rvm fetch

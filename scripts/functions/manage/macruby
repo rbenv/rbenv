@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+
+macruby_install()
+{
+  if [[ "Darwin" = "$(uname)" ]]
+  then
+    if (( rvm_head_flag == 1 ))
+    then
+      if (( ${rvm_llvm_flag:=0} == 1 ))
+      then
+        "$rvm_scripts_path/package" llvm install
+      fi
+
+      macruby_path="/usr/local/bin"
+      # TODO: configure & make variables should be set here.
+      rvm_ruby_configure=" true "
+      rvm_ruby_make="rake"
+      rvm_ruby_make_install="$rvm_bin_path/rvmsudo rake install"
+
+      __rvm_db "${rvm_ruby_interpreter}_repo_url" "rvm_ruby_url"
+
+      rvm_ruby_repo_url=$rvm_ruby_url
+
+      __rvm_install_source $*
+      result=$?
+
+      if (( result > 0 ))
+      then
+        rvm_error "There has been an error while trying to install from source. \nHalting the installation."
+        return $result
+      fi
+
+    elif [[ "nightly" = "$rvm_ruby_version" ]] ; then
+      __rvm_db "macruby_nightly_version" "macruby_nightly_version"
+      macruby_path="/Library/Frameworks/MacRuby.framework/Versions/${macruby_nightly_version}/usr/bin"
+      unset macruby_nightly_version
+      # TODO: Separated nightly from head.
+
+      rvm_log "Retrieving the latest nightly macruby build..."
+
+      "$rvm_scripts_path/fetch" "$rvm_ruby_url"
+      result=$?
+      if (( result > 0 ))
+      then
+        rvm_error "There has been an error while trying to fetch the source.  \nHalting the installation."
+        return $result
+      fi
+
+      mv "${rvm_archives_path}/macruby_nightly-latest.pkg" \
+        "${rvm_archives_path}/macruby_nightly.pkg"
+
+      __rvm_run "macruby/extract" \
+        "sudo /usr/sbin/installer -pkg '${rvm_archives_path}/macruby_nightly.pkg' -target '/'"
+
+      mkdir -p "$rvm_ruby_home/bin"
+
+    else
+      macruby_path="/Library/Frameworks/MacRuby.framework/Versions/${rvm_ruby_version}/usr/bin"
+
+      # TODO: Separated nightly from head.
+      rvm_log "Retrieving MacRuby ${rvm_ruby_version} ..."
+
+      "$rvm_scripts_path/fetch" "$rvm_ruby_url"
+
+      result=$?
+
+      if (( result > 0 ))
+      then
+        rvm_error "There has been an error while trying to fetch the source. Halting the installation."
+        return $result
+      fi
+
+      mkdir -p ${rvm_src_path}/$rvm_ruby_string
+
+      unzip -o -j "${rvm_archives_path}/$rvm_ruby_package_file" \
+        "MacRuby ${rvm_ruby_version}/MacRuby ${rvm_ruby_version}.pkg" \
+        -d "${rvm_src_path}/$rvm_ruby_string"
+
+      mv "${rvm_src_path}/$rvm_ruby_string/MacRuby ${rvm_ruby_version}.pkg" \
+        "${rvm_src_path}/$rvm_ruby_string/$rvm_ruby_string.pkg"
+
+      __rvm_run "macruby/extract" \
+        "sudo /usr/sbin/installer -pkg '${rvm_src_path}/$rvm_ruby_string/$rvm_ruby_string.pkg' -target '/'"
+
+      mkdir -p "$rvm_ruby_home/bin"
+    fi
+
+    binaries=(erb gem irb rake rdoc ri ruby testrb)
+    for binary_name in ${binaries[@]}; do
+      # TODO: This should be generated via an external script.
+      ruby_wrapper=$(cat <<RubyWrapper
+#!/usr/bin/env bash
+
+export GEM_HOME="\${GEM_HOME:-$rvm_ruby_gem_home}"
+export GEM_PATH="\${GEM_PATH:-$rvm_ruby_gem_path}"
+export MY_RUBY_HOME="$rvm_ruby_home"
+export PATH="$rvm_ruby_gem_home/bin:$rvm_ruby_global_gems_path/bin:$rvm_ruby_home/bin:\$PATH"
+
+exec "$macruby_path/mac$binary_name" "\$@"
+RubyWrapper
+      )
+
+      file_name="$rvm_ruby_home/bin/$binary_name"
+
+      if [[ -f "$file_name" ]]
+      then
+        rm -f "$file_name"
+      fi
+
+      echo "$ruby_wrapper" > "$file_name"
+
+      if [[ ! -x "$file_name" ]]
+      then
+        chmod +x $file_name
+      fi
+
+      if [[ "$binary_name" = "ruby" ]]
+      then
+        echo "$ruby_wrapper" \
+          > "${rvm_bin_path:-"$rvm_bin_path/bin"}/$rvm_ruby_string"
+      fi
+    done
+    unset binaries
+
+    __rvm_irbrc
+
+  else
+    rvm_error "MacRuby can only be installed on a Darwin OS."
+  fi
+}

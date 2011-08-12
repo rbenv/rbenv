@@ -1,0 +1,17 @@
+
+Usage:
+
+  rvm get {latest|x.y.z|head|master,help}
+
+Options:
+
+  latest      - download and install the latest RVM release listed by
+                http://rvm.beginrescueend.com/releases/stable-version.txt
+
+  x.y.z       - download and install a specific RVM release
+
+  head        - git clone and install the latest RVM repository master/HEAD.
+  master
+
+  help        - Output this message.
+

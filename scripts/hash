@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+#
+# The idea is that we emulate a hash using two methods
+#
+# The first method is providing functions by sourcing this file
+#
+# The second method is where this script is called directly,
+# we then provide functionality of a file based hash
+#
+
+if [[ "$rvm_trace_flag" -eq 2 ]] ; then set -x ; export rvm_trace_flag ; fi
+
+[[ -z "${ZSH_VERSION:-}" ]] ; array_start=$?
+
+hash()
+{
+  hash_name=$1 ; hash_key=$2 ; hash_value=$3
+
+  eval "_hash_${hash_name}_keys=\${_hash_${hash_name}_keys:-()} ; _hash_${hash_name}_values=\${_hash_${hash_name}_values:-()}"
+
+  if [[ -z "$hash_value" ]] ; then
+    eval "length=\${#_hash_${hash_name}_keys[@]}"
+    for (( index=$__array_start ; index < $length; index++ )) ; do
+      eval "key=\"\${_hash_${hash_name}_keys[$index]}\""
+      if [[ "$hash_key" = "$key" ]] ; then
+        eval "echo -n \${_hash_${hash_name}_values[$index]}"
+        break
+      fi
+    done
+  else
+    eval "index=\$((\${#_hash_${hash_name}_keys[*]} + $__array_start))"
+    eval "_hash_${hash_name}_keys[$index]=\"$hash_key\""
+    eval "_hash_${hash_name}_values[$index]=\"$hash_value\""
+  fi
+}
+

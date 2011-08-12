@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+
+ruby_install()
+{
+  __rvm_check_for_bison # && Run like hell...
+  if (( $? > 0 ))
+  then
+    rvm_log "Bison required but not found. Halting."
+    exit $result
+  fi
+
+  if (( ${rvm_make_flags_flag:=0} == 1 ))
+  then
+    __rvm_make_flags
+  fi
+
+  ( __rvm_install_source $* )
+  result=$?
+}

@@ -1,0 +1,11 @@
+--- support/shobj-conf.orig	2010-10-01 22:46:26.000000000 +0900
++++ support/shobj-conf	2010-10-01 22:46:50.000000000 +0900
+@@ -171,7 +171,7 @@
+ 	SHLIB_LIBSUFF='dylib'
+ 
+ 	case "${host_os}" in
+-	darwin[78]*)	SHOBJ_LDFLAGS=''
++	darwin[789]*|darwin10*)	SHOBJ_LDFLAGS=''
+ 			SHLIB_XLDFLAGS='-dynamiclib -arch_only `/usr/bin/arch` -install_name $(libdir)/$@ -current_version $(SHLIB_MAJOR)$(SHLIB_MINOR) -compatibility_version $(SHLIB_MAJOR) -v'
+ 			;;
+ 	*)		SHOBJ_LDFLAGS='-dynamic'

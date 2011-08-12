@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+
+system="$(uname)"
+
+if [[ "Linux" = "$system" ]]
+then
+  for file in /etc/*-release
+  do
+    release="( $(cat $file) )"
+    break
+  done
+  printf "\n\nNotes for ${system} $release\n"
+
+  rvm_apt_binary="$(command -v apt-get)"
+  rvm_emerge_binary="$(command -v emerge)"
+  rvm_pacman_binary="$(command -v pacman)"
+  rvm_yum_binary="$(command -v yum)"
+  rvm_zypper_binary="$(command -v zypper)"
+  rvm_free_ram_mb="$(free -m | awk '{if (NR==3) print $4}')"
+
+  printf "
+NOTE: 'ruby' represents Matz's Ruby Interpreter (MRI) (1.8.X, 1.9.X)
+             This is the *original* / standard Ruby Language Interpreter
+      'ree'  represents Ruby Enterprise Edition
+      'rbx'  represents Rubinius
+
+bash >= 3.2 is required
+curl is required
+git is required (>= 1.7 recommended)
+patch is required (for ree and some ruby-head's).
+
+If you wish to install rbx and/or Ruby 1.9 head (MRI) (eg. 1.9.2-head),
+then you must install and use rvm 1.8.7 first.
+
+If you wish to have the 'pretty colors' again,
+  set 'export rvm_pretty_print_flag=1' in ~/.rvmrc.
+"
+
+  if [[ ! -z "$rvm_apt_binary" ]]
+  then
+    printf "
+dependencies:
+# For RVM
+  rvm: bash curl git
+
+# For Ruby (MRI & ree)  you should install the following OS dependencies:
+  ruby: ${rvm_apt_binary} install build-essential bison openssl libreadline6 libreadline6-dev curl git-core zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 libxml2-dev libxslt-dev autoconf libc6-dev ncurses-dev automake
+
+# For JRuby (if you wish to use it) you will need:
+  jruby: ${rvm_apt_binary} install curl g++ openjdk-6-jre-headless
+  jruby-head: ${rvm_apt_binary} install ant openjdk-6-jdk
+
+# In addition to ruby: dependencies,
+  ruby-head: subversion
+
+# For IronRuby (if you wish to use it) you will need:
+  ironruby: ${rvm_apt_binary} install curl mono-2.0-devel
+"
+
+  elif [[ ! -z "$rvm_emerge_binary" ]]
+  then
+    printf "
+dependencies:
+  # For RVM
+  rvm: bash curl git
+
+  # For MRI based rubies you will need:
+  ruby: emerge libiconv readline zlib openssl curl git libyaml sqlite libxslt
+  ruby-head: gcc bison autoconf automake m4
+
+  # For JRuby (if you wish to use it) you will need:
+  jruby: emerge dev-java/sun-jdk dev-java/sun-jre-bin
+
+  # For IronRuby (if you wish to use it) you will need:
+  ironruby: emerge dev-lang/mono
+    "
+
+  elif [[ ! -z "$rvm_pacman_binary" ]]
+  then
+    printf "
+dependencies:
+  # For RVM itself
+  rvm: bash curl git
+
+  # For Ruby (MRI & Ree) you should install the following OS dependencies:
+  ruby: pacman -Sy --noconfirm gcc patch curl bison zlib readline libxml2 libxslt git autoconf diffutils bison make
+  ruby-head: pacman -Sy --noconfirm subversion
+
+  # For JRuby (if you wish to use it) you will need:
+  jruby: pacman -Sy --noconfirm jdk jre curl
+
+  # For IronRuby (if you wish to use it) you will need:
+  ironruby: pacman -Sy --noconfirm mono
+"
+
+  elif [[ ! -z "$rvm_yum_binary" ]]
+  then
+    printf "
+dependencies:
+  # For RVM
+  rvm: yum install -y bash curl git libxslt # NOTE: For git you need the EPEL repository enabled
+
+  # For Ruby (MRI & Ree) you should install the following OS dependencies:
+  ruby: yum install -y gcc-c++ patch readline readline-devel zlib zlib-devel libyaml-devel libffi-devel openssl-devel ;
+        yum install -y make bzip2 ;
+        yum install -y iconv-devel # NOTE: For centos 5.4 final iconv-devel might not be available :(
+
+  # For JRuby (if you wish to use it) you will need:
+  jruby: yum install -y java
+"
+
+  elif [[ ! -z "$rvm_zypper_binary" ]]
+  then
+    printf "
+dependencies:
+  # For RVM
+  rvm: sudo zypper install -y bash curl git
+
+  # For Ruby (MRI & Ree) you should install the following OS dependencies:
+  ruby: sudo zypper install -y patterns-openSUSE-devel_basis gcc-c++ bzip2 readline-devel zlib-devel \\
+                               libxml2-devel libxslt-devel libyaml-devel libopenssl-devel libffi45-devel
+
+  # For JRuby (if you wish to use it) you will need:
+  jruby: sudo zypper install -y java-1_6_0-sun # Non-Oss repository required
+"
+
+  else
+    printf "
+dependencies:
+  # RVM
+  rvm: bash curl git
+
+  # For Ruby (MRI & Ree) you should install the following OS dependencies:
+  ruby: # gcc-c++ patch readline zlib libyaml iconv libxml2 libxslt
+
+  # For JRuby (if you wish to use it) you will need:
+  jruby: # The SUN java runtime environment and development kit.
+
+  # For IronRuby (if you wish to use it) you will need:
+  ironruby: #The Mono Runtime and Development Platform (version 2.6 or greater is recommended).
+"
+  fi
+  if [[ $rvm_free_ram_mb -le 600 ]]
+  then
+    printf "
+For rbx (Rubinius) more than 600MB of free RAM required.
+"
+  fi
+elif [[ "$MACHTYPE" = *darwin* ]]
+then
+
+  release="( $(sw_vers -productName) )"
+
+  printf "
+  Notes for ${system} $release
+    For Lion, Rubies should be built using gcc rather than llvm-gcc. Since
+    /usr/bin/gcc is now linked to /usr/bin/llvm-gcc-4.2, add the following to
+    your shell's start-up file: export CC=gcc-4.2
+    (The situation with LLVM and Ruby may improve. This is as of 07-23-2011.)
+
+    For Snow Leopard be sure to have Xcode Tools Version 3.2.1 (1613) or later
+    You should download the latest Xcode tools from developer.apple.com.
+      (This is since the dvd install for Snow Leopard contained bugs).
+
+    If you intend on installing MacRuby you must install LLVM first.
+    If you intend on installing JRuby you must install the JDK.
+    If you intend on installing IronRuby you must install Mono (version 2.6 or greater is recommended).
+
+    To seamlessly abandon the Apple-installed system ruby (ruby 1.8.7 patchlevel 174 for Snow Leopard):
+
+    rvm install 1.8.7 # installs patch 302: closest supported version
+    rvm system ; rvm gemset export system.gems ; rvm 1.8.7 ; rvm gemset import system # migrate your gems
+    rvm --default 1.8.7
+
+  "
+  if (( UID == 0 ))
+  then
+    echo "
+    NOTE:
+
+     You have installed RVM as root. You need to add users to the rvm group.
+       Run the following commands as a user to make this happen
+
+     user$ sudo dscl localhost -append /Local/Default/Groups/rvm GroupMemip "$USER"\n
+     "
+  fi
+fi
+
+echo

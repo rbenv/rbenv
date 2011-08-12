@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# Save or restore the rvm's state. This is a toggle action.
+# Meant for use before and after an operation that might reset
+# the currently selected ruby.
+# TODO: Determine if we should a) yank this out or b) actually use it :)
+__rvm_state()
+{
+  if [[ -z "$rvm_state" ]] ; then
+
+    rvm_state="$(__rvm_environment_identifier)"
+
+    rvm_state="${rvm_state:-"system"}"
+
+    if [[ -n "$1" ]]; then
+
+      rvm_ruby_string="$1"
+
+      __rvm_select
+
+      __rvm_use
+
+    fi
+
+  else
+
+    rvm_ruby_string="$rvm_state"
+
+    __rvm_select
+
+    __rvm_use
+
+    unset rvm_state
+
+  fi
+
+  return 0
+}
+

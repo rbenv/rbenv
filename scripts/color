@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+case "$1" in
+  # regular colors
+  black)    tput setaf 0 ;;
+  red)      tput setaf 1 ;;
+  green)    tput setaf 2 ;;
+  yellow)   tput setaf 3 ;;
+  blue)     tput setaf 4 ;;
+  magenta)  tput setaf 5 ;;
+  cyan)     tput setaf 6 ;;
+  white)    tput setaf 7 ;;
+
+  # emphasized (bolded) colors
+  eblack)   tput bold ; tput setaf 0 ;;
+  ered)     tput bold ; tput setaf 1 ;;
+  egreen)   tput bold ; tput setaf 2 ;;
+  eyellow)  tput bold ; tput setaf 3 ;;
+  eblue)    tput bold ; tput setaf 4 ;;
+  emagenta) tput bold ; tput setaf 5 ;;
+  ecyan)    tput bold ; tput setaf 6 ;;
+  ewhite)   tput bold ; tput setaf 7 ;;
+
+  # underlined colors
+  ublack)   set smul unset rmul ; tput setaf 0 ;;
+  ured)     set smul unset rmul ; tput setaf 1 ;;
+  ugreen)   set smul unset rmul ; tput setaf 2 ;;
+  uyellow)  set smul unset rmul ; tput setaf 3 ;;
+  ublue)    set smul unset rmul ; tput setaf 4 ;;
+  umagenta) set smul unset rmul ; tput setaf 5 ;;
+  ucyan)    set smul unset rmul ; tput setaf 6 ;;
+  uwhite)   set smul unset rmul ; tput setaf 7 ;;
+
+  # background colors
+  bblack)   tput setab 0 ;;
+  bred)     tput setab 1 ;;
+  bgreen)   tput setab 2 ;;
+  byellow)  tput setab 3 ;;
+  bblue)    tput setab 4 ;;
+  bmagenta) tput setab 5 ;;
+  bcyan)    tput setab 6 ;;
+  bwhite)   tput setab 7 ;;
+
+  # Defaults
+  default)  tput setaf 9 ;;
+  bdefault) tput setab 9 ;;
+  none)     tput sgr0    ;;
+  *)        tput sgr0    # Reset
+esac

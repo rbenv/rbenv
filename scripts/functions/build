@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+
+__rvm_setup_compile_environment()
+{
+  if [[ "Darwin" = "$(uname)" ]]
+  then
+    rvm_configure_env=()
+    local architectures="${rvm_architectures:-"-arch i386 -arch x86_64"}"
+    rvm_configure_env+=(
+    "MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion |
+    awk -F'.' '{print $1"."$2}')"
+    )
+    rvm_configure_env+=("CFLAGS='$architectures -g -Os -pipe -no-cpp-precomp'")
+    rvm_configure_env+=("CCFLAGS='$architectures -g -Os -pipe'")
+    rvm_configure_env+=("CXXFLAGS='$architectures -g -Os -pipe'")
+    rvm_configure_env+=("LDFLAGS='$architectures -bind_at_load'")
+    rvm_configure_env+=(
+    "LDSHARED='cc $architectures -dynamiclib -undefined suppress -flat_namespace'"
+    )
+  fi
+  rvm_configure_env="${rvm_configure_env[*]}"
+  export rvm_configure_env
+}
+
+# Attempt to override the Darwin build settings for rubies
+# This should only be used in extreme edge cases that
+# will not work via the default way.
+__rvm_make_flags()
+{
+  # This is only an issue with Darwin :/
+  if [[ "$MACHTYPE" = *darwin* ]]
+  then
+    # \ls /usr/lib/gcc/x86_64-apple-darwin10
+    # Set the build & host type
+    if [[ "Power Macintosh" = "$(/usr/sbin/sysctl -n hw.machine)" ]]
+    then
+      true # Do nothing ?
+    elif [[ "$(/usr/sbin/sysctl -n hw.cpu64bit_capable)" = 1 || \
+      "$(/usr/sbin/sysctl -n hw.optional.x86_64)" = 1 ]]
+    then
+      #   64 bit capable
+      if [[ "-arch x86_64" = "${rvm_archflags:-""}" ]]
+      then
+        rvm_configure_flags="${rvm_configure_flags} \
+          --build=x86_64-apple-darwin$(uname -r) \
+          --host=x86_64-apple-darwin$(uname -r)"
+
+      elif [[ "-arch i386" = "${rvm_archflags:-""}" ]]
+      then
+        rvm_configure_flags="${rvm_configure_flags} \
+          --build=i386-apple-darwin$(uname -r) \
+          --host=i386-apple-darwin$(uname -r)"
+      # else
+      #   rvm_archflags="-arch x86_64"
+      #   rvm_configure_flags="${rvm_configure_flags} \
+      #     --build=x86_64-apple-darwin$(uname -r) \
+      #     --host=x86_64-apple-darwin$(uname -r)"
+      fi
+    fi
+
+    if [[ -n "${rvm_archflags:-""}" ]]
+    then
+      export ARCHFLAGS="$rvm_archflags"
+      # Use the latest sdk available.
+      if [[ -z "${rvm_sdk:-""}" ]]
+      then
+        rvm_sdk="$(
+        /usr/bin/basename -a /Developer/SDKs/* | awk '/^M/' | \sort | \tail -n 1
+        )"
+      fi
+
+      CFLAGS="${CFLAGS:-"-isysroot /Developer/SDKs/$rvm_sdk $rvm_archflags"}"
+      LDFLAGS="${LDFLAGS:-"-Wl,-syslibroot /Developer/SDKs/$rvm_sdk $rvm_archflags"}"
+      export CFLAGS LDFLAGS
+
+      # CXXFLAGS="-mmacosx-version-min="$(sw_vers -productVersion \
+      # | awk -F'.' '{print $1"."$2}')" -isysroot /Developer/SDKs/$rvm_sdk "
+      # export CXXFLAGS
+    fi
+  fi
+
+  return 0
+}
+
+__rvm_mono_env()
+{
+  DYLD_LIBRARY_PATH="${rvm_usr_path}/lib:$DYLD_LIBRARY_PATH"
+  C_INCLUDE_PATH="${rvm_usr_path}/include:$C_INCLUDE_PATH"
+  ACLOCAL_PATH="${rvm_usr_path}/share/aclocal"
+  ACLOCAL_FLAGS="-I $ACLOCAL_PATH"
+  PKG_CONFIG_PATH="${rvm_usr_path}/lib/pkgconfig:$PKG_CONFIG_PATH"
+
+  export  DYLD_LIBRARY_PATH C_INCLUDE_PATH ACLOCAL_PATH ACLOCAL_FLAGS PKG_CONFIG_PATH
+
+  PATH="${rvm_usr_path}/bin:$PATH"
+
+  builtin hash -r
+
+  return 0
+}
+
+# Returns all mri compatible (partly) ruby for use
+# with things like rbx etc which require a ruby be installed.
+__rvm_mri_rubies()
+{
+  local versions="${1:-"1.8.|ree|1.9."}" _ruby
+  for _ruby in $( find $rvm_rubies_path/ -maxdepth 1 -mindepth 1 -type d -not -type l )
+  do
+    printf "${_ruby##*/}\n"
+  done | grep -E "$versions"
+}
+
+# Returns the first mri compatible (partly) ruby for use
+# with things like rbx etc which require a ruby be installed.
+__rvm_mri_ruby()
+{
+  local versions="${1:-"1.8.|ree|1.9."}"
+  _mri_rubies=( $( __rvm_mri_rubies "$versions" ) )
+  _current_ruby=$(__rvm_environment_identifier)
+  if [[ " ${_mri_rubies[*]} " =~ " ${_current_ruby} " ]]
+  then
+    printf "${_current_ruby}\n"
+  else
+    for _ruby in ${_mri_rubies[@]}
+    do
+      printf "${_ruby}\n"
+    done | sort | head -n 1
+  fi
+  return 0
+}
+
+__rvm_ensure_has_mri_ruby()
+{
+  local versions="${1:-"1.8.|ree|1.9."}"
+  if [[ -z "$(__rvm_mri_ruby $versions)" ]]
+  then
+    local compat_result=0
+    if ! ( "$rvm_bin_path"/rvm install 1.8.7 )
+    then
+      rvm_error "
+To proceed rvm requires a 1.8-compatible ruby is installed.
+We attempted to install 1.8.7 automatically but it failed.
+Please install it manually (or a compatible alternative) to proceed.
+"
+      compat_result=1
+    fi
+    return $compat_result
+  fi
+
+  return 0
+}
+

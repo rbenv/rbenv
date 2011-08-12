@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+source ./test/setup
+initialize_rvm
+
+
+heat 'output=$(rvm gemdir)'
+assert string_eq "$(gem env gemdir)" "$output"
+
+heat 'output=$(rvm gemdir system)'
+assert match "/Library/Ruby/Gems/1.8" "$output"
+
+heat 'output=$(rvm gemdir system user)'
+assert match ".gem/ruby/1.8" "$output"
+
+heat 'output=$(rvm gemdir user)'
+assert match ".gem/ruby/1.8" "$output"
+
+heat 'output=$(rvm jruby gemdir)'
+assert match ".rvm/gems/jruby/1.4.0" "$output"
+
+heat 'output=$(rvm ree gemdir)'
+assert match ".rvm/gems/ree/1.8.7" "$output"
+
+heat 'output=$(rvm 1.9.1 gemdir)'
+assert match ".rvm/gems/ruby/1.9.1" "$output"
+
+# Gemsets
+# Creating
+# Using
+# Global
+# Listing
+# Deleting
+# Emptying
+# Exporting
+# Importing
+# Copying
+# Pristine
+
+if [[ -z "$rvm_teset_suite_flag" ]] ; then btu_summary ; fi
+

@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+
+# rvm : Ruby enVironment Manager
+# https://rvm.beginrescueend.com
+# https://github.com/wayneeseguin/rvm
+
+# Is RVM loaded as a shell function already?
+
+export HOME="${HOME%%+(\/)}" # Remove trailing slashes if they exist on HOME
+
+if (( ${rvm_ignore_rvmrc:=0} == 0 ))
+then
+  for rvmrc in /etc/rvmrc "$HOME/.rvmrc"
+  do
+    if [[ -f "$rvmrc" ]]
+    then
+      if \grep '^\s*rvm .*$' "$rvmrc" >/dev/null 2>&1
+      then
+        printf "\nError:
+        $rvmrc is for rvm settings only.
+        rvm CLI may NOT be called from within $rvmrc.
+        Skipping the loading of $rvmrc"
+        return 1
+      else
+        source "$rvmrc"
+      fi
+    fi
+  done
+fi
+
+#if [[ -z "${rvm_path:-}" ]]
+#then
+  # Set the default sandboxed value.
+  # TODO: Alter the variable names to make sense
+  if [[ -z "${rvm_user_install_flag:-}" ]]
+  then
+    if (( UID == 0 )) ||
+      [[ -n "${rvm_prefix:-}" && "${rvm_prefix:-}" != "${HOME}" ]]
+    then
+      rvm_user_install_flag=0
+    else
+      rvm_user_install_flag=1
+    fi
+  fi
+
+  if [[ -z "${rvm_prefix:-}" ]]
+  then
+    true ${rvm_user_install_flag:=0}
+    if (( UID > 0 || rvm_user_install_flag == 1 ))
+    then
+      rvm_prefix="$HOME"
+    else
+      rvm_prefix="/usr/local"
+    fi
+  fi
+
+  true "${rvm_prefix/rvm/scripts}" # Fix rvm_prefix changes, older installs.
+
+  if [[ -z "${rvm_path:-}" ]]
+  then
+    if [[ "$rvm_prefix" = "$HOME" ]]
+    then
+      rvm_path="${rvm_prefix}/.rvm"
+    else
+      rvm_path="${rvm_prefix}/rvm"
+    fi
+  fi
+#fi
+\export rvm_prefix
+\export rvm_user_install_flag
+\export rvm_path="${rvm_path%%+(\/)}"
+
+if [[ -n "${BASH_VERSION:-}" ]]
+then
+  if type rvm 2>&1 | \grep 'function' >/dev/null
+  then
+    rvm_loaded_flag=1
+  else
+    rvm_loaded_flag=0
+  fi
+elif [[ -n "${ZSH_VERSION:-}" ]]
+then
+  if type rvm 2>&1 | \grep 'function' >/dev/null
+  then
+    rvm_loaded_flag=1
+  else
+    rvm_loaded_flag=0
+  fi
+else
+  rvm_loaded_flag=0
+fi
+
+if (( ${rvm_loaded_flag:=0} == 0 )) || (( ${rvm_reload_flag:=0} == 1 ))
+then
+  if [[ -n "${rvm_path}" && -d "$rvm_path" ]]
+  then
+    true ${rvm_scripts_path:="$rvm_path/scripts"}
+
+    for script in base version selector cd cli override_gem
+    do
+      if [[ -f "$rvm_scripts_path/$script" ]]
+      then
+        source "$rvm_scripts_path/$script"
+      else
+        printf "WARNING:
+        Could not source '$rvm_scripts_path/$script' as file does not exist.
+        RVM will likely not work as expected.\n"
+      fi
+    done
+
+    rvm_version="$(cat "$rvm_path/VERSION")"
+
+    export rvm_version="${rvm_version/%.}"
+
+    alias rvm-restart="rvm_reload_flag=1 source '${rvm_path}/scripts/rvm'"
+
+    if ! command -v ruby >/dev/null 2>&1 || command -v ruby | \grep -v rvm >/dev/null
+    then
+      if [[ -s "$rvm_path/environments/default" ]]
+      then
+        source "$rvm_path/environments/default"
+      fi
+    fi
+
+    # Makes sure rvm_bin_path is in PATH atleast once.
+    __rvm_conditionally_add_bin_path
+
+    if (( rvm_reload_flag == 1 ))
+    then
+      printf 'RVM reloaded!\n'
+    fi
+
+    rvm_loaded_flag=1
+    rvm_reload_flag=0
+  else
+    printf "\n\$rvm_path ($rvm_path) does not exist."
+  fi
+  unset rvm_prefix_needs_trailing_slash rvm_rc_files rvm_gems_cache_path \
+    rvm_gems_path rvm_project_rvmrc_default rvm_gemset_separator
+fi
+
+if [[ -t 0 ]] && command -v __rvm_project_rvmrc >/dev/null  2>&1
+then
+  # Reload the rvmrc, use promptless ensuring shell processes does not
+  # prompt if .rvmrc trust value is not stored.
+  rvm_promptless=1 __rvm_project_rvmrc
+fi
+

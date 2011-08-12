@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+
+add_user_to_rvm_group()
+{
+  echo "Adding user '$user' to the RVM group '${rvm_group_name}'"
+
+  case "$(uname)" in
+    "OpenBSD")
+      usermod -G "$rvm_group_name" "$user"
+      ;;
+    "FreeBSD")
+      pw usermod "$user" -G "$rvm_group_name"
+      ;;
+    "Linux")
+      if [[ -f "/etc/SuSE-release" ]] ; then
+        groupmod -A "$user" "$rvm_group_name"
+      else
+        /usr/sbin/usermod -a -G "$rvm_group_name" "$user"
+      fi
+    ;;
+    "Darwin")
+      dscl . -append "/Groups/$rvm_group_name" GroupMembership "$user"
+      ;;
+    "SunOS")
+      groups="$(id -G "$user") \"$rvm_group_name\""
+      usermod -G "${groups// /, }" "$user"
+      ;;
+  esac
+
+  return 0
+}
+
+# TODO: Remove this... it is now replaced with rvm group cli api.
+setup_rvm_group_users()
+{
+  case "$(uname)" in
+    "Darwin")
+      usernames=$(dscl . -search /Users PrimaryGroupID 20 | grep PrimaryGroupID | cut -f 1)
+      ;;
+    *)
+      usernames=($(grep -xF -f <(cat /etc/passwd | cut -d: -f1) <(find /home -mindepth 1 -maxdepth 1 -type d | cut -d '/' -f 3)))
+      ;;
+  esac
+
+  for user in ${usernames[@]}
+  do
+    if ! groups "$user" | grep 'rvm' >/dev/null 2>&1
+    then
+      printf "Ensuring '$user' is in group '$rvm_group_name'\n"
+      add_user_to_rvm_group $user
+    fi
+  done
+}
+

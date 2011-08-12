@@ -1,0 +1,33 @@
+
+∴ rvm exec some-command
+
+Executes arbitrary commands against rvm set operations. If given a set that
+matches a single ruby command, it will exec the command directly without printing
+out extra rvm information.
+
+Examples:
+
+To execute 'ruby -v' against all installed rubies and aliases, you would run:
+
+  ∴ rvm exec ruby -v
+
+If you instead want to execute it against a specific ruby (without extra logging
+/ data printed by rvm as is done with normal set operations), you can instead do:
+
+  ∴ rvm ree exec ruby -v
+
+Since it is a set operation, normal ruby specifiers will work. As an example, to run
+it against 1.9.2 and 1.8.7, you would run:
+
+  ∴ rvm 1.9.2,1.8.7 exec ruby -v
+
+Or, to execute 'gem env' against all gemsets:
+
+  ∴ rvm --with-rubies all-gemsets exec gem env
+
+To execute 'which ruby' in the current directory, loading a .rvmrc and falling back
+to the default ruby:
+
+  ∴ rvm --with-rubies default-with-rvmrc exec which ruby
+
+For more information, look up the rvm set operations.
