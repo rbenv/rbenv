@@ -1,0 +1,18 @@
+Host ubuntu
+Port 2220
+
+Host opensuse
+Port 2221
+
+Host debian
+Port 2222
+
+Host *
+HostName localhost
+User #USERNAME
+Port 2220
+UserKnownHostsFile /dev/null
+StrictHostKeyChecking no
+IdentitiesOnly yes
+ControlMaster auto
+ControlPath /tmp/socket-%r@%h:%p

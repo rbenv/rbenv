@@ -1,0 +1,57 @@
+= openSUSE
+
+Build an openSUSE base box using the following:
+
+  * http://software.opensuse.org/113/en
+  - name: opensuse
+  - openSUSE
+  - 512 MB memory
+  - 8 GB dynamically resizing drive
+
+Add the iso to the cd/dvd device under Settings > Storage. Now start the
+server and install (use default settings unless specified):
+
+  - Desktop Selection: Other > Minimal Server Selection
+  - deselect automatic login
+  
+When the server has rebooted and is ready at the login screen, remove the
+install iso, take a snapshot and setup port forwarding.
+
+  (Devices > CD/DVD Devices > Remove disk from virtual drive)
+  VBoxManage snapshot opensuse take RAW
+  VBoxManage controlvm opensuse poweroff
+  # wait to fully power off
+  VBoxManage modifyvm opensuse --natpf1 'opensuse-ssh,tcp,,2221,,22'
+  VBoxManage -q snapshot opensuse restore RAW
+  VBoxManage startvm opensuse
+
+Login as root, start sshd, stop the firewall (you could just open port 22):
+
+  vm: /etc/init.d/sshd start
+  vm: rcSuSEfirewall2 stop
+
+Transfer your ssh key to the vm. Help to generate ssh keys can be found on
+{GitHub}[http://help.github.com/key-setup-redirect]:
+
+  scp -P 2221 -o UserKnownHostsFile=/dev/null ~/.ssh/id_rsa.pub USERNAME@localhost:id_rsa.pub
+
+Login as root and SSH for your user, then exit:
+
+  vm: su -l USERNAME
+  vm: mkdir .ssh
+  vm: mv id_rsa.pub .ssh/authorized_keys
+  vm: chmod 0700 .ssh
+  vm: chmod 0600 .ssh/authorized_keys
+  vm: exit
+  vm: exit
+
+Now take the standard snapshots:
+
+  VBoxManage snapshot opensuse take BASE
+  VBoxManage snapshot opensuse take CURRENT
+  VBoxManage controlvm opensuse poweroff
+
+To cleanup the port forwarding (run later, if ever):
+
+  VBoxManage modifyvm opensuse --natpf1 delete 'opensuse-ssh'
+
