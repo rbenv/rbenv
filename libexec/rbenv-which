@@ -2,10 +2,12 @@
 
 expand_path() {
   local cwd="$(pwd)"
-  if [[ -e $1 ]]; then
+  if [[ -e "$1" ]]; then
     cd "$1"
     pwd
     cd "$cwd"
+  else
+    echo "$1"
   fi
 }
 
