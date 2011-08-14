@@ -24,3 +24,10 @@ for path in "${HOME}/.rbenv/versions/"*; do
     fi
   fi
 done
+
+version="system"
+if [ "$version" == "$RBENV_VERSION_NAME" ]; then
+  echo "${hit_prefix}${print_version}"
+else
+  echo "${miss_prefix}${version}"
+fi
