@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
+#/ usage: rbenv set-default <version>
+#/
+#/ Sets the default Ruby version. You can override the default at any time
+#/ by setting a directory-specific version with `rbenv set-local' or by
+#/ setting the RBENV_VERSION environment variable.
+
 set -e
+
+usage() {
+  grep '^#/' <"$0" | cut -c4- >&2
+  exit 1
+}
+
+expr -- "$*" : ".*--help" >/dev/null && usage
 
 RBENV_VERSION="$1"
 if [ -z "$RBENV_VERSION" ]; then
-  echo "usage: rbenv set-default VERSION" >&2
-  exit 1
+  usage
 fi
 
 # Make sure the specified version is installed

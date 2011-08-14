@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
+#/ usage: rbenv <command> [<args>]
+#/
+#/ Some useful rbenv commands are:
+#/    commands      List all commands
+#/    rehash        Rehash rbenv shims (run this after installing binaries)
+#/    set-default   Set the default Ruby version
+#/    set-local     Set a local directory-specific Ruby version
+#/    version       Show the current Ruby version
+#/    versions      List all Ruby versions known by rbenv
+#/
+#/ See 'rbenv help <command>' for more information on a specific command.
+#/ For more information, see: https://github.com/sstephenson/rbenv#readme
+
 set -e
+
+usage() {
+  grep '^#/' <"$0" | cut -c4- >&2
+  exit 1
+}
 
 abs_dirname() {
   local cwd="$(pwd)"
@@ -21,7 +39,7 @@ export PATH="${libexec_path}:${PATH}"
 command="$1"
 case "$command" in
 "" | "-h" | "--help" )
-  echo -e "rbenv 0.1.1\n$(rbenv-help)" >&2
+  usage
   ;;
 * )
   command_path="$(command -v "rbenv-$command" || true)"
