@@ -24,7 +24,9 @@ cd "${HOME}/.rbenv/shims"
 rm -f *
 
 create_prototype_shim
-make_shims ../versions/*/bin/*
+#make_shims ../versions/*/bin/*
+EXEC_GEM_DIR=$(rbenv exec gem environment | grep 'EXECUTABLE DIRECTORY' | sed -n 's/  - EXECUTABLE DIRECTORY: \(.*\)/\1/p')
+make_shims $EXEC_GEM_DIR
 
 shopt -s nullglob
 RBENV_REHASH_PLUGINS=(/etc/rbenv.d/rehash/*.bash ${HOME}/.rbenv/rbenv.d/rehash/*.bash)
