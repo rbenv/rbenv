@@ -1,55 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-print_set_version() {
-  echo "<version> should be a string matching a Ruby version known by rbenv."
-
-  local versions="$(rbenv-versions --bare)"
-  if [ -z "$versions" ]; then
-    echo "There are currently no Ruby versions installed for rbenv."
-  else
-    echo "The currently installed Ruby versions are:"
-    echo "$versions" | sed 's/^/  /'
-  fi
-
-  echo
-  echo "The special version string 'system' will use your default system Ruby."
-}
-
 case "$1" in
-"") echo "usage: rbenv <command> [<args>]
-
-Some useful rbenv commands are:
-   commands      List all commands
-   rehash        Rehash rbenv shims (run this after installing binaries)
-   set-default   Set the default Ruby version
-   set-local     Set a local directory-specific Ruby version
-   version       Show the current Ruby version
-   versions      List all Ruby versions known by rbenv
-
-See 'rbenv help <command>' for more information on a specific command.
-For more information, see: https://github.com/sstephenson/rbenv#readme"
-;;
-set-default) echo "usage: rbenv set-default <version>
-
-Sets the default Ruby version. You can override the default at any time
-by setting a directory-specific version with \`rbenv set-local' or by
-setting the RBENV_VERSION environment variable.
-
-$(print_set_version)"
-;;
-set-local) echo "usage: rbenv set-local <version>
-
-Sets the local directory-specific Ruby version by writing the version
-name to a file named '.rbenv-version'.
-
-When you run a Ruby command, rbenv will look for an '.rbenv-version'
-file in the current directory and each parent directory. If no such
-file is found in the tree, rbenv will use the default Ruby version
-specified with \`rbenv set-default', or the version specified in the
-RBENV_VERSION environment variable.
-
-$(print_set_version)"
-;;
-*) echo "No command arguments needed or invalid/undocumented command."
+   rbenv) exec rbenv --help;;
+  [a-z]*) exec rbenv "$1" --help;;
+       *) exec rbenv --help;;
 esac
