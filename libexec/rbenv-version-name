@@ -2,7 +2,7 @@
 set -e
 
 read_version_file() {
-  egrep -m 1 '[^[:space:]]' "$1"
+  egrep --color=never -m 1 '[^[:space:]]' "$1"
 }
 
 DEFAULT_PATH="${HOME}/.rbenv/default"
