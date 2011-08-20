@@ -30,6 +30,13 @@ use_version() {
 	fi
 }
 
+if [ -z "$1" ]; then
+  echo "Please specify one of the following Ruby versions to use:" >&2
+  echo
+  echo "$(rbenv-versions)"
+  exit 1
+fi
+
 RBENV_VERSION=$1
 TMP_PATH="$(set_tmp_path)"
 
