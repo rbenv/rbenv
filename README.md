@@ -149,7 +149,20 @@ overrides the global, and can be overridden itself by setting the
 When run without a version number, `rbenv local` reports the currently
 configured local version.
 
-### <a name="section_3.3"></a> 3.3 versions
+### <a name="section_3.3"></a> 3.3 use
+
+Allows the user to override the global or local Ruby versions with a
+manually specified version.
+
+    $ rbenv use 1.9.3-preview1
+
+Versions set with `rbenv use` can be cleared by either changing into a
+directory containing a `.rbenv-version` file, or else by manually setting
+the global version again.
+
+    $ rbenv use global
+
+### <a name="section_3.4"></a> 3.4 versions
 
 Lists all Ruby versions known to rbenv, and shows an asterisk next to
 the currently active version.
@@ -162,7 +175,7 @@ the currently active version.
       rbx-1.2.4
       ree-1.8.7-2011.03
 
-### <a name="section_3.4"></a> 3.4 version
+### <a name="section_3.5"></a> 3.5 version
 
 Displays the currently active Ruby version, along with information on
 how it was set.
@@ -170,7 +183,7 @@ how it was set.
     $ rbenv version
     1.8.7-p352 (set by /Volumes/37signals/basecamp/.rbenv-version)
 
-### <a name="section_3.5"></a> 3.5 rehash
+### <a name="section_3.6"></a> 3.6 rehash
 
 Installs shims for all Ruby binaries known to rbenv (i.e.,
 `~/.rbenv/versions/*/bin/*`). Run this command after you install a new
