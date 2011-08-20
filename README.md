@@ -44,9 +44,10 @@ tools that do one thing well.
    * [3 Usage](#section_3)
       * [3.1 global](#section_3.1)
       * [3.2 local](#section_3.2)
-      * [3.3 versions](#section_3.3)
-      * [3.4 version](#section_3.4)
-      * [3.5 rehash](#section_3.5)
+      * [3.3 use](#section_3.3)
+      * [3.4 versions](#section_3.4)
+      * [3.5 version](#section_3.5)
+      * [3.6 rehash](#section_3.6)
    * [4 Contributing](#section_4)
       * [4.1 License](#section_4.1)
 
