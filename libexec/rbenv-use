@@ -25,7 +25,7 @@ use_version() {
 		echo "rbenv: using ruby \`$RBENV_VERSION'"
 		echo "$RBENV_VERSION" > $TMP_PATH
 	else
-		echo "rbenv: version \`$1' is not installed" >&2
+		echo "rbenv: version \`$RBENV_VERSION' is not installed" >&2
 		exit 1
 	fi
 }
