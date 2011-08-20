@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+TMP_PATH="/tmp/rbenv_use.tmp"
+
 root="$(pwd)"
 while [ -n "$root" ]; do
   if [ -e "${root}/.rbenv-version" ]; then
@@ -13,7 +15,9 @@ done
 GLOBAL_PATH="${HOME}/.rbenv/global"
 DEFAULT_PATH="${HOME}/.rbenv/default"
 
-if [ -e "$GLOBAL_PATH" ]; then
+if [ -e "$TMP_PATH" ]; then
+  echo "$TMP_PATH"
+elif [ -e "$GLOBAL_PATH" ]; then
   echo "$GLOBAL_PATH"
 elif [ -e "$DEFAULT_PATH" ]; then
   echo "$DEFAULT_PATH"

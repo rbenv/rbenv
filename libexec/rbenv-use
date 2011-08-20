@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -e
+
+use_global() {
+	if [ -e "$HOME/.rbenv/global" -a -e "$PWD/.rbenv-version" ]; then
+		echo "rbenv: cannot override local ruby \`$(cat .rbenv-version)'"
+		exit 1
+	elif [ -e "$HOME/.rbenv/global" ]; then
+		global_version="$(cat $HOME/.rbenv/global)"
+		echo "rbenv: using global ruby \`$global_version'"
+		echo "$global_version" >$TMP_PATH
+	else
+		echo "rbenv: a global ruby hasn't been set up yet" >&2
+		exit 1
+	fi
+}
+
+use_version() {
+	if [ -d "$HOME/.rbenv/versions/$RBENV_VERSION" ]; then
+		echo "rbenv: using ruby \`$RBENV_VERSION'"
+		echo "$RBENV_VERSION" > $TMP_PATH
+	else
+		echo "rbenv: version \`$1' is not installed" >&2
+		exit 1
+	fi
+}
+
+RBENV_VERSION=$1
+TMP_PATH="/tmp/rbenv_use.tmp"
+
+case $RBENV_VERSION in
+	global|default)
+		use_global
+		;;
+	*)
+		use_version
+esac
