@@ -2,18 +2,31 @@
 set -e
 
 TMP_PATH="/tmp/rbenv_use.tmp"
+TMP_PATH_FOR_LOCAL="/tmp/rbenv_use_in_local_context.tmp"
+GLOBAL_PATH="${HOME}/.rbenv/global"
+DEFAULT_PATH="${HOME}/.rbenv/default"
 
 root="$(pwd)"
 while [ -n "$root" ]; do
-  if [ -e "${root}/.rbenv-version" ]; then
-    echo "${root}/.rbenv-version"
+  rbenv_version_path="${root}/.rbenv-version"
+
+  if [ -e "$rbenv_version_path" ]; then
+    if [ -e "$TMP_PATH" ]; then
+      rm -f "$TMP_PATH"
+      echo "$rbenv_version_path"
+    elif [ -e "$TMP_PATH_FOR_LOCAL" ]; then
+      echo "$TMP_PATH_FOR_LOCAL"
+    else
+      echo "$rbenv_version_path"
+    fi
     exit
+  else
+    if [ -e "$TMP_PATH_FOR_LOCAL" ]; then
+      rm -f "$TMP_PATH_FOR_LOCAL"
+    fi
   fi
   root="${root%/*}"
 done
-
-GLOBAL_PATH="${HOME}/.rbenv/global"
-DEFAULT_PATH="${HOME}/.rbenv/default"
 
 if [ -e "$TMP_PATH" ]; then
   echo "$TMP_PATH"

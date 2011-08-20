@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 set -e
 
+set_tmp_path() {
+	if [ -e "$PWD/.rbenv-version" ]; then
+    echo "/tmp/rbenv_use_in_local_context.tmp"
+	else
+    echo "/tmp/rbenv_use.tmp"
+	fi
+}
+
 use_global() {
-	if [ -e "$HOME/.rbenv/global" -a -e "$PWD/.rbenv-version" ]; then
-		echo "rbenv: cannot override local ruby \`$(cat .rbenv-version)'"
-		exit 1
-	elif [ -e "$HOME/.rbenv/global" ]; then
+	if [ -e "$HOME/.rbenv/global" ]; then
 		global_version="$(cat $HOME/.rbenv/global)"
 		echo "rbenv: using global ruby \`$global_version'"
 		echo "$global_version" >$TMP_PATH
@@ -26,7 +31,7 @@ use_version() {
 }
 
 RBENV_VERSION=$1
-TMP_PATH="/tmp/rbenv_use.tmp"
+TMP_PATH="$(set_tmp_path)"
 
 case $RBENV_VERSION in
 	global|default)
