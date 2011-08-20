@@ -163,6 +163,10 @@ the global version again.
 
     $ rbenv use global
 
+You can also manually set the system Ruby.
+
+  $ rbenv use system
+
 ### <a name="section_3.4"></a> 3.4 versions
 
 Lists all Ruby versions known to rbenv, and shows an asterisk next to

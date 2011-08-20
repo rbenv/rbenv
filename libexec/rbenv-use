@@ -30,6 +30,10 @@ use_version() {
 	fi
 }
 
+use_system() {
+  echo "system" > $TMP_PATH
+}
+
 if [ -z "$1" ]; then
   echo "Please specify one of the following Ruby versions to use:" >&2
   echo
@@ -44,6 +48,9 @@ case $RBENV_VERSION in
 	global|default)
 		use_global
 		;;
+  system)
+    use_system
+    ;;
 	*)
 		use_version
 esac
