@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-TMP_PATH="/tmp/rbenv_use.tmp"
-TMP_PATH_FOR_LOCAL="/tmp/rbenv_use_in_local_context.tmp"
+TMP_PATH="/tmp/rbenv_use.$REAL_PPID.tmp"
+TMP_PATH_FOR_LOCAL="/tmp/rbenv_use_in_local_context.$REAL_PPID.tmp"
 GLOBAL_PATH="${HOME}/.rbenv/global"
 DEFAULT_PATH="${HOME}/.rbenv/default"
 

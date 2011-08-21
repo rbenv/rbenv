@@ -3,9 +3,9 @@ set -e
 
 set_tmp_path() {
 	if [ -e "$PWD/.rbenv-version" ]; then
-    echo "/tmp/rbenv_use_in_local_context.tmp"
+    echo "/tmp/rbenv_use_in_local_context.$REAL_PPID.tmp"
 	else
-    echo "/tmp/rbenv_use.tmp"
+    echo "/tmp/rbenv_use.$PPID.tmp"
 	fi
 }
 
