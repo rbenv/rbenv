@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -e
+
+set_tmp_path() {
+	if [ -e "$PWD/.rbenv-version" ]; then
+    echo "/tmp/rbenv_use_in_local_context.$REAL_PPID.tmp"
+	else
+    echo "/tmp/rbenv_use.$REAL_PPID.tmp"
+	fi
+}
+
+use_global() {
+	if [ -e "$HOME/.rbenv/global" ]; then
+		global_version="$(cat $HOME/.rbenv/global)"
+		echo "rbenv: using global ruby \`$global_version'"
+		echo "$global_version" >$TMP_PATH
+	else
+		echo "rbenv: a global ruby hasn't been set up yet" >&2
+		exit 1
+	fi
+}
+
+use_version() {
+	if [ -d "$HOME/.rbenv/versions/$RBENV_VERSION" ]; then
+		echo "rbenv: using ruby \`$RBENV_VERSION'"
+		echo "$RBENV_VERSION" > $TMP_PATH
+	else
+		echo "rbenv: version \`$RBENV_VERSION' is not installed" >&2
+		exit 1
+	fi
+}
+
+use_system() {
+  echo "system" > $TMP_PATH
+}
+
+if [ -z "$1" ]; then
+  echo "Please specify one of the following Ruby versions to use:" >&2
+  echo
+  echo "$(rbenv-versions)"
+  exit 1
+fi
+
+RBENV_VERSION=$1
+TMP_PATH="$(set_tmp_path)"
+
+case $RBENV_VERSION in
+	global|default)
+		use_global
+		;;
+  system)
+    use_system
+    ;;
+	*)
+		use_version
+esac

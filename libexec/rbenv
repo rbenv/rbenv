@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+export REAL_PPID=$PPID
+
 resolve_link() {
   $(type -p greadlink readlink | head -1) $1
 }
