@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
+GLOBAL_PATH="${HOME}/.rbenv/global"
+
 if [ -z "$RBENV_VERSION" ]; then
   RBENV_VERSION_FILE="$(rbenv-version-file)"
-  RBENV_VERSION="$(rbenv-version-file-read "$RBENV_VERSION_FILE" || true)"
+  
+  if [ -e "$RBENV_VERSION_FILE" ]; then
+    RBENV_VERSION="$(rbenv-version-file-read "$RBENV_VERSION_FILE" || true)"
+  elif [ "$RBENV_VERSION_FILE" = "$GLOBAL_PATH" ]; then
+  	# Missing global file is equivalent to 'system'
+  	RBENV_VERSION="system"
+  fi
 fi
 
 if [ "$RBENV_VERSION" = "system" ]; then
