@@ -129,7 +129,7 @@ the version name to the `~/.rbenv/global` file. This version can be
 overridden by a per-project `.rbenv-version` file, or by setting the
 `RBENV_VERSION` environment variable.
 
-    $ rbenv global 1.9.2-p290
+    $ rbenv set-default 1.9.2-p290
 
 The special version name `system` tells rbenv to use the system Ruby
 (detected by searching your `$PATH`).
@@ -144,7 +144,7 @@ an `.rbenv-version` file in the current directory. This version
 overrides the global, and can be overridden itself by setting the
 `RBENV_VERSION` environment variable.
 
-    $ rbenv local rbx-1.2.4
+    $ rbenv set-local rbx-1.2.4
 
 When run without a version number, `rbenv local` reports the currently
 configured local version.
