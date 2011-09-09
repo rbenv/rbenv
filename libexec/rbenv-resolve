@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -e
+
+RBENV_VERSION="$1"
+
+if [ -z "$RBENV_VERSION" ]; then
+  echo "usage: rbenv resolve VERSION_PREFIX" >&2
+  exit 1
+fi
+
+system="system"
+if [ ${system#$RBENV_VERSION} != "system" ]; then
+  echo "system"
+  exit
+fi
+
+RBENV_PREFIX_PATH="${HOME}/.rbenv/versions/${RBENV_VERSION}"
+if [ -d "$RBENV_PREFIX_PATH" ]; then
+  echo $RBENV_VERSION
+  exit
+fi
+
+set +e
+POSSIBILITIES=(`ls -1d ${HOME}/.rbenv/versions/${RBENV_VERSION}* 2>/dev/null`)
+if [ $? != 0 ]; then
+  echo "rbenv: no matches for '$RBENV_VERSION'"
+  exit 1
+fi
+set -e
+
+if [ ${#POSSIBILITIES[@]} = 1 ]; then
+  echo `basename $POSSIBILITIES`
+else
+  echo "rbenv: more than one possible match for '$RBENV_VERSION': "
+  for var in "${POSSIBILITIES[@]}"; do
+    echo "  $(basename ${var})"
+  done
+  exit 1
+fi 
