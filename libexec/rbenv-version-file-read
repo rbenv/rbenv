@@ -12,7 +12,7 @@ if [ -e "$VERSION_FILE" ]; then
       echo "$version"
       break
     fi
-  done < "$VERSION_FILE"
-else
-  exit 1
+  done < <( cat "$VERSION_FILE" && echo )
 fi
+
+exit 1
