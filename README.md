@@ -93,7 +93,7 @@ command-line utility.
 autocompletion. (If you prefer not to load rbenv in your shell, you
 can manually add `$HOME/.rbenv/shims` to your path in step 2.)
 
-        $ echo 'eval "$(rbenv init -)"' >> .bash_profile
+        $ echo 'eval "$(rbenv init -)"' >> .bashrc
 
 4. Restart your shell. You can now begin using rbenv.
 

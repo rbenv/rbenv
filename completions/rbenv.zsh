@@ -1,4 +1,4 @@
-#compdef _rbenv rbenv
+compdef _rbenv rbenv
 
 function _rbenv_commands() {
   cmds_str="$(rbenv commands)"

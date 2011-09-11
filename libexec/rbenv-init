@@ -35,13 +35,13 @@ root="$(abs_dirname "$0")/.."
 if [ -z "$print" ]; then
   case "$shell" in
   bash )
-    profile='~/.bash_profile'
+    profile='~/.bashrc'
     ;;
   zsh )
     profile='~/.zshrc'
     ;;
   * )
-    profile='your profile'
+    profile='your shell config'
     ;;
   esac
 
