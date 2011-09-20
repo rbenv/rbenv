@@ -2,14 +2,7 @@
 set -e
 
 expand_path() {
-  if [ ! -d "$1" ]; then
-    return 1
-  fi
-
-  local cwd="$(pwd)"
-  cd "$1"
-  pwd
-  cd "$cwd"
+	echo `readlink -f $1`
 }
 
 remove_from_path() {
