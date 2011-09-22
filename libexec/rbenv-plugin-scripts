@@ -21,5 +21,9 @@ for path in ${RBENV_PLUGIN_PATH//:/$'\n'}; do
   for script in $path/"$RBENV_COMMAND"/*.bash; do
     echo $script
   done
+
+  for script in $path/plugins/*/"$RBENV_COMMAND".bash; do
+    echo $script
+  done
 done
 shopt -u nullglob
