@@ -31,7 +31,7 @@ for plugin in ${RBENV_ROOT}/plugins/*; do
   RBENV_PLUGIN_PATH="${RBENV_PLUGIN_PATH}:$plugin"
 done
 
-export RBENV_PLUGIN_PATH="${RBENV_PLUGIN_PATH}:/etc/rbenv.d:${RBENV_ROOT}/rbenv.d"
+export RBENV_PLUGIN_PATH="${RBENV_PLUGIN_PATH}:${RBENV_ROOT}/rbenv.d:/usr/local/etc/rbenv.d:/etc/rbenv.d"
 
 libexec_path="$(abs_dirname "$0")"
 export PATH="${libexec_path}:${PATH}"
