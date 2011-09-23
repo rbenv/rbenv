@@ -27,6 +27,9 @@ else
 fi
 export RBENV_ROOT
 
+for plugin in ${RBENV_ROOT}/plugins/*; do
+  RBENV_PLUGIN_PATH="${RBENV_PLUGIN_PATH}:$plugin"
+done
 
 export RBENV_PLUGIN_PATH="${RBENV_PLUGIN_PATH}:/etc/rbenv.d:${RBENV_ROOT}/rbenv.d"
 
