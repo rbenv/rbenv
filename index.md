@@ -1,5 +1,5 @@
 ---
-title: Simple Ruby Version Management: rbenv
+title: "Simple Ruby Version Management: rbenv"
 layout: default
 ---
 
