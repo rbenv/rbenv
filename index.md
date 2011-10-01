@@ -11,14 +11,14 @@ tools that do one thing well.
 
 <img src="http://i.sstephenson.us/rbenv.png" width="894" height="464">
 
-### rbenv _doesƒ_
+### rbenv _does…_
 
 * Let you **change the global Ruby version** on a per-user basis.
 * Provide support for **per-project Ruby versions**.
 * Allow you to **override the Ruby version** with an environment
   variable.
 
-### In contrast with rvm, rbenv _does notƒ_
+### In contrast with rvm, rbenv _does not…_
 
 * **Need to be loaded into your shell.** Instead, rbenv's shim
     approach works by adding a directory to your `$PATH`.
