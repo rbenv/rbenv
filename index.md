@@ -1,6 +1,7 @@
 ---
 title: "Simple Ruby Version Management: rbenv"
 layout: default
+id: main
 ---
 
 rbenv lets you easily switch between multiple versions of Ruby. It's
