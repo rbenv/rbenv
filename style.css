@@ -36,15 +36,6 @@ body { margin: 0; font-size: 13px; line-height: 1.231; }
 
 body, button, input, select, textarea { font-family: sans-serif; color: #222; }
 
-/* 
- * Remove text-shadow in selection highlight: h5bp.com/i
- * These selection declarations have to be separate
- * Also: hot pink! (or customize the background color to match your design)
- */
-
-::-moz-selection { background: #fe57a1; color: #fff; text-shadow: none; }
-::selection { background: #fe57a1; color: #fff; text-shadow: none; }
-
 
 /* =============================================================================
    Links
@@ -208,7 +199,7 @@ td { vertical-align: top; }
 
 
 /* ==|== primary styles =====================================================
-   Author: 
+   Author: Javier Julio
    ========================================================================== */
 
 body 
