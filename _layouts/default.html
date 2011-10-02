@@ -2,28 +2,20 @@
 <html>
 <head>
   <title>{{ page.title }}</title>
-  <style type="text/css">
-    body {
-      margin: 0;
-      padding: 30px 0;
-      background-color: #fff;
-      color: #555;
-    }
-    #container {
-      margin: 0 auto;
-      width: 600px;
-    }
-    img {
-      border: none;
-      display: block;
-      margin: auto;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body id="{{ page.id }}">
 
 <div id="container">
 
+  <header>
+    
+    <div id="logo">rbenv</div>
+    
+    <div id="slogan"># Simple Ruby Version Management</div>
+    
+  </header>
+  
   {{ content }}
   
 </div>
