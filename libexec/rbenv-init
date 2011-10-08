@@ -80,6 +80,8 @@ function rbenv() {
   case "\$command" in
   ${commands[*]})
     eval \`rbenv "sh-\$command" "\$@"\`;;
+  use)
+    export RBENV_VERSION="\$1";;
   *)
     command rbenv "\$command" "\$@";;
   esac
