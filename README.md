@@ -106,6 +106,14 @@ easy to fork and contribute any changes back upstream.
 
         $ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
 
+    **Ubuntu note**: If you're using Ubuntu and have dash configured
+    as your login shell (which is the default), you have to modify
+    your `~/.profile` file instead of `~/.bash_profile`. Also, you'll
+    have to make sure that bash autocompletion is not loaded when your
+    `~/.profile` file is loaded into bash.
+    
+        $ echo 'if [ -n "$BASH_VERSION" ]; then eval "$(rbenv init -)"; else eval "$(rbenv init - dash)"; fi' >> ~/.profile
+
     **Zsh note**: Modifiy your `~/.zshenv` file instead of `~/.bash_profile`.
 
 4. Restart your shell so the path changes take effect. You can now
