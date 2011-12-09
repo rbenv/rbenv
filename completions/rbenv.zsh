@@ -1,4 +1,6 @@
-compctl -K _rbenv rbenv
+if [[ -o login ]]; then
+  compctl -K _rbenv rbenv
+fi
 
 _rbenv() {
   local word words completions
