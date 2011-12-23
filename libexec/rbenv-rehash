@@ -55,17 +55,24 @@ make_shims() {
   done
 }
 
-# Save the working directory.
-CUR_PATH=$PWD
+# Remove shims that no longer reference an executable in the glob.
+remove_stale_shims() {
+  local glob="$@"
 
-# Empty out the shims directory and make it the working directory.
-rm -f "$SHIM_PATH"/*
+  for file in $(comm -23 <(ls -1 | xargs basename | sort -u) <(ls -1 $glob | xargs basename | sort -u)); do
+    rm $file
+  done
+}
+
+# Save the working directory and move to the shims directory.
+CUR_PATH=$PWD
 cd "$SHIM_PATH"
 
 # Create the prototype shim, then make shims for all known binaries.
 create_prototype_shim
 shopt -s nullglob
 make_shims ../versions/*/bin/*
+remove_stale_shims ../versions/*/bin/*
 
 # Restore the previous working directory.
 cd "$CUR_PATH"
