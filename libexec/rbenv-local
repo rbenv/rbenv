@@ -13,8 +13,10 @@ RBENV_VERSION="$1"
 
 if [ -e ".rbenv-version" ]; then
   RBENV_VERSION_FILE=".rbenv-version"
-elif [ -e ".ruby-version" ]
+elif [ -e ".ruby-version" ]; then
   RBENV_VERSION_FILE=".ruby-version"
+else
+  RBENV_VERSION_FILE=".rbenv-version"
 fi
 
 if [ "$RBENV_VERSION" = "--unset" ]; then
