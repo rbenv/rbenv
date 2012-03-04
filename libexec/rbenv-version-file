@@ -8,6 +8,10 @@ while [ -n "$root" ]; do
     echo "${root}/.rbenv-version"
     exit
   fi
+  if [ -e "${root}/.ruby-version" ]; then
+    echo "${root}/.ruby-version"
+    exit
+  fi
   root="${root%/*}"
 done
 

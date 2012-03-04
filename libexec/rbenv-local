@@ -10,7 +10,12 @@ if [ "$1" = "--complete" ]; then
 fi
 
 RBENV_VERSION="$1"
-RBENV_VERSION_FILE=".rbenv-version"
+
+if [ -e ".rbenv-version" ]; then
+  RBENV_VERSION_FILE=".rbenv-version"
+elif [ -e ".ruby-version" ]
+  RBENV_VERSION_FILE=".ruby-version"
+fi
 
 if [ "$RBENV_VERSION" = "--unset" ]; then
   rm -f "$RBENV_VERSION_FILE"
