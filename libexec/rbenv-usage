@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#/ usage: rbenv usage <path>
+#/
+#/ Prints usage of a path.
+
+set -e
+grep '^#/' <"$1" | cut -c4- >&2
+
+plugin="$(basename $1)"
+case "$plugin" in "rbenv-global" | "rbenv-local" | "rbenv-shell" )
+
+  print_set_version() {
+    echo "<version> should be a string matching a Ruby version known by rbenv."
+
+    local versions="$(rbenv-versions --bare)"
+    if [ -z "$versions" ]; then
+      echo "There are currently no Ruby versions installed for rbenv."
+    else
+      echo "The currently installed Ruby versions are:"
+      echo "$versions" | sed 's/^/  /'
+    fi
+
+    echo
+    echo "The special version string 'system' will use your default system Ruby."
+  }
+  echo
+  print_set_version
+esac
+
+exit 1

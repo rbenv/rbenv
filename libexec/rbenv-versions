@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#/ usage: rbenv versions [--bare]
+#/
+#/ Lists all Ruby versions known by rbenv.
+
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
 
