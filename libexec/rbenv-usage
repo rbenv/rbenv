@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
-#/ usage: rbenv usage <path>
+#/ usage: rbenv usage [--short] <path>
 #/
 #/ Prints usage of a path.
 
 set -e
+
+if [ "$1" = '--short' ]; then
+  grep '^#/' <"$2" | head -1 | cut -c4- >&2
+  exit 1
+fi
+
 grep '^#/' <"$1" | cut -c4- >&2
 
 plugin="$(basename $1)"
