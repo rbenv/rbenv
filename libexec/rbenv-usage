@@ -4,6 +4,7 @@
 #/ Prints usage of a path.
 
 set -e
+[ -n "$RBENV_DEBUG" ] && set -x
 
 if [ "$1" = '--short' ]; then
   grep '^#/' <"$2" | head -1 | cut -c4- >&2
