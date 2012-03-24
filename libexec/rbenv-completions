@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
+#/ usage: rbenv completions COMMAND [arg1 arg2...]
+
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
 
 COMMAND="$1"
 if [ -z "$COMMAND" ]; then
-  echo "usage: rbenv completions COMMAND [arg1 arg2...]" >&2
-  exit 1
+  exec rbenv help completions
 fi
 
 COMMAND_PATH="$(command -v "rbenv-$COMMAND" || command -v "rbenv-sh-$COMMAND")"
