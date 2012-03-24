@@ -13,7 +13,7 @@ fi
 grep '^#/' <"$1" | cut -c4- >&2
 
 plugin="$(basename $1)"
-case "$plugin" in "rbenv-global" | "rbenv-local" | "rbenv-shell" )
+case "$plugin" in "rbenv-global" | "rbenv-local" | "rbenv-sh-shell" )
 
   print_set_version() {
     echo "<version> should be a string matching a Ruby version known by rbenv."

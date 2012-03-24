@@ -25,7 +25,7 @@ See 'rbenv help <command>' for information on a specific command.
 For full documentation, see: https://github.com/sstephenson/rbenv#readme"
 ;;
 *)
-  command_path="$(command -v "rbenv-$1" || true)"
+  command_path="$(command -v "rbenv-$1" || command -v "rbenv-sh-$1")"
   if [ -n "$command_path" ]; then
     exec rbenv-usage "$command_path"
   else
