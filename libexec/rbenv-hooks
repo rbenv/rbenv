@@ -21,13 +21,13 @@ resolve_link() {
 }
 
 realpath() {
-  local cwd="$(pwd)"
-  local base="$(basename $1)"
-  local path="$1"
+  typeset cwd="$(pwd)"
+  typeset base="$(basename $1)"
+  typeset path="$1"
 
   while [ -n "$path" ]; do
     cd "${path%/*}"
-    local name="${path##*/}"
+    typeset name="${path##*/}"
     path="$(resolve_link "$name" || true)"
   done
 

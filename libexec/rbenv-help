@@ -5,7 +5,7 @@ set -e
 print_set_version() {
   echo "<version> should be a string matching a Ruby version known by rbenv."
 
-  local versions="$(rbenv-versions --bare)"
+  typeset versions="$(rbenv-versions --bare)"
   if [ -z "$versions" ]; then
     echo "There are currently no Ruby versions installed for rbenv."
   else

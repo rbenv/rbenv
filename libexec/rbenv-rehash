@@ -47,10 +47,10 @@ SH
 # registered for installation as a shim. In this way, plugins may call
 # `make_shims` with a glob to register many shims at once.
 make_shims() {
-  local shims="$@"
+  typeset shims="$@"
 
   for file in $shims; do
-    local shim="${file##*/}"
+    typeset shim="${file##*/}"
     register_shim "$shim"
   done
 }
@@ -64,8 +64,8 @@ registered_shims=()
 # global variables will let us quickly check whether a shim with the
 # given name has been registered or not.
 register_shim() {
-  local shim="$@"
-  local var="$(shim_variable_name "$shim")"
+  typeset shim="$@"
+  typeset var="$(shim_variable_name "$shim")"
 
   if [ -z "${!var}" ]; then
     registered_shims[${#registered_shims[*]}]="$shim"
@@ -79,16 +79,16 @@ register_shim() {
 # shorter path. Otherwise, we must iterate over each character and
 # escape the non-alphanumeric ones using `printf`.
 shim_variable_name() {
-  local shim="$1"
-  local result="_shim_"
+  typeset shim="$1"
+  typeset result="_shim_"
 
   if [[ ! "$shim" =~ [^[:alnum:]_-] ]]; then
     shim="${shim//_/_5f}"
     shim="${shim//-/_2d}"
     result+="$shim"
   else
-    local length="${#shim}"
-    local char i
+    typeset length="${#shim}"
+    typeset char i
 
     for ((i=0; i<length; i++)); do
       char="${shim:$i:1}"
@@ -117,7 +117,7 @@ install_registered_shims() {
 # in the directory but has not been registered as a shim should be
 # removed.
 remove_stale_shims() {
-  local var
+  typeset var
   for shim in *; do
     var="$(shim_variable_name "$shim")"
     if [ -z "${!var}" ]; then
