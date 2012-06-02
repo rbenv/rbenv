@@ -95,25 +95,18 @@ easy to fork and contribute any changes back upstream.
         $ cd
         $ git clone git://github.com/sstephenson/rbenv.git .rbenv
 
-2. Add `~/.rbenv/bin` to your `$PATH` for access to the `rbenv`
-   command-line utility.
-
-        $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
-
-    **Zsh note**: Modify your `~/.zshenv` file instead of `~/.bash_profile`.
-
-3. Add rbenv init to your shell to enable shims and autocompletion.
+2. Add rbenv init to your shell to enable shims and autocompletion.
 
         $ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
 
     **Zsh note**: Modify your `~/.zshenv` file instead of `~/.bash_profile`.
 
-4. Restart your shell so the path changes take effect. You can now
+3. Restart your shell so the path changes take effect. You can now
    begin using rbenv.
 
         $ exec $SHELL
 
-5. Install Ruby versions into `~/.rbenv/versions`. For example, to
+4. Install Ruby versions into `~/.rbenv/versions`. For example, to
    install Ruby 1.9.2-p290, download and unpack the source, then run:
 
         $ ./configure --prefix=$HOME/.rbenv/versions/1.9.2-p290
@@ -126,7 +119,7 @@ easy to fork and contribute any changes back upstream.
 
         $ rbenv install 1.9.2-p290
 
-6. Rebuild the shim binaries. You should do this any time you install
+5. Rebuild the shim binaries. You should do this any time you install
    a new Ruby binary (for example, when installing a new Ruby version,
    or when installing a gem that provides a binary).
 
