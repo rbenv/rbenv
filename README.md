@@ -166,7 +166,7 @@ X.
 
 The same commands can be used for upgrading.
 
-Afterwards you'll still need to add `eval "$(rbenv init -)"` to your
+Afterwards you'll still need to add `eval "$(rbenv init -)"` and `export PATH="$HOME/.rbenv/bin:$PATH"` to your
 profile as stated in the caveats. You'll only ever have to do this
 once.
 
