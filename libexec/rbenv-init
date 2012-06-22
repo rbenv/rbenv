@@ -70,7 +70,12 @@ fi
 
 mkdir -p "${RBENV_ROOT}/"{shims,versions}
 
-echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+case $shell in
+"fish")
+    echo 'set -x PATH "'${RBENV_ROOT}'" "'$PATH'"';;
+*)
+    echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"';;
+esac
 
 case "$shell" in
 bash | zsh )
