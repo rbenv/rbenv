@@ -21,7 +21,7 @@ abs_dirname() {
 }
 
 if [ -z "${RBENV_ROOT}" ]; then
-  RBENV_ROOT="${HOME}/.rbenv"
+  RBENV_ROOT="${0%/*/rbenv}"
 else
   RBENV_ROOT="${RBENV_ROOT%/}"
 fi
