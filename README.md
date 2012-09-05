@@ -106,7 +106,9 @@ easy to fork and contribute any changes back upstream.
 
         $ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
 
-    **Zsh note**: Modify your `~/.zshenv` file instead of `~/.bash_profile`.
+    **Zsh note**: Modify your `~/.zshenv` file instead of `~/.bash_profile` as follows:
+    
+        $ echo 'eval "$(rbenv init - zsh)"' >> ~/.zshenv
 
 4. Restart your shell so the path changes take effect. You can now
    begin using rbenv.
