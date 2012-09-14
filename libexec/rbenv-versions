@@ -14,14 +14,21 @@ else
   print_version="$(rbenv-version)"
 fi
 
+print_version_line() {
+  version=$1
+
+  if [ "$version" == "$RBENV_VERSION_NAME" ]; then
+    echo "${hit_prefix}${print_version}"
+  else
+    echo "${miss_prefix}${version}"
+  fi
+}
+
+# always include system in versions
+print_version_line "system"
+
 for path in "${RBENV_ROOT}/versions/"*; do
   if [ -d "$path" ]; then
-    version="${path##*/}"
-
-    if [ "$version" == "$RBENV_VERSION_NAME" ]; then
-      echo "${hit_prefix}${print_version}"
-    else
-      echo "${miss_prefix}${version}"
-    fi
+    print_version_line "${path##*/}"
   fi
 done
