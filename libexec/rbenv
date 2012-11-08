@@ -64,7 +64,7 @@ case "$command" in
 "" | "-h" | "--help" )
   echo -e "rbenv $RBENV_PROJECT_VERSION\n$(rbenv-help)" >&2
   ;;
-"" | "-v" | "--version" )
+"" | "-V" | "--version" )
   echo -e "rbenv $RBENV_PROJECT_VERSION\n" >&2
   ;;
 * )
