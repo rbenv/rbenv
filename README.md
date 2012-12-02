@@ -114,8 +114,10 @@ easy to fork and contribute any changes back upstream.
         $ exec $SHELL
 
 5. Install Ruby versions into `~/.rbenv/versions`. For example, to
-   install Ruby 1.9.2-p290, download and unpack the source, then run:
+   install Ruby 1.9.2-p290, download and unpack the [source](https://github.com/ruby/ruby), 
+   then run:
 
+        $ [ -f ./configure ] || autoconf
         $ ./configure --prefix=$HOME/.rbenv/versions/1.9.2-p290
         $ make
         $ make install
