@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
+#/ usage: rbenv root
+#/
+#/ Prints rbenv root.
 echo $RBENV_ROOT
