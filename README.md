@@ -77,7 +77,7 @@ directory for the selected version at the beginning of your `$PATH`
 and then execute the corresponding binary.
 
 Because of the simplicity of the shim approach, all you need to use
-rbenv is `~/.rbenv/shims` in your `$PATH`.
+rbenv is `~/.rbenv/shims:~/.rbenv/bin` in your `$PATH`.
 
 ## Installation ##
 
@@ -191,7 +191,7 @@ opposed to this idea. Here's what `rbenv init` actually does:
 
 1. Sets up your shims path. This is the only requirement for rbenv to
    function properly. You can do this by hand by prepending
-   `~/.rbenv/shims` to your `$PATH`.
+   `~/.rbenv/shims:~/.rbenv/bin` to your `$PATH`.
 
 2. Installs autocompletion. This is entirely optional but pretty
    useful. Sourcing `~/.rbenv/completions/rbenv.bash` will set that
