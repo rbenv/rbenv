@@ -12,22 +12,22 @@ expand_path() {
     return 1
   fi
 
-  local cwd="$(pwd)"
+  typeset cwd="$(pwd)"
   cd "$1"
   pwd
   cd "$cwd"
 }
 
 remove_from_path() {
-  local path_to_remove="$(expand_path "$1")"
-  local result=""
+  typeset path_to_remove="$(expand_path "$1")"
+  typeset result=""
 
   if [ -z "$path_to_remove" ]; then
     echo "${PATH}"
     return
   fi
 
-  local paths
+  typeset paths
   IFS=: paths=($PATH)
 
   for path in "${paths[@]}"; do

@@ -16,7 +16,7 @@ else
 fi
 
 whence() {
-  local command="$1"
+  typeset command="$1"
   rbenv-versions --bare | while read version; do
     path="$(rbenv-prefix "$version")/bin/${command}"
     if [ -x "$path" ]; then
