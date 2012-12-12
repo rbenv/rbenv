@@ -25,7 +25,7 @@ Some useful rbenv commands are:
    rehash        Rehash rbenv shims (run this after installing binaries)
    global        Set or show the global Ruby version
    local         Set or show the local directory-specific Ruby version
-   shell         Set or show the shell-specific Ruby version
+   sh-shell      Set or show the shell-specific Ruby version
    version       Show the current Ruby version
    versions      List all Ruby versions known by rbenv
    which         Show the full path for the given Ruby command
