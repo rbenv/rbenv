@@ -20,6 +20,8 @@ abs_dirname() {
   cd "$cwd"
 }
 
+RBENV_PROJECT_VERSION="0.3.0"
+
 if [ -z "${RBENV_ROOT}" ]; then
   RBENV_ROOT="${HOME}/.rbenv"
 else
@@ -60,7 +62,10 @@ shopt -u nullglob
 command="$1"
 case "$command" in
 "" | "-h" | "--help" )
-  echo -e "rbenv 0.3.0\n$(rbenv-help)" >&2
+  echo -e "rbenv $RBENV_PROJECT_VERSION\n$(rbenv-help)" >&2
+  ;;
+"" | "-V" | "--version" )
+  echo -e "rbenv $RBENV_PROJECT_VERSION\n" >&2
   ;;
 * )
   command_path="$(command -v "rbenv-$command" || true)"
