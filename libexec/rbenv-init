@@ -82,7 +82,15 @@ if [ -z "$no_rehash" ]; then
   echo 'rbenv rehash 2>/dev/null'
 fi
 
-commands=(`rbenv commands --sh`)
+shell_commands=()
+shopt -s nullglob
+{ for path in ${PATH//:/$'\n'}; do
+    for command in "${path}/rbenv-sh-"*; do
+      shell_commands+=(${command##*rbenv-sh-})
+    done
+  done
+}
+
 IFS="|"
 cat <<EOS
 rbenv() {
@@ -92,7 +100,7 @@ rbenv() {
   fi
 
   case "\$command" in
-  ${commands[*]})
+  ${shell_commands[*]})
     eval \`rbenv "sh-\$command" "\$@"\`;;
   *)
     command rbenv "\$command" "\$@";;
