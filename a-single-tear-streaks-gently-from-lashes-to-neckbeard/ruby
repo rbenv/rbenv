@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#
+# This wrapper script behaves just like `rbenv exec ruby`. You can use it
+# to do a standard '/usr/bin/env ruby' shebang that respects your local
+# .rbenv-version file.
+
+set -e
+export RBENV_DIR="${1%/*}"
+exec rbenv exec ruby "$@"
