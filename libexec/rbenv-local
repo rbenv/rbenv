@@ -10,13 +10,14 @@ if [ "$1" = "--complete" ]; then
 fi
 
 RBENV_VERSION="$1"
-RBENV_VERSION_FILE=".rbenv-version"
+RBENV_VERSION_FILE="$(rbenv-local-version-file --no-detect)"
 
 if [ "$RBENV_VERSION" = "--unset" ]; then
   rm -f "$RBENV_VERSION_FILE"
 elif [ -n "$RBENV_VERSION" ]; then
   rbenv-version-file-write "$RBENV_VERSION_FILE" "$RBENV_VERSION"
 else
+  RBENV_VERSION_FILE="$(rbenv-local-version-file)" &&
   rbenv-version-file-read "$RBENV_VERSION_FILE" ||
   { echo "rbenv: no local version configured for this directory"
     exit 1

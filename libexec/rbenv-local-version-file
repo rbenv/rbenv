@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#
+# Summary: Find the local ruby version file
+#
+# Usage: rbenv local-version-file [--no-detect]
+#
+# Finds the name of the local file that specifies the ruby version, traversing
+# all the way up to the root directory until it finds a match.
+#
+# With `--no-detect`, ".rbenv-version" is displayed without checking whether it
+# exist in current or any of the parent directories. This is useful for scripts
+# that want to obtain the generic name of a local version file.
+
+set -e
+[ -n "$RBENV_DEBUG" ] && set -x
+
+RBENV_VERSION_FILE=".rbenv-version"
+
+if [ "$1" == "--no-detect" ]; then
+  echo $RBENV_VERSION_FILE
+  exit
+fi
+
+root="${1:-$RBENV_DIR}"
+
+while [ -n "$root" ]; do
+  if [ -e "${root}/${RBENV_VERSION_FILE}" ]; then
+    echo "${root}/${RBENV_VERSION_FILE}"
+    exit
+  fi
+  root="${root%/*}"
+done
+
+exit 1
