@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
+#
+# Summary: Find the file that specifies the current ruby version
+#
+# Finds the file in which the ruby version that applies to the current context
+# is kept. The following locations are tried, in order:
+#
+# - local file in the location of the ruby script being run
+# - local file in the current location
+# - global file at $RBENV_ROOT/version
+# - global file at $RBENV_ROOT/global
+# - global file at $RBENV_ROOT/default
+#
+# If none exist, the command displays "$RBENV_ROOT/version".
+
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
 
-find_local_version_file() {
-  local root="$1"
-  while [ -n "$root" ]; do
-    if [ -e "${root}/.rbenv-version" ]; then
-      echo "${root}/.rbenv-version"
-      exit
-    fi
-    root="${root%/*}"
-  done
-}
-
-find_local_version_file "$RBENV_DIR"
-[ "$RBENV_DIR" = "$PWD" ] || find_local_version_file "$PWD"
+if rbenv-local-version-file "$RBENV_DIR"; then
+  exit
+elif [ "$RBENV_DIR" != "$PWD" ] && rbenv-local-version-file "$PWD"; then
+  exit
+fi
 
 global_version_file="${RBENV_ROOT}/version"
 
