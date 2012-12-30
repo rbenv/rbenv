@@ -16,6 +16,10 @@ if [ -e "$VERSION_FILE" ]; then
   done < <( cat "$VERSION_FILE" && echo )
 
   if [ -n "$version" ]; then
+    if [ "${VERSION_FILE##*/}" = ".ruby-version" ]; then
+      # MRI versions from other managers might be prefixed with "ruby-"
+      version="${version#ruby-}"
+    fi
     echo "$version"
     exit
   fi
