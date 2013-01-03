@@ -1,0 +1,14 @@
+#compdef rbenv
+
+_rbenv() {
+  word="${words[2]}"
+
+  if [ "${#words}" -eq 2 ]; then
+    completions="$(rbenv commands)"
+  else
+    completions="$(rbenv completions "${word}")"
+  fi
+
+  reply=("${(ps:\n:)completions}")
+  _describe '_rbenv' reply
+}

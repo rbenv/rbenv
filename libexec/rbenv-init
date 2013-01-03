@@ -76,8 +76,12 @@ mkdir -p "${RBENV_ROOT}/"{shims,versions}
 echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
 
 case "$shell" in
-bash | zsh )
+bash )
   echo "source \"$root/completions/rbenv.${shell}\""
+  ;;
+zsh )
+  echo "source \"$root/completions/rbenv.${shell}\""
+  echo "fpath=($root/completions \$fpath)"
   ;;
 esac
 
