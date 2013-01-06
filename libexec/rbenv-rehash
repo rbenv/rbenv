@@ -108,7 +108,7 @@ register_shim() {
 install_registered_shims() {
   local shim
   for shim in "${registered_shims[@]}"; do
-    [ -e "$shim" ] || ln -f "$PROTOTYPE_SHIM_PATH" "$shim"
+    [ -e "$shim" ] || ln -s -f "$PROTOTYPE_SHIM_PATH" "$shim"
   done
 }
 
