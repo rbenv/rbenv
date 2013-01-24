@@ -29,6 +29,10 @@ abs_dirname() {
   cd "$cwd"
 }
 
+if [ ! -z "${CDPATH}" ]; then
+  unset CDPATH
+fi
+
 if [ -z "${RBENV_ROOT}" ]; then
   RBENV_ROOT="${HOME}/.rbenv"
 else
