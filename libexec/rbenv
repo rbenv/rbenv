@@ -52,15 +52,21 @@ export RBENV_DIR
 
 shopt -s nullglob
 
+export RBENV_PLUGIN_PATH="${RBENV_PLUGIN_PATH}:${RBENV_ROOT}/plugins:/usr/local/share/rbenv/plugins"
+
 bin_path="$(abs_dirname "$0")"
-for plugin_bin in "${RBENV_ROOT}/plugins/"*/bin; do
-  bin_path="${bin_path}:${plugin_bin}"
+for plugin_dir in ${RBENV_PLUGIN_PATH//:/$'\n'}; do
+  for plugin_bin in "${plugin_dir}/"*/bin; do
+    bin_path="${bin_path}:${plugin_bin}"
+  done
 done
 export PATH="${bin_path}:${PATH}"
 
 hook_path="${RBENV_HOOK_PATH}:${RBENV_ROOT}/rbenv.d:/usr/local/etc/rbenv.d:/etc/rbenv.d:/usr/lib/rbenv/hooks"
-for plugin_hook in "${RBENV_ROOT}/plugins/"*/etc/rbenv.d; do
-  hook_path="${hook_path}:${plugin_hook}"
+for plugin_dir in ${RBENV_PLUGIN_PATH//:/$'\n'}; do
+  for plugin_hook in "${plugin_dir}/"*/etc/rbenv.d; do
+    hook_path="${hook_path}:${plugin_hook}"
+  done
 done
 export RBENV_HOOK_PATH="$hook_path"
 
