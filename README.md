@@ -133,7 +133,7 @@ Each Ruby version is installed into its own directory under
 installed:
 
 * `~/.rbenv/versions/1.8.7-p371/`
-* `~/.rbenv/versions/1.9.3-p327/`
+* `~/.rbenv/versions/1.9.3-p385/`
 * `~/.rbenv/versions/jruby-1.7.1/`
 
 Version names to rbenv are simply the names of the directories in
@@ -190,7 +190,7 @@ easy to fork and contribute any changes back upstream.
    process of installing new Ruby versions.
 
     ~~~
-    $ rbenv install 1.9.3-p327
+    $ rbenv install 1.9.3-p385
     ~~~
 
    As an alternative, you can download and compile Ruby yourself into
@@ -299,7 +299,7 @@ overrides the global version, and can be overridden itself by setting
 the `RBENV_VERSION` environment variable or with the `rbenv shell`
 command.
 
-    $ rbenv local 1.9.3-p327
+    $ rbenv local 1.9.3-p385
 
 When run without a version number, `rbenv local` reports the currently
 configured local version. You can also unset the local version:
@@ -354,7 +354,7 @@ the currently active version.
     $ rbenv versions
       1.8.7-p352
       1.9.2-p290
-    * 1.9.3-p327 (set by /Users/sam/.rbenv/version)
+    * 1.9.3-p385 (set by /Users/sam/.rbenv/version)
       jruby-1.7.1
       rbx-1.2.4
       ree-1.8.7-2011.03
@@ -381,14 +381,14 @@ Displays the full path to the executable that rbenv will invoke when
 you run the given command.
 
     $ rbenv which irb
-    /Users/sam/.rbenv/versions/1.9.3-p327/bin/irb
+    /Users/sam/.rbenv/versions/1.9.3-p385/bin/irb
 
 ### rbenv whence
 
 Lists all Ruby versions with the given command installed.
 
     $ rbenv whence rackup
-    1.9.3-p327
+    1.9.3-p385
     jruby-1.7.1
     ree-1.8.7-2011.03
 
