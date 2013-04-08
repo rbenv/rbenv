@@ -12,6 +12,10 @@ if [ -n "$RBENV_DEBUG" ]; then
   set -x
 fi
 
+if [ -f "${HOME}/.rbenvrc" ]; then
+  source "${HOME}/.rbenvrc"
+fi
+
 resolve_link() {
   $(type -p greadlink readlink | head -1) "$1"
 }
