@@ -22,6 +22,12 @@ IFS=: paths=($PATH)
   done
 }
 
+if ${bininpath}; then
+  echo -e "\e[0;32;40m${rbenvbinpath} is in the path.\e[0m"
+else
+  echo -e "\e[1;31;40m${rbenvbinpath} is not in the path. PLEASE CHECK YOUR PATH!\e[0m"
+fi
+
 if [ -x "${rbenvbinpath}/rbenv" ]; then
   echo -e "\e[0;32;40m${rbenvbinpath}/rbenv appears to exist in path and be executable.\e[0m"
 else
@@ -39,20 +45,3 @@ if [ $(which ruby) == "${rbenvshimpath}/ruby" ]; then
 else
   echo -e "\e[1;31;40mUsing system ruby. PLEASE CHECK PATH!\e[0m"
 fi
-
-
-
-#   for command in "${path}/rbenv-"*; do
-#     command="${command##*rbenv-}"
-#     if [ -n "$sh" ]; then
-#       if [ ${command:0:3} = "sh-" ]; then
-#         echo ${command##sh-}
-#       fi
-#     elif [ -n "$nosh" ]; then
-#       if [ ${command:0:3} != "sh-" ]; then
-#         echo ${command##sh-}
-#       fi
-#     else
-#       echo ${command##sh-}
-#     fi
-#   done
