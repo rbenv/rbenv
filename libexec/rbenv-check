@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Summary: Check if rbenv is installed correctly
+# Usage: rbenv check
+
+set -e
+[ -n "$RBENV_DEBUG" ] && set -x
+
+bininpath=false
+shiminpath=false
+rbenvbinpath="$HOME/.rbenv/bin"
+rbenvshimpath="$HOME/.rbenv/shims"
+
+IFS=: paths=($PATH)
+
+{ for path in "${paths[@]}"; do
+    if [ "${path}" == ${rbenvbinpath} ]; then
+      bininpath=true
+    fi
+    if [ "${path}" == ${rbenvshimpath} ]; then
+      shiminpath=true
+    fi
+  done
+}
+
+if [ -x "${rbenvbinpath}/rbenv" ]; then
+  echo -e "\e[0;32;40m${rbenvbinpath}/rbenv appears to exist in path and be executable.\e[0m"
+else
+  echo -e "\e[1;31;40m${rbenvbinpath}/rbenv does not exist in the path or is not executable. PLEASE MAKE SURE THESE CONDITIONS ARE MET!\e[0m"
+fi
+
+if ${shiminpath}; then
+  echo -e "\e[0;32;40m${rbenvshimpath} is in path.\e[0m"
+else
+  echo -e "\e[1;31;40m${rbenvshimpath} is not in path. PLEASE ADD IT TO THE PATH!\e[0m"
+fi
+
+if [ $(which ruby) == "${rbenvshimpath}/ruby" ]; then
+  echo -e "\e[0;32;40mUsing rbenv $(ruby -v)\e[0m"
+else
+  echo -e "\e[1;31;40mUsing system ruby. PLEASE CHECK PATH!\e[0m"
+fi
+
+
+
+#   for command in "${path}/rbenv-"*; do
+#     command="${command##*rbenv-}"
+#     if [ -n "$sh" ]; then
+#       if [ ${command:0:3} = "sh-" ]; then
+#         echo ${command##sh-}
+#       fi
+#     elif [ -n "$nosh" ]; then
+#       if [ ${command:0:3} != "sh-" ]; then
+#         echo ${command##sh-}
+#       fi
+#     else
+#       echo ${command##sh-}
+#     fi
+#   done
