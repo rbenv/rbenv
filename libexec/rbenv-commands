@@ -20,7 +20,9 @@ elif [ "$1" = "--no-sh" ]; then
   shift
 fi
 
+OLDIFS="$IFS"
 IFS=: paths=($PATH)
+IFS="$OLDIFS"
 
 shopt -s nullglob
 
