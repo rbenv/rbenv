@@ -87,3 +87,12 @@ assert() {
     flunk "failed: $@"
   fi
 }
+
+# Run code in command in the same scope. Useful to setup environment variables
+# for the command.
+run_by_source () {
+  local command="$1"
+  shift
+  # source in child process
+  (source "$(which $command)")
+}

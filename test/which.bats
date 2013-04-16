@@ -58,3 +58,16 @@ The \`rspec' command exists in these Ruby versions:
   2.0
 OUT
 }
+
+@test "restores IFS" {
+  hook_path="${RBENV_TEST_DIR}/rbenv.d"
+  output="${RBENV_TEST_DIR}/output"
+  mkdir -p "$hook_path/which"
+  echo 'echo "IFS is $IFS in hook"' > "$hook_path/which/ifs.bash"
+  create_executable "1.8" "rspec"
+  export IFS="#" RBENV_HOOK_PATH="$hook_path"
+  run_by_source rbenv-which rspec > "$output"
+  IFS=$'\n' lines=($(cat "$output"))
+  unset RBENV_HOOK_PATH IFS
+  assert_equal "${lines[0]}" "IFS is # in hook"
+}

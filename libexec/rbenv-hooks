@@ -37,6 +37,7 @@ realpath() {
   cd "$cwd"
 }
 
+OLDIFS="$IFS"
 IFS=: hook_paths=($RBENV_HOOK_PATH)
 
 shopt -s nullglob
@@ -46,3 +47,4 @@ for path in "${hook_paths[@]}"; do
   done
 done
 shopt -u nullglob
+IFS="$OLDIFS"
