@@ -97,3 +97,17 @@ SH
   run ruby -S rake
   assert_success "hello rake"
 }
+
+@test "restores IFS" {
+  hook_path="${RBENV_TEST_DIR}/rbenv.d"
+  output="${RBENV_TEST_DIR}/output"
+  mkdir -p "$hook_path/exec"
+  echo 'echo "IFS is $IFS in hook"' > "$hook_path/exec/ifs.bash"
+
+  export RBENV_VERSION=system RBENV_HOOK_PATH="$hook_path" IFS='#'
+  run_by_source rbenv-exec env > "$output"
+  IFS=$'\n' lines=($(cat "$output"))
+  unset RBENV_HOOK_PATH IFS
+
+  assert_equal "${lines[0]}" "IFS is # in hook"
+}
