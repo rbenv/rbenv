@@ -45,3 +45,11 @@ load test_helper
   assert_failure
   assert_output "rbenv: cannot change working directory to \`$dir'"
 }
+
+@test "runs commands from ~/.rbenvrc" {
+  mkdir -p "${BATS_TMPDIR}/home/raven"
+  echo "export ONCE_UPON_A_MIDNIGHT_DREARY='while I pondered weak and weary'" > "${BATS_TMPDIR}/home/raven/.rbenvrc"
+  RBENV_ROOT="" HOME="${BATS_TMPDIR}/home/raven" run rbenv echo ONCE_UPON_A_MIDNIGHT_DREARY
+  assert_success
+  assert_output "while I pondered weak and weary"
+}
