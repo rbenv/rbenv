@@ -166,7 +166,7 @@ easy to fork and contribute any changes back upstream.
     $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
     ~~~
 
-    **Ubuntu note**: Modify your `~/.profile` instead of `~/.bash_profile`.
+    **Ubuntu note**: Modify your `~/.profile` instead of `~/.bashrc`.
 
     **Zsh note**: Modify your `~/.zshrc` file instead of `~/.bash_profile`.
 
