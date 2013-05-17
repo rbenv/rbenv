@@ -166,7 +166,7 @@ easy to fork and contribute any changes back upstream.
     $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
     ~~~
 
-    **Ubuntu note**: Modify your `~/.profile` instead of `~/.bash_profile`.
+    **Ubuntu note**: Modify your `~/.bashrc` instead of `~/.bash_profile`.
 
     **Zsh note**: Modify your `~/.zshrc` file instead of `~/.bash_profile`.
 
@@ -176,7 +176,7 @@ easy to fork and contribute any changes back upstream.
     $ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
     ~~~
 
-    _Same as in previous step, use `~/.profile` on Ubuntu, `~/.zshrc` for Zsh._
+    _Same as in previous step, use `~/.bashrc` on Ubuntu, `~/.zshrc` for Zsh._
 
 4. Restart your shell as a login shell so the path changes take effect.
     You can now begin using rbenv.
