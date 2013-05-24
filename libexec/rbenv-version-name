@@ -13,6 +13,13 @@ if [ -z "$RBENV_VERSION" ] || [ "$RBENV_VERSION" = "system" ]; then
   exit
 fi
 
+version_lookup() {
+  version="$1"
+  echo "$(rbenv-versions --bare | grep "$version" | sort -r | head -n1)"
+}
+
+RBENV_VERSION="$(version_lookup $RBENV_VERSION)"
+
 version_exists() {
   local version="$1"
   [ -d "${RBENV_ROOT}/versions/${version}" ]
