@@ -8,5 +8,6 @@
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
 
-cd ../plugins/ruby-build && git pull origin master
+cd ~/.rbenv/plugins/ruby-build && git pull origin master
+
 rbenv rehash
