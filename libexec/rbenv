@@ -55,6 +55,11 @@ else
 fi
 export RBENV_DIR
 
+READLINK=$(type -p greadlink readlink | head -1)
+if [ -z "$READLINK" ]; then
+  echo "rbenv: cannot find readlink - are you missing GNU coreutils?" >&2
+  exit 1
+fi
 
 shopt -s nullglob
 
@@ -71,7 +76,6 @@ done
 export RBENV_HOOK_PATH="$hook_path"
 
 shopt -u nullglob
-
 
 command="$1"
 case "$command" in
