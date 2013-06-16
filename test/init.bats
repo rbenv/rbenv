@@ -38,9 +38,11 @@ load test_helper
   assert_line 0 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
 }
 
-@test "doesn't add shims to PATH more than once" {
-  export PATH="${RBENV_ROOT}/shims:$PATH"
+@test "remove and readd shims path if already exists" {
+  local base_path="${BATS_TEST_DIRNAME}/../libexec:/usr/bin:/bin"
+  export PATH="${RBENV_ROOT}/shims:${base_path}"
   run rbenv-init -
   assert_success
-  refute_line 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+  assert [ ${lines[0]##*IFS} = '=":";echo "${p[*]}")' ]
+  assert_line 1 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
 }
