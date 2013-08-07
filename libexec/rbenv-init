@@ -46,7 +46,7 @@ abs_dirname() {
   done
 
   pwd
-  cd "$cwd"
+  [ -z "$cwd" ] && cd "$cwd" && cd '/'
 }
 
 root="$(abs_dirname "$0")/.."

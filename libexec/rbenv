@@ -33,7 +33,7 @@ abs_dirname() {
   done
 
   pwd
-  cd "$cwd"
+  [ -z "$cwd" ] && cd "$cwd" || cd '/'
 }
 
 if [ -z "${RBENV_ROOT}" ]; then
