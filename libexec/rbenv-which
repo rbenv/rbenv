@@ -22,7 +22,7 @@ expand_path() {
 
   cd "$1"
   pwd
-  cd -
+  cd $OLDPWD
 }
 
 remove_from_path() {
