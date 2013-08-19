@@ -15,7 +15,7 @@ rbenv-rehash
 
 case "$shell" in
 "fish" )
-  echo "true"
+  # nothing to do
   ;;
 * )
   echo "hash -r 2>/dev/null || true"
