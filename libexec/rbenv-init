@@ -49,6 +49,42 @@ abs_dirname() {
   cd "$cwd"
 }
 
+nodups_path() {
+
+  local colon_list="${1}"
+  local string_to_move="${2}"
+
+  # Script to split fields into tokens
+  #
+  # Borrowed from:
+  # http://stackoverflow.com/questions/1617771/splitting-string-into-array
+
+  while true ; do
+    local part=${colon_list%%:*}
+    colon_list=${colon_list#*:}
+    if [[ "${part}" != "${string_to_move}" ]]; then
+      local parts[i++]=$part
+    fi
+    if test "$colon_list" = "$part" ; then
+      break
+    fi
+  done
+
+  local new_path=""
+
+  for part in "${parts[@]}"
+  do
+    if [ -z "${new_path}" ]; then
+      new_path="$part"
+    else
+      new_path="$new_path:$part"
+    fi
+  done
+
+  echo "$string_to_move:$new_path"
+
+}
+
 root="$(abs_dirname "$0")/.."
 
 if [ -z "$print" ]; then
@@ -79,9 +115,8 @@ fi
 
 mkdir -p "${RBENV_ROOT}/"{shims,versions}
 
-if [[ ":${PATH}:" != *:"${RBENV_ROOT}/shims":* ]]; then
-  echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
-fi
+echo 'export PATH="'`nodups_path "${PATH}" "${RBENV_ROOT}/shims"`'"'
+
 
 case "$shell" in
 bash | zsh )
