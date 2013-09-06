@@ -159,8 +159,14 @@ easy to fork and contribute any changes back upstream.
     ~~~ sh
     $ git clone https://github.com/sstephenson/rbenv.git ~/.rbenv
     ~~~
+    
+2. Install the `ruby-build` plugin so you can install ruby versions
 
-2. Add `~/.rbenv/bin` to your `$PATH` for access to the `rbenv`
+   ~~~ sh
+   $ git clone https://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
+   ~~~~
+
+3. Add `~/.rbenv/bin` to your `$PATH` for access to the `rbenv`
    command-line utility.
 
     ~~~ sh
@@ -171,7 +177,7 @@ easy to fork and contribute any changes back upstream.
 
     **Zsh note**: Modify your `~/.zshrc` file instead of `~/.bash_profile`.
 
-3. Add `rbenv init` to your shell to enable shims and autocompletion.
+4. Add `rbenv init` to your shell to enable shims and autocompletion.
 
     ~~~ sh
     $ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
@@ -179,14 +185,14 @@ easy to fork and contribute any changes back upstream.
 
     _Same as in previous step, use `~/.profile` on Ubuntu, `~/.zshrc` for Zsh._
 
-4. Restart your shell as a login shell so the path changes take effect.
+5. Restart your shell as a login shell so the path changes take effect.
     You can now begin using rbenv.
 
     ~~~ sh
     $ exec $SHELL -l
     ~~~
 
-5. Install [ruby-build](https://github.com/sstephenson/ruby-build),
+6. Install [ruby-build](https://github.com/sstephenson/ruby-build),
    which provides an `rbenv install` command that simplifies the
    process of installing new Ruby versions.
 
@@ -197,7 +203,7 @@ easy to fork and contribute any changes back upstream.
    As an alternative, you can download and compile Ruby yourself into
    `~/.rbenv/versions/`.
 
-6. Rebuild the shim executables. You should do this any time you
+7. Rebuild the shim executables. You should do this any time you
    install a new Ruby executable (for example, when installing a new
    Ruby version, or when installing a gem that provides a command).
 
