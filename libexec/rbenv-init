@@ -85,7 +85,7 @@ fi
 
 case "$shell" in
 bash | zsh )
-  echo "source \"$root/completions/rbenv.${shell}\""
+  echo "test -r \"$root/completions/rbenv.${shell}\" && source \"$root/completions/rbenv.${shell}\""
   ;;
 esac
 
