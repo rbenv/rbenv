@@ -53,6 +53,24 @@ ruby
 OUT
 }
 
+@test "binary install locations containing spaces" {
+  create_executable "dirname1 p247" "ruby"
+  create_executable "dirname2 preview1" "rspec"
+
+  assert [ ! -e "${RBENV_ROOT}/shims/ruby" ]
+  assert [ ! -e "${RBENV_ROOT}/shims/rspec" ]
+
+  run rbenv-rehash
+  assert_success ""
+
+  run ls "${RBENV_ROOT}/shims"
+  assert_success
+  assert_output <<OUT
+rspec
+ruby
+OUT
+}
+
 @test "carries original IFS within hooks" {
   hook_path="${RBENV_TEST_DIR}/rbenv.d"
   mkdir -p "${hook_path}/rehash"
