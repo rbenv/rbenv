@@ -94,7 +94,7 @@ commands=(`rbenv-commands --sh`)
 IFS="|"
 cat <<EOS
 rbenv() {
-  typeset command
+  local command
   command="\$1"
   if [ "\$#" -gt 0 ]; then
     shift
