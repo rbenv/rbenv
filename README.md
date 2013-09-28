@@ -177,7 +177,9 @@ easy to fork and contribute any changes back upstream.
     $ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
     ~~~
 
-    _Same as in previous step, use `~/.profile` on Ubuntu, `~/.zshrc` for Zsh._
+    _Same as in previous step, use `~/.profile` on Ubuntu, `~/.zshrc` for Zsh.
+    Consider [Neckbeard configuration](#neckbeard-configuration) if you
+    experience any problems with `rbenv init`_.
 
 4. Restart your shell as a login shell so the path changes take effect.
     You can now begin using rbenv.
@@ -258,6 +260,21 @@ opposed to this idea. Here's what `rbenv init` actually does:
    useful. Sourcing `~/.rbenv/completions/rbenv.bash` will set that
    up. There is also a `~/.rbenv/completions/rbenv.zsh` for Zsh
    users.
+
+   To choose a proper completion script `rbenv init` uses a default shell
+   for your system user account (those that usually specified in
+   `/etc/passwd` and available as an env variable `$SHELL`). To
+   explicitly specify a shell you need to be configured, you can
+   either override `$SHELL` like:
+   
+   ~~~ sh
+   env SHELL=zsh rbenv init -
+   ~~~
+   , or just pass it as an argument:
+   
+   ~~~ sh
+   rbenv init - zsh
+   ~~~
 
 3. Rehashes shims. From time to time you'll need to rebuild your
    shim files. Doing this automatically makes sure everything is up to
