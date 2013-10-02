@@ -40,8 +40,9 @@ RVM?**](https://github.com/sstephenson/rbenv/wiki/Why-rbenv%3F)
   * [Locating the Ruby Installation](#locating-the-ruby-installation)
 * [Installation](#installation)
   * [Basic GitHub Checkout](#basic-github-checkout)
-    * [Upgrading](#upgrading)
   * [Homebrew on Mac OS X](#homebrew-on-mac-os-x)
+  * [Initial setup](#initial-setup)
+  * [Upgrading](#upgrading)
   * [Neckbeard Configuration](#neckbeard-configuration)
   * [Uninstalling Ruby Versions](#uninstalling-ruby-versions)
 * [Command Reference](#command-reference)
@@ -146,49 +147,67 @@ Version names to rbenv are simply the names of the directories in
   sure to fully uninstall RVM and remove any references to it from
   your shell initialization files before installing rbenv.
 
-If you're on Mac OS X, consider
-[installing with Homebrew](#homebrew-on-mac-os-x).
-
 ### Basic GitHub Checkout
 
 This will get you going with the latest version of rbenv and make it
 easy to fork and contribute any changes back upstream.
 
-1. Check out rbenv into `~/.rbenv`.
+Check out rbenv into `~/.rbenv`.
 
-    ~~~ sh
-    $ git clone https://github.com/sstephenson/rbenv.git ~/.rbenv
-    ~~~
+~~~ sh
+$ git clone https://github.com/sstephenson/rbenv.git ~/.rbenv
+~~~
 
-2. Add `~/.rbenv/bin` to your `$PATH` for access to the `rbenv`
-   command-line utility.
+Add `~/.rbenv/bin` to your `$PATH` for access to the `rbenv`
+command-line utility.
 
-    ~~~ sh
-    $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
-    ~~~
+~~~ sh
+$ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+~~~
 
-    **Ubuntu note**: Modify your `~/.profile` instead of `~/.bash_profile`.
+**Ubuntu note**: Modify your `~/.profile` instead of `~/.bash_profile`.
 
-    **Zsh note**: Modify your `~/.zshrc` file instead of `~/.bash_profile`.
+**Zsh note**: Modify your `~/.zshrc` file instead of `~/.bash_profile`.
 
-3. Add `rbenv init` to your shell to enable shims and autocompletion.
+### Homebrew on Mac OS X
+
+You can also install rbenv using the
+[Homebrew](http://brew.sh) package manager on Mac OS
+X.
+
+~~~
+$ brew update
+$ brew install rbenv
+~~~
+
+### Initial setup
+
+You need to follow these steps whichever way you installed rbenv.
+
+1. Add `rbenv init` to your shell to enable shims and autocompletion.
 
     ~~~ sh
     $ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
     ~~~
 
-    _Same as in previous step, use `~/.profile` on Ubuntu, `~/.zshrc` for Zsh._
+    _Use `~/.profile` on Ubuntu/Mac OS X, `~/.zshrc` for Zsh._
 
-4. Restart your shell as a login shell so the path changes take effect.
+2. Restart your shell as a login shell so the path changes take effect.
     You can now begin using rbenv.
 
     ~~~ sh
     $ exec $SHELL -l
     ~~~
 
-5. Install [ruby-build](https://github.com/sstephenson/ruby-build),
+3. Install [ruby-build](https://github.com/sstephenson/ruby-build),
    which provides an `rbenv install` command that simplifies the
-   process of installing new Ruby versions.
+   process of installing new Ruby versions. On Mac OS X use
+
+    ~~~
+    $ brew install ruby-build
+    ~~~
+
+4. Install your preferred Ruby version.
 
     ~~~
     $ rbenv install 2.0.0-p247
@@ -197,7 +216,7 @@ easy to fork and contribute any changes back upstream.
    As an alternative, you can download and compile Ruby yourself into
    `~/.rbenv/versions/`.
 
-6. Rebuild the shim executables. You should do this any time you
+5. Rebuild the shim executables. You should do this any time you
    install a new Ruby executable (for example, when installing a new
    Ruby version, or when installing a gem that provides a command).
 
@@ -223,23 +242,12 @@ $ git fetch
 $ git checkout v0.3.0
 ~~~
 
-### Homebrew on Mac OS X
+On Mac OS use Homebrew:
 
-You can also install rbenv using the
-[Homebrew](http://brew.sh) package manager on Mac OS
-X.
-
+~~~ sh
+$ brew upgrade rbenv
+$ brew upgrade ruby-build
 ~~~
-$ brew update
-$ brew install rbenv
-$ brew install ruby-build
-~~~
-
-To later update these installs, use `upgrade` instead of `install`.
-
-Afterwards you'll still need to add `eval "$(rbenv init -)"` to your
-profile as stated in the caveats. You'll only ever have to do this
-once.
 
 ### Neckbeard Configuration
 
