@@ -207,7 +207,7 @@ To use a specific release of rbenv, check out the corresponding tag:
 ~~~ sh
 $ cd ~/.rbenv
 $ git fetch
-$ git checkout v0.3.0
+$ git checkout v0.4.0
 ~~~
 
 If you've [installed via Homebrew](#homebrew-on-mac-os-x), then upgrade
