@@ -85,6 +85,16 @@ ruby
 OUT
 }
 
+@test "rubinius gems bin" {
+  bindir="${RBENV_ROOT}/versions/rbx-2.0.0/gems/bin"
+  mkdir -p "$bindir"
+  touch "$bindir/bundle"
+  chmod +x "$bindir/bundle"
+  run rbenv-rehash
+  assert_success ""
+  assert [ -x "${RBENV_ROOT}/shims/bundle" ]
+}
+
 @test "carries original IFS within hooks" {
   hook_path="${RBENV_TEST_DIR}/rbenv.d"
   mkdir -p "${hook_path}/rehash"
