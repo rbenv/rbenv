@@ -31,6 +31,13 @@ load test_helper
   assert_line "export RBENV_SHELL=bash"
 }
 
+@test "detect parent shell" {
+  root="$(cd $BATS_TEST_DIRNAME/.. && pwd)"
+  SHELL=/bin/false run rbenv-init -
+  assert_success
+  assert_line "export RBENV_SHELL=bash"
+}
+
 @test "setup shell completions (fish)" {
   root="$(cd $BATS_TEST_DIRNAME/.. && pwd)"
   run rbenv-init - fish
