@@ -59,6 +59,20 @@ The \`rspec' command exists in these Ruby versions:
 OUT
 }
 
+@test "rubinius gems bin" {
+  export RBENV_VERSION=rbx-2.0
+  create_executable "$RBENV_VERSION" "ruby"
+  bindir="${RBENV_ROOT}/versions/${RBENV_VERSION}/gems/bin"
+  mkdir -p "$bindir"
+  touch "$bindir/bundle"
+  chmod +x "$bindir/bundle"
+
+  run rbenv-which ruby
+  assert_success "${RBENV_ROOT}/versions/rbx-2.0/bin/ruby"
+  run rbenv-which bundle
+  assert_success "${RBENV_ROOT}/versions/rbx-2.0/gems/bin/bundle"
+}
+
 @test "carries original IFS within hooks" {
   hook_path="${RBENV_TEST_DIR}/rbenv.d"
   mkdir -p "${hook_path}/which"

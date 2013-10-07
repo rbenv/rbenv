@@ -138,7 +138,7 @@ shopt -s nullglob
 # executables.
 create_prototype_shim
 remove_outdated_shims
-make_shims ../versions/*/bin/*
+make_shims ../versions/*/{,gems/}bin/*
 
 # Restore the previous working directory.
 cd "$OLDPWD"
