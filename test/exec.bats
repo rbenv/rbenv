@@ -2,6 +2,37 @@
 
 load test_helper
 
+create_standard_shim() {
+  shimdir="$RBENV_ROOT/shims"
+  mkdir -p "$shimdir"
+  cat > "$shimdir/$1" <<STANDARD
+#!/usr/bin/env bash
+set -e
+[ -n "\$RBENV_DEBUG" ] && set -x
+
+opt=""
+program="\${0##*/}"
+if [ "\$program" = "ruby" ]; then
+  for arg; do
+    case "\$arg" in
+    -S* ) opt=--rubypath ;;
+    -e* | -- ) break ;;
+    */* )
+      if [ -f "\$arg" ]; then
+        export RBENV_DIR="\${arg%/*}"
+        break
+      fi
+      ;;
+    esac
+  done
+fi
+
+export RBENV_ROOT="$RBENV_ROOT"
+exec rbenv exec \$opt "\$program" "\$@"
+STANDARD
+  chmod +x "$shimdir/$1"
+}
+
 create_executable() {
   name="${1?}"
   shift 1
@@ -57,6 +88,30 @@ SH
   RBENV_HOOK_PATH="$hook_path" IFS=$' \t\n' run rbenv-exec env
   assert_success
   assert_line "HELLO=:hello:ugly:world:again"
+}
+
+@test "execs rubies directly instead of doing recursive shim calls" {
+  export RBENV_VERSION="2.0"
+  create_standard_shim "env_ruby_script"
+  create_executable "env_ruby_script" <<ENVRUBY
+#!/usr/bin/env ruby
+ENVRUBY
+
+  shimdir="$RBENV_ROOT/shims"
+  mkdir -p "$shimdir"
+  cat > "$shimdir/ruby" <<RUBYSHIM
+#!$BASH
+echo 'called ruby shim'
+RUBYSHIM
+  chmod +x "$shimdir/ruby"
+
+  create_executable "ruby" <<BIN
+#!$BASH
+echo 'called interpreter directly!'
+BIN
+
+  run env_ruby_script
+  assert_output 'called interpreter directly!'
 }
 
 @test "forwards all arguments" {
