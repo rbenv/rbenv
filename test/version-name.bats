@@ -63,3 +63,26 @@ warning: ignoring extraneous \`ruby-' prefix in version \`ruby-1.8.7'
 1.8.7
 OUT
 }
+
+@test "ambiguous version chooses closest matching" {
+  create_version "1.9.3-p484"
+  create_version "1.9.3-p448"
+
+  cat > ".ruby-version" <<<"1.9.3"
+
+  run rbenv-version-name
+  assert_success
+  assert_output <<OUT
+warning: ambiguous ruby version \`1.9.3', using \`1.9.3-p484'
+1.9.3-p484
+OUT
+}
+
+@test "ambiguous version shouldn't choose wrong minor version" {
+  create_version "1.9.3-p484"
+
+  cat > ".ruby-version" <<<"1.9.4"
+
+  run rbenv-version-name
+  assert_failure "rbenv: version \`1.9.4' is not installed"
+}

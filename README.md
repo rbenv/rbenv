@@ -123,6 +123,9 @@ reading it from the following sources, in this order:
    file is not present, rbenv assumes you want to use the "system"
    Ruby—i.e. whatever version would be run if rbenv weren't in your
    path.
+   
+The lexicographically greatest patch number will be chosen if one is not
+provided.
 
 ### Locating the Ruby Installation
 

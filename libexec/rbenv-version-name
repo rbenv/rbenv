@@ -26,6 +26,16 @@ elif version_exists "${RBENV_VERSION#ruby-}"; then
   } >&2
   echo "${RBENV_VERSION#ruby-}"
 else
+  if [ -d "${RBENV_ROOT}/versions" ]; then
+    chosen_version="$(ls ${RBENV_ROOT}/versions | grep -e ${RBENV_VERSION} | tail -n 1)"
+    if [ -n "${chosen_version}" ] && [ -d ${RBENV_ROOT}/versions/${chosen_version} ]; then
+      { echo "warning: ambiguous ruby version \`${RBENV_VERSION}', using \`${chosen_version}'"
+      } >&2
+      echo "${chosen_version}"
+      exit
+    fi
+  fi
+
   echo "rbenv: version \`$RBENV_VERSION' is not installed" >&2
   exit 1
 fi
