@@ -11,11 +11,9 @@ setup() {
   cd "$RBENV_TEST_DIR"
 }
 
+# normalize for any missing system ruby (non-Mac OS X systems)!
 stub_system_ruby() {
-  run which ruby
-  [[ -n $output ]] && return
-
-  stub="${RBENV_TEST_DIR}/bin/ruby"
+  local stub="${RBENV_TEST_DIR}/bin/ruby"
   mkdir -p "$(dirname "$stub")"
   touch "$stub" && chmod +x "$stub"
 }
