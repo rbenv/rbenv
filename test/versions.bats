@@ -21,7 +21,7 @@ stub_system_ruby() {
   stub_system_ruby
   assert [ ! -d "${RBENV_ROOT}/versions" ]
   run rbenv-versions
-  assert_success "* system (set by ${RBENV_ROOT}/version)"
+  assert_success '* system (set the global version with: `rbenv global VERSION`)'
 }
 
 @test "bare output no versions installed" {
@@ -36,7 +36,7 @@ stub_system_ruby() {
   run rbenv-versions
   assert_success
   assert_output <<OUT
-* system (set by ${RBENV_ROOT}/version)
+* system (set the global version with: \`rbenv global VERSION\`)
   1.9
 OUT
 }
@@ -55,7 +55,7 @@ OUT
   run rbenv-versions
   assert_success
   assert_output <<OUT
-* system (set by ${RBENV_ROOT}/version)
+* system (set the global version with: \`rbenv global VERSION\`)
   1.8.7
   1.9.3
   2.0.0

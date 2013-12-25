@@ -7,10 +7,10 @@ setup() {
   cd "$RBENV_TEST_DIR"
 }
 
-@test "reports global file even if it doesn't exist" {
+@test "doesn't report a global file if it doesn't exist" {
   assert [ ! -e "${RBENV_ROOT}/version" ]
   run rbenv-version-origin
-  assert_success "${RBENV_ROOT}/version"
+  assert_success ""
 }
 
 @test "detects global file" {

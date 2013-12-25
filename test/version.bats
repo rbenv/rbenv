@@ -14,7 +14,7 @@ setup() {
 @test "no version selected" {
   assert [ ! -d "${RBENV_ROOT}/versions" ]
   run rbenv-version
-  assert_success "system (set by ${RBENV_ROOT}/version)"
+  assert_success 'system (set the global version with: `rbenv global VERSION`)'
 }
 
 @test "set by RBENV_VERSION" {
