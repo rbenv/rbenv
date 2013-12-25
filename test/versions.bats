@@ -11,7 +11,15 @@ setup() {
   cd "$RBENV_TEST_DIR"
 }
 
+# normalize for any missing system ruby (non-Mac OS X systems)!
+stub_system_ruby() {
+  local stub="${RBENV_TEST_DIR}/bin/ruby"
+  mkdir -p "$(dirname "$stub")"
+  touch "$stub" && chmod +x "$stub"
+}
+
 @test "no versions installed" {
+  stub_system_ruby
   assert [ ! -d "${RBENV_ROOT}/versions" ]
   run rbenv-versions
   assert_success "* system (set by ${RBENV_ROOT}/version)"
@@ -24,6 +32,7 @@ setup() {
 }
 
 @test "single version installed" {
+  stub_system_ruby
   create_version "1.9"
   run rbenv-versions
   assert_success
@@ -40,6 +49,7 @@ OUT
 }
 
 @test "multiple versions" {
+  stub_system_ruby
   create_version "1.8.7"
   create_version "1.9.3"
   create_version "2.0.0"
@@ -54,6 +64,7 @@ OUT
 }
 
 @test "indicates current version" {
+  stub_system_ruby
   create_version "1.9.3"
   create_version "2.0.0"
   RBENV_VERSION=1.9.3 run rbenv-versions
@@ -77,6 +88,7 @@ OUT
 }
 
 @test "globally selected version" {
+  stub_system_ruby
   create_version "1.9.3"
   create_version "2.0.0"
   cat > "${RBENV_ROOT}/version" <<<"1.9.3"
@@ -90,6 +102,7 @@ OUT
 }
 
 @test "per-project version" {
+  stub_system_ruby
   create_version "1.9.3"
   create_version "2.0.0"
   cat > ".ruby-version" <<<"1.9.3"
