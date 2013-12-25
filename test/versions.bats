@@ -14,9 +14,10 @@ setup() {
 stub_system_ruby() {
   run which ruby
   [[ -n $output ]] && return
-  mkdir "${RBENV_TEST_DIR}/bin"
-  touch "${RBENV_TEST_DIR}/bin/ruby"
-  chmod +x "${RBENV_TEST_DIR}/bin/ruby"
+
+  stub="${RBENV_TEST_DIR}/bin/ruby"
+  mkdir -p "$(dirname "$stub")"
+  touch "$stub" && chmod +x "$stub"
 }
 
 @test "no versions installed" {
