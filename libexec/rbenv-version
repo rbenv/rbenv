@@ -8,9 +8,9 @@
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
 
-version_origin=$(rbenv-version-origin)
-if [[ -z $version_origin ]]; then
-  echo "$(rbenv-version-name)"' (set the global version with: `rbenv global VERSION`)'
-else
+version_origin=$(rbenv-version-origin || true)
+if [ -n "$version_origin" ]; then
   echo "$(rbenv-version-name) (set by $version_origin)"
+else
+  echo "$(rbenv-version-name) (set the global version with: \`rbenv global VERSION\`)"
 fi

@@ -10,7 +10,7 @@ setup() {
 @test "doesn't report a global file if it doesn't exist" {
   assert [ ! -e "${RBENV_ROOT}/version" ]
   run rbenv-version-origin
-  assert_success ""
+  assert_failure ""
 }
 
 @test "detects global file" {

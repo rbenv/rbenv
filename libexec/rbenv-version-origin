@@ -7,7 +7,6 @@ if [ -n "$RBENV_VERSION" ]; then
   echo "RBENV_VERSION environment variable"
 else
   version_file=$(rbenv-version-file)
-  if [[ -f $version_file ]]; then
-    echo $version_file
-  fi
+  [ ! -f "$version_file" ] && exit 1
+  echo $version_file
 fi
