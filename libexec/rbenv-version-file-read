@@ -8,7 +8,11 @@ VERSION_FILE="$1"
 if [ -e "$VERSION_FILE" ]; then
   # Read the first non-whitespace word from the specified version file.
   # Be careful not to load it whole in case there's something crazy in it.
-  words=( $(head -c 1024 "$VERSION_FILE") )
+
+  # We don't want the read command to stop reading the file when it encounters 
+  # a newline so we tell it that newlines are delimited by a character we don't 
+  # expect to encounter in the file ever, namely: Ω
+  words=( $(read -dΩ -n1024 first_chars < "$VERSION_FILE"; echo $first_chars ) )
   version="${words[0]}"
 
   if [ -n "$version" ]; then
