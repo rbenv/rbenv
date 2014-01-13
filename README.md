@@ -168,9 +168,11 @@ easy to fork and contribute any changes back upstream.
     $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
     ~~~
 
-    **Ubuntu Desktop note**: Modify your `~/.bashrc` instead of `~/.bash_profile`.
+    **Ubuntu Bash note**: Modify your `~/.bashrc` instead of `~/.bash_profile`.
 
     **Zsh note**: Modify your `~/.zshrc` file instead of `~/.bash_profile`.
+    
+    **fish note**: Run `set -U fish_user_paths $fish_user_paths ~/.rbenv/bin`
 
 3. Add `rbenv init` to your shell to enable shims and autocompletion.
 
@@ -178,7 +180,8 @@ easy to fork and contribute any changes back upstream.
     $ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
     ~~~
 
-    _Same as in previous step, use `~/.bashrc` on Ubuntu, or `~/.zshrc` for Zsh._
+    _Same as in previous step, use `~/.bashrc` on Ubuntu, or `~/.zshrc` for Zsh.  
+    For fish, run `rbenv init fish` and follow the instructions._
 
 4. Restart your shell so that PATH changes take effect. (Opening a new
    terminal tab will usually do it.) Now check if rbenv was set up:
