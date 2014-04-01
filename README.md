@@ -85,7 +85,7 @@ then `/bin`.
 rbenv works by inserting a directory of _shims_ at the front of your
 `PATH`:
 
-    ~/.rbenv/shims:/usr/local/bin:/usr/bin:/bin
+    ~/.rbenv/bin:/usr/local/bin:/usr/bin:/bin
 
 Through a process called _rehashing_, rbenv maintains shims in that
 directory to match every Ruby command across every installed version
