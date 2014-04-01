@@ -244,7 +244,7 @@ opposed to this idea. Here's what `rbenv init` actually does:
 
 1. Sets up your shims path. This is the only requirement for rbenv to
    function properly. You can do this by hand by prepending
-   `~/.rbenv/shims` to your `$PATH`.
+   `~/.rbenv/bin` to your `$PATH`.
 
 2. Installs autocompletion. This is entirely optional but pretty
    useful. Sourcing `~/.rbenv/completions/rbenv.bash` will set that
