@@ -72,6 +72,9 @@ export RBENV_HOOK_PATH="$hook_path"
 
 shopt -u nullglob
 
+if [[ -e $RBENV_ALT_MALLOC ]] ; then
+  export LD_PRELOAD=$RBENV_ALT_MALLOC
+fi
 
 command="$1"
 case "$command" in
