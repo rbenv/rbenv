@@ -149,7 +149,7 @@ IFS=$'\n' scripts=(`rbenv-hooks rehash`)
 IFS="$OLDIFS"
 
 for script in "${scripts[@]}"; do
-  source "$script"
+  . "$script"
 done
 
 # Change back to the shims directory to install the registered shims
