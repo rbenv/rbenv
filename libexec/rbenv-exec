@@ -37,7 +37,7 @@ OLDIFS="$IFS"
 IFS=$'\n' scripts=(`rbenv-hooks exec`)
 IFS="$OLDIFS"
 for script in "${scripts[@]}"; do
-  source "$script"
+  . "$script"
 done
 
 shift 1

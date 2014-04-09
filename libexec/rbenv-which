@@ -67,7 +67,7 @@ OLDIFS="$IFS"
 IFS=$'\n' scripts=(`rbenv-hooks which`)
 IFS="$OLDIFS"
 for script in "${scripts[@]}"; do
-  source "$script"
+  . "$script"
 done
 
 if [ -x "$RBENV_COMMAND_PATH" ]; then
