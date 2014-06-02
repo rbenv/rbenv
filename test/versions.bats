@@ -9,6 +9,7 @@ create_version() {
 setup() {
   mkdir -p "$RBENV_TEST_DIR"
   cd "$RBENV_TEST_DIR"
+  mkdir "$RBENV_ROOT"
 }
 
 stub_system_ruby() {
@@ -20,8 +21,16 @@ stub_system_ruby() {
 @test "no versions installed" {
   stub_system_ruby
   assert [ ! -d "${RBENV_ROOT}/versions" ]
+  cat > "${RBENV_ROOT}/version" <<<"system"
   run rbenv-versions
   assert_success "* system (set by ${RBENV_ROOT}/version)"
+}
+
+@test "no versions installed with no global version file" {
+  stub_system_ruby
+  assert [ ! -d "${RBENV_ROOT}/versions" ]
+  run rbenv-versions
+  assert_success '* system (set the global version with: `rbenv global VERSION`)'
 }
 
 @test "bare output no versions installed" {
@@ -33,10 +42,22 @@ stub_system_ruby() {
 @test "single version installed" {
   stub_system_ruby
   create_version "1.9"
+  cat > "${RBENV_ROOT}/version" <<<"system"
   run rbenv-versions
   assert_success
   assert_output <<OUT
 * system (set by ${RBENV_ROOT}/version)
+  1.9
+OUT
+}
+
+@test "single version installed with no global version file" {
+  stub_system_ruby
+  create_version "1.9"
+  run rbenv-versions
+  assert_success
+  assert_output <<OUT
+* system (set the global version with: \`rbenv global VERSION\`)
   1.9
 OUT
 }
@@ -52,6 +73,7 @@ OUT
   create_version "1.8.7"
   create_version "1.9.3"
   create_version "2.0.0"
+  cat > "${RBENV_ROOT}/version" <<<"system"
   run rbenv-versions
   assert_success
   assert_output <<OUT
@@ -62,10 +84,26 @@ OUT
 OUT
 }
 
-@test "indicates current version" {
+@test "multiple versions with no global version file" {
+  stub_system_ruby
+  create_version "1.8.7"
+  create_version "1.9.3"
+  create_version "2.0.0"
+  run rbenv-versions
+  assert_success
+  assert_output <<OUT
+* system (set the global version with: \`rbenv global VERSION\`)
+  1.8.7
+  1.9.3
+  2.0.0
+OUT
+}
+
+@test "environmentally selected version" {
   stub_system_ruby
   create_version "1.9.3"
   create_version "2.0.0"
+  cat > "${RBENV_ROOT}/version" <<<"system"
   RBENV_VERSION=1.9.3 run rbenv-versions
   assert_success
   assert_output <<OUT
@@ -104,6 +142,7 @@ OUT
   stub_system_ruby
   create_version "1.9.3"
   create_version "2.0.0"
+  cat > "${RBENV_ROOT}/version" <<<"system"
   cat > ".ruby-version" <<<"1.9.3"
   run rbenv-versions
   assert_success
