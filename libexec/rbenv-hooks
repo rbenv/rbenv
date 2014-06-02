@@ -8,6 +8,7 @@ set -e
 # Provide rbenv completions
 if [ "$1" = "--complete" ]; then
   echo exec
+  echo init
   echo rehash
   echo which
   exit

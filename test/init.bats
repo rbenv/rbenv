@@ -94,3 +94,26 @@ load test_helper
   assert_line '  switch "$command"'
   refute_line '  case "$command" in'
 }
+
+@test "supports hook path with spaces" {
+  hook_path="${RBENV_TEST_DIR}/custom stuff/rbenv hooks"
+  mkdir -p "${hook_path}/init"
+  echo "echo export HELLO='from hook'" > "${hook_path}/init/hello.bash"
+
+  RBENV_HOOK_PATH="$hook_path" run rbenv-init -
+  assert_success
+  assert_line "export HELLO=from hook"
+}
+
+@test "carries original IFS within hooks" {
+  hook_path="${RBENV_TEST_DIR}/rbenv.d"
+  mkdir -p "${hook_path}/init"
+  cat > "${hook_path}/init/hello.bash" <<SH
+hellos=(\$(printf "hello\\tugly world\\nagain"))
+echo export HELLO="\$(printf ":%s" "\${hellos[@]}")"
+SH
+
+  RBENV_HOOK_PATH="$hook_path" IFS=$' \t\n' run rbenv-init -
+  assert_success
+  assert_line "export HELLO=:hello:ugly:world:again"
+}
