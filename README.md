@@ -218,13 +218,24 @@ $ brew update
 $ brew upgrade rbenv ruby-build
 ~~~
 
+If you installed rbenv via Homebrew with `--HEAD` to get the latest
+version, you must remove rbenv before upgrading so that Homebrew will try
+downloading the latest version:
+
+~~~ sh
+$ brew update
+$ brew remove rbenv
+$ brew install --HEAD rbenv
+$ brew upgrade ruby-build
+~~~
+
 ### Homebrew on Mac OS X
 
 As an alternative to installation via GitHub checkout, you can install
 rbenv and [ruby-build][] using the [Homebrew](http://brew.sh) package
 manager on Mac OS X:
 
-~~~
+~~~ sh
 $ brew update
 $ brew install rbenv ruby-build
 ~~~
@@ -232,6 +243,17 @@ $ brew install rbenv ruby-build
 Afterwards you'll still need to add `eval "$(rbenv init -)"` to your
 profile as stated in the caveats. You'll only ever have to do this
 once.
+
+rbenv has not had an official release in a while, but the newest
+development version has many new features, such as support for the Fish
+shell. If you want these features, install the development version of
+rbenv instead, using `--HEAD`:
+
+~~~ sh
+$ brew update
+$ brew install --HEAD rbenv
+$ brew install ruby-build
+~~~
 
 ### How rbenv hooks into your shell
 
