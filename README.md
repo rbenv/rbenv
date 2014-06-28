@@ -150,6 +150,9 @@ Version names to rbenv are simply the names of the directories in
 If you're on Mac OS X, consider
 [installing with Homebrew](#homebrew-on-mac-os-x).
 
+If you have a current system ruby or rvm installation, be sure to 
+remove your `~/.gem` directory if it exists.
+
 ### Basic GitHub Checkout
 
 This will get you going with the latest version of rbenv and make it
