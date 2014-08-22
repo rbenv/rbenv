@@ -202,6 +202,14 @@ $ cd ~/.rbenv
 $ git pull
 ~~~
 
+You may wish to upgrade ruby-build as well. If you installed it using git,
+pull the latest repository into your plugins directory.
+
+~~~ sh
+$ cd ~/.rbenv/plugins/ruby-build
+$ git pull
+~~~
+
 To use a specific release of rbenv, check out the corresponding tag:
 
 ~~~ sh
@@ -210,7 +218,7 @@ $ git fetch
 $ git checkout v0.3.0
 ~~~
 
-If you've [installed via Homebrew](#homebrew-on-mac-os-x), then upgrade
+If you've [installed rbenv via Homebrew](#homebrew-on-mac-os-x), then upgrade
 via its `brew` command:
 
 ~~~ sh
