@@ -93,7 +93,9 @@ echo HELLO="\$(printf ":%s" "\${hellos[@]}")"
 exit
 SH
 
-  RBENV_HOOK_PATH="$hook_path" IFS=$' \t\n' run rbenv-which anything
+  create_executable "6.6.6" "anything"
+
+  RBENV_VERSION=6.6.6 RBENV_HOOK_PATH="$hook_path" IFS=$' \t\n' run rbenv-which anything
   assert_success
   assert_output "HELLO=:hello:ugly:world:again"
 }
