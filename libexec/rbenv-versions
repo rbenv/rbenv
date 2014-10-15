@@ -1,13 +1,40 @@
 #!/usr/bin/env bash
 # Summary: List all Ruby versions available to rbenv
-# Usage: rbenv versions [--bare]
+# Usage: rbenv versions [--bare] [--skip-aliases]
 #
 # Lists all Ruby versions found in `$RBENV_ROOT/versions/*'.
 
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
 
-if [ "$1" = "--bare" ]; then
+unset bare
+unset skip_aliases
+unset display_aliases
+for arg; do
+  case "$arg" in
+  --bare ) bare=1 ;;
+  --skip-aliases ) skip_aliases=1 ;;
+  * )
+    rbenv-help --usage versions >&2
+    exit 1
+    ;;
+  esac
+done
+
+versions_dir="$RBENV_ROOT"/versions
+
+if enable -f "${0%/*}"/../libexec/rbenv-realpath.dylib realpath 2>/dev/null; then
+  display_aliases=1
+  [ ! -d "$versions_dir" ] || versions_dir="$(realpath "$versions_dir")"
+else
+  if [ -n "$RBENV_NATIVE_EXT" ]; then
+    echo "rbenv: failed to load \`realpath' builtin" >&2
+    exit 1
+  fi
+  unset skip_aliases
+fi
+
+if [ -n "$bare" ]; then
   hit_prefix=""
   miss_prefix=""
   current_version=""
@@ -19,13 +46,25 @@ else
   include_system="1"
 fi
 
+if [ -t 1 ]; then
+  green=$'\e'"[32m"
+  yellow=$'\e'"[33m"
+  purple=$'\e'"[35m"
+  reset=$'\e'"[0m"
+else
+  green=""
+  yellow=""
+  purple=""
+  reset=""
+fi
+
 num_versions=0
 
 print_version() {
   if [ "$1" == "$current_version" ]; then
-    echo "${hit_prefix}$(rbenv-version 2>/dev/null)"
+    echo "${hit_prefix}${green}$(rbenv-version 2>/dev/null)${reset}"
   else
-    echo "${miss_prefix}$1"
+    echo "${miss_prefix}${1}${2}"
   fi
   num_versions=$((num_versions + 1))
 }
@@ -36,9 +75,17 @@ if [ -n "$include_system" ] && RBENV_VERSION=system rbenv-which ruby >/dev/null 
 fi
 
 shopt -s nullglob
-for path in "${RBENV_ROOT}/versions/"*; do
+for path in "${versions_dir}/"*; do
   if [ -d "$path" ]; then
-    print_version "${path##*/}"
+    alias=""
+    if [ -n "$display_aliases" ] && [ -L "$path" ]; then
+      target="$(realpath "$path")"
+      if [ "${target%/*}" = "$versions_dir" ]; then
+        [ -z "$skip_aliases" ] || continue
+        [ -n "$bare" ] || alias=" ${yellow}-> ${purple}${target##*/}${reset}"
+      fi
+    fi
+    print_version "${path##*/}" "$alias"
   fi
 done
 shopt -u nullglob
