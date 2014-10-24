@@ -43,7 +43,7 @@ abs_dirname() {
   done
 
   pwd
-  cd "$cwd"
+  test -x "$cwd" && cd "$cwd"
 }
 fi
 
