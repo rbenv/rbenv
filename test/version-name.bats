@@ -63,3 +63,13 @@ warning: ignoring extraneous \`ruby-' prefix in version \`ruby-1.8.7'
 1.8.7
 OUT
 }
+
+@test "version with prefix in name when warning disabled" {
+  create_version "1.8.7"
+  cat > ".ruby-version" <<<"ruby-1.8.7"
+  RBENV_VERSION_PREFIX_NOWARN=1 run rbenv-version-name
+  assert_success
+  assert_output <<OUT
+1.8.7
+OUT
+}
