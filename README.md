@@ -161,14 +161,14 @@ easy to fork and contribute any changes back upstream.
     $ git clone https://github.com/sstephenson/rbenv.git ~/.rbenv
     ~~~
 
-2. Add `~/.rbenv/bin` to your `$PATH` for access to the `rbenv`
-   command-line utility.
+2. Add `~/.rbenv/bin` and `~/.rbenv/shims` to your `$PATH` for access to the `rbenv`
+   command-line utility and shims.
 
     ~~~ sh
-    $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+    $ echo 'export PATH="$HOME/.rbenv/bin:$HOME/.rbenv/shims:$PATH"' >> ~/.bash_profile
     ~~~
 
-    **Ubuntu Desktop note**: Modify your `~/.bashrc` instead of `~/.bash_profile`.
+    **Ubuntu note**: Modify your `~/.bashrc` instead of `~/.bash_profile`.
 
     **Zsh note**: Modify your `~/.zshrc` file instead of `~/.bash_profile`.
 
