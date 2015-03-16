@@ -184,7 +184,7 @@ easy to fork and contribute any changes back upstream.
 
     ~~~ sh
     $ type rbenv
-    #=> "rbenv is a function"
+    #=> "rbenv is a shell function"
     ~~~
 
 5. _(Optional)_ Install [ruby-build][], which provides the
