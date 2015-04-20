@@ -13,6 +13,7 @@ find_local_version_file() {
       echo "${root}/.rbenv-version"
       exit
     fi
+    [ "${root}" = "${root%/*}" ] && break
     root="${root%/*}"
   done
 }
