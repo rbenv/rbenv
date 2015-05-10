@@ -94,3 +94,10 @@ load test_helper
   assert_line '  switch "$command"'
   refute_line '  case "$command" in'
 }
+
+@test "shell version in script" {
+  printf '#!/bin/sh\neval "$(rbenv-init -)"; echo $RBENV_SHELL' > ${BATS_TEST_DIRNAME}/script.sh
+  chmod +x ${BATS_TEST_DIRNAME}/script.sh
+  run ${BATS_TEST_DIRNAME}/script.sh
+  assert_success 'sh'
+}
