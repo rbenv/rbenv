@@ -2,10 +2,9 @@
 
 load test_helper
 
-setup() {
-  mkdir -p "$HOME"
-  git config --global user.name  "Tester"
-  git config --global user.email "tester@test.local"
+git_config_user() {
+  git config user.name  "Tester"
+  git config user.email "tester@test.local"
 }
 
 git_commit() {
@@ -23,6 +22,7 @@ git_commit() {
   mkdir -p "$RBENV_ROOT"
   cd "$RBENV_ROOT"
   git init
+  git_config_user
   git_commit
   git tag v0.4.1
   git_commit
@@ -38,6 +38,7 @@ git_commit() {
   mkdir -p "$RBENV_ROOT"
   cd "$RBENV_ROOT"
   git init
+  git_config_user
   git_commit
 
   cd "$RBENV_TEST_DIR"
