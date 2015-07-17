@@ -12,7 +12,7 @@
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
 
-version="0.4.0"
+version="0.5.0"
 
 if cd "$RBENV_ROOT" 2>/dev/null; then
   git_revision="$(git describe --tags HEAD 2>/dev/null || true)"
