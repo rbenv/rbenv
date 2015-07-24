@@ -22,29 +22,29 @@ else
     echo "rbenv: failed to load \`realpath' builtin" >&2
     exit 1
   fi
-READLINK=$(type -p greadlink readlink | head -1)
-if [ -z "$READLINK" ]; then
-  echo "rbenv: cannot find readlink - are you missing GNU coreutils?" >&2
-  exit 1
-fi
+  READLINK=$(type -p greadlink readlink | head -1)
+  if [ -z "$READLINK" ]; then
+    echo "rbenv: cannot find readlink - are you missing GNU coreutils?" >&2
+    exit 1
+  fi
 
-resolve_link() {
-  $READLINK "$1"
-}
+  resolve_link() {
+    $READLINK "$1"
+  }
 
-abs_dirname() {
-  local cwd="$(pwd)"
-  local path="$1"
+  abs_dirname() {
+    local cwd="$(pwd)"
+    local path="$1"
 
-  while [ -n "$path" ]; do
-    cd "${path%/*}"
-    local name="${path##*/}"
-    path="$(resolve_link "$name" || true)"
-  done
+    while [ -n "$path" ]; do
+      cd "${path%/*}"
+      local name="${path##*/}"
+      path="$(resolve_link "$name" || true)"
+    done
 
-  pwd
-  cd "$cwd"
-}
+    pwd
+    cd "$cwd"
+  }
 fi
 
 if [ -z "${RBENV_ROOT}" ]; then
