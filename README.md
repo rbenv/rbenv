@@ -178,7 +178,13 @@ easy to fork and contribute any changes back upstream.
     $ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
     ~~~
 
-    _Same as in previous step, use `~/.bashrc` on Ubuntu, or `~/.zshrc` for Zsh._
+    _Same as in previous step, use `~/.bashrc` on Ubuntu_
+    
+    For zsh users, add `rbenv init` to your zsh.
+    
+    ~~~ sh
+    $ echo 'eval "$(rbenv init - zsh)"' >> ~/.zshrc
+    ~~~
 
 4. Restart your shell so that PATH changes take effect. (Opening a new
    terminal tab will usually do it.) Now check if rbenv was set up:
