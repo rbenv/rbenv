@@ -12,4 +12,5 @@ if [ ! -x "$RBENV_COMMAND_PATH" ]; then
   if [ -n "$gemdir" ]; then
     RBENV_COMMAND_PATH="${HOME}/.gem/${gemdir}/bin/${RBENV_COMMAND}"
   fi
+  unset gemdir
 fi
