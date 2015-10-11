@@ -5,7 +5,7 @@ if [ ! -x "$RBENV_COMMAND_PATH" ]; then
   1.9* ) gemdir="ruby/1.9.1" ;;
   2.* ) gemdir="ruby/${RBENV_VERSION:0:3}.0" ;;
   jruby-1.* ) gemdir="jruby/1.9" ;;
-  jruby-9000* ) gemdir="jruby/2.1" ;;
+  jruby-9* ) gemdir="jruby/2.1" ;;
   rbx-2.* ) gemdir="rbx/2.1" ;;
   esac
 
