@@ -73,7 +73,7 @@ bin_path="$(abs_dirname "$0")"
 for plugin_bin in "${RBENV_ROOT}/plugins/"*/bin; do
   PATH="${plugin_bin}:${PATH}"
 done
-export PATH="${bin_path}:${PATH}"
+PATH="${bin_path}:${PATH}"
 
 RBENV_HOOK_PATH="${RBENV_HOOK_PATH}:${RBENV_ROOT}/rbenv.d"
 if [ "${bin_path%/*}" != "$RBENV_ROOT" ]; then

@@ -165,7 +165,7 @@ easy to fork and contribute any changes back upstream.
    command-line utility.
 
     ~~~ sh
-    $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+    $ echo 'PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
     ~~~
 
     **Ubuntu Desktop note**: Modify your `~/.bashrc` instead of `~/.bash_profile`.
