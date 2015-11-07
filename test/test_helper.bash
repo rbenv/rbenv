@@ -125,6 +125,6 @@ path_without() {
 }
 
 create_hook() {
-  mkdir -p "${RBENV_ROOT}/rbenv.d/$1"
-  cat > "${RBENV_ROOT}/rbenv.d/$1/$2" <<<"$3"
+  mkdir -p "${RBENV_HOOK_PATH}/$1"
+  cat > "${RBENV_HOOK_PATH}/$1/$2" <<<"$3"
 }
