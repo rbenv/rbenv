@@ -123,3 +123,8 @@ path_without() {
   done
   echo "${path%:}"
 }
+
+create_hook() {
+  mkdir -p "${RBENV_ROOT}/rbenv.d/$1"
+  cat > "${RBENV_ROOT}/rbenv.d/$1/$2" <<<"$3"
+}
