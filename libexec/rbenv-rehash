@@ -50,9 +50,9 @@ if [ "\$program" = "ruby" ]; then
   for arg; do
     case "\$arg" in
     -e* | -- ) break ;;
-    */* )
+    * )
       if [ -f "\$arg" ]; then
-        export RBENV_DIR="\${arg%/*}"
+        export RBENV_FILE_ARG="\$arg"
         break
       fi
       ;;

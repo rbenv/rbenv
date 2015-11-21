@@ -58,7 +58,13 @@ fi
 export RBENV_ROOT
 
 if [ -z "${RBENV_DIR}" ]; then
-  RBENV_DIR="$PWD"
+  # Transfer RBENV_FILE_ARG (from shims) into RBENV_DIR.
+  if [ -n "${RBENV_FILE_ARG}" ]; then
+    RBENV_DIR="$(abs_dirname "$(dirname "${RBENV_FILE_ARG}")/${RBENV_FILE_ARG##*/}")"
+    unset RBENV_FILE_ARG
+  else
+    RBENV_DIR="$PWD"
+  fi
 else
   cd "$RBENV_DIR" 2>/dev/null || abort "cannot change working directory to \`$RBENV_DIR'"
   RBENV_DIR="$PWD"
