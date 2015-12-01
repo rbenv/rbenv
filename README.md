@@ -42,6 +42,7 @@ RVM?**](https://github.com/rbenv/rbenv/wiki/Why-rbenv%3F)
   * [Basic GitHub Checkout](#basic-github-checkout)
     * [Upgrading](#upgrading)
   * [Homebrew on Mac OS X](#homebrew-on-mac-os-x)
+  * [AUR package on Arch Linux](#aur-package-on-arch-linux)
   * [How rbenv hooks into your shell](#how-rbenv-hooks-into-your-shell)
   * [Installing Ruby Versions](#installing-ruby-versions)
   * [Uninstalling Ruby Versions](#uninstalling-ruby-versions)
@@ -227,6 +228,27 @@ manager on Mac OS X:
 ~~~
 $ brew update
 $ brew install rbenv ruby-build
+~~~
+
+Afterwards you'll still need to add `eval "$(rbenv init -)"` to your
+profile as stated in the caveats. You'll only ever have to do this
+once.
+
+### AUR package on Arch Linux
+
+As an alternative to installation via GitHub checkout, you can install
+rbenv and [ruby-build][] using the [AUR packages]
+(https://wiki.archlinux.org/index.php/Arch_User_Repository) provided by
+the Arch Linux community:
+* [rbenv](https://aur.archlinux.org/packages/rbenv)
+* [ruby-build](https://aur.archlinux.org/packages/ruby-build)
+
+If you use [Yaourt](https://wiki.archlinux.org/index.php/Yaourt) to manage your
+AUR packages :
+
+~~~
+$ yaourt -Syua
+$ yaourt -S rbenv ruby-build
 ~~~
 
 Afterwards you'll still need to add `eval "$(rbenv init -)"` to your
