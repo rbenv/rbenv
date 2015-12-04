@@ -22,7 +22,11 @@ if [ "$1" = "--complete" ]; then
 fi
 
 RBENV_VERSION="$1"
-RBENV_VERSION_FILE="${RBENV_ROOT}/version"
+RBENV_VERSION_FILE="${RBENV_ROOT:?}/version"
+
+if [ "$1" = "--unset" ]; then
+  exec rm -f "$RBENV_VERSION_FILE" "${RBENV_ROOT:?}/global" "${RBENV_ROOT:?}/default"
+fi
 
 if [ -n "$RBENV_VERSION" ]; then
   rbenv-version-file-write "$RBENV_VERSION_FILE" "$RBENV_VERSION"

@@ -3,7 +3,7 @@
 load test_helper
 
 @test "default" {
-  run rbenv global
+  run rbenv-global
   assert_success
   assert_output "system"
 }
@@ -28,4 +28,16 @@ load test_helper
   mkdir -p "$RBENV_ROOT"
   run rbenv-global "1.2.3"
   assert_failure "rbenv: version \`1.2.3' not installed"
+}
+
+@test "unset (remove) RBENV_ROOT/version" {
+  mkdir -p "$RBENV_ROOT"
+  echo "1.2.3" > "$RBENV_ROOT/version"
+
+  run rbenv-global --unset
+  assert_success
+
+  assert [ ! -e $RBENV_ROOT/version ]
+  run rbenv-global
+  assert_output "system"
 }
