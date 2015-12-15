@@ -129,3 +129,8 @@ path_without() {
   path="${path#:}"
   echo "${path%:}"
 }
+
+create_hook() {
+  mkdir -p "${RBENV_HOOK_PATH}/$1"
+  cat > "${RBENV_HOOK_PATH}/$1/$2" <<<"$3"
+}
