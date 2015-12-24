@@ -54,7 +54,7 @@ load test_helper
   export PATH="${BATS_TEST_DIRNAME}/../libexec:/usr/bin:/bin:/usr/local/bin"
   run rbenv-init - bash
   assert_success
-  assert_line 0 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+  assert_line 0 '[[ ":${PATH}:" != *":'${RBENV_ROOT}'/shims:"* ]] && export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
 }
 
 @test "adds shims to PATH (fish)" {
@@ -68,7 +68,7 @@ load test_helper
   export PATH="${RBENV_ROOT}/shims:$PATH"
   run rbenv-init - bash
   assert_success
-  assert_line 0 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+  assert_line 0 '[[ ":${PATH}:" != *":'${RBENV_ROOT}'/shims:"* ]] && export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
 }
 
 @test "can add shims to PATH more than once (fish)" {
