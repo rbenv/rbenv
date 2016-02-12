@@ -74,3 +74,12 @@ load test_helper
   run rbenv echo "RBENV_HOOK_PATH"
   assert_success "${RBENV_ROOT}/rbenv.d:${BATS_TEST_DIRNAME%/*}/rbenv.d:/usr/local/etc/rbenv.d:/etc/rbenv.d:/usr/lib/rbenv/hooks"
 }
+
+@test "abs_dirname with symlink in same dir" {
+  mkdir -p "$RBENV_TEST_DIR"
+  cd "$RBENV_TEST_DIR"
+  ln -s $(which rbenv) rbenv-wrapper
+  ln -s rbenv-wrapper rbenv-wrapper-link
+  run ./rbenv-wrapper-link echo "PATH"
+  assert_success "${BATS_TEST_DIRNAME%/*}/libexec:$PATH"
+}
