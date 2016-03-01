@@ -180,7 +180,7 @@ easy to fork and contribute any changes back upstream.
 
     **Zsh note**: Modify your `~/.zshrc` file instead of `~/.bash_profile`.
 
-3. Run `~/.rbenv/bin/rbenv init` for shell-specific instructions on how to
+3. Run `rbenv init` for shell-specific instructions on how to
    initialize rbenv to enable shims and autocompletion.
 
 4. Restart your shell so that PATH changes take effect. (Opening a new
