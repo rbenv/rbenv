@@ -86,11 +86,11 @@ mkdir -p "${RBENV_ROOT}/"{shims,versions}
 
 case "$shell" in
 fish )
-  echo "setenv PATH '${RBENV_ROOT}/shims' \$PATH"
+  echo "contains '$RBENV_ROOT/shims' \$PATH; or setenv PATH '$RBENV_ROOT/shims' \$PATH"
   echo "setenv RBENV_SHELL $shell"
 ;;
 * )
-  echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+  echo "[ \"\${PATH#*$RBENV_ROOT}\" != \"\$PATH\" ] || export PATH='$RBENV_ROOT/shims':\$PATH"
   echo "export RBENV_SHELL=$shell"
 ;;
 esac
