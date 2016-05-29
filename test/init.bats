@@ -53,7 +53,7 @@ OUT
 @test "fish instructions" {
   run rbenv-init fish
   assert [ "$status" -eq 1 ]
-  assert_line 'status --is-interactive; and . (rbenv init -|psub)'
+  assert_line 'status --is-interactive; and source (rbenv init -|psub)'
 }
 
 @test "option to skip rehash" {
