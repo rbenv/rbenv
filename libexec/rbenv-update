@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Summary: Update rbenv. Requires git 1.8.5 or up.
+# Usage: rbenv update
+git -C $RBENV_ROOT pull
