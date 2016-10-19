@@ -70,7 +70,9 @@ SH
 
 @test "missing version" {
   RBENV_VERSION=1.2 run rbenv-version-name
-  assert_failure "rbenv: version \`1.2' is not installed (set by RBENV_VERSION environment variable)"
+  assert_failure "rbenv: version \`1.2' is not installed (set by RBENV_VERSION environment variable)
+install it with:
+  rbenv install 1.2"
 }
 
 @test "version with prefix in name" {
