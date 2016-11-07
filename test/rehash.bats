@@ -3,7 +3,10 @@
 load test_helper
 
 create_executable() {
-  local bin="${RBENV_ROOT}/versions/${1}/bin"
+  local bin
+  if [[ $1 == */* ]]; then bin="$1"
+  else bin="${RBENV_ROOT}/versions/${1}/bin"
+  fi
   mkdir -p "$bin"
   touch "${bin}/$2"
   chmod +x "${bin}/$2"
@@ -116,6 +119,20 @@ SH
   RBENV_HOOK_PATH="$hook_path" IFS=$' \t\n' run rbenv-rehash
   assert_success
   assert_output "HELLO=:hello:ugly:world:again"
+}
+
+@test "include binstubs from user-gems" {
+  create_executable "${HOME}/.gem/ruby/2.0.0/bin/rake"
+  create_executable "${HOME}/.gem/jruby/1.9/bin/rspec"
+
+  RBENV_HOOK_PATH="${BATS_TEST_DIRNAME}/../rbenv.d" run rbenv-rehash
+  assert_success ""
+
+  run ls "${RBENV_ROOT}/shims"
+  assert_output <<OUT
+rake
+rspec
+OUT
 }
 
 @test "sh-rehash in bash" {
