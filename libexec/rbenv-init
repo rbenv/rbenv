@@ -86,7 +86,7 @@ mkdir -p "${RBENV_ROOT}/"{shims,versions}
 
 case "$shell" in
 fish )
-  echo "setenv PATH '${RBENV_ROOT}/shims' \$PATH"
+  echo "not contains '${RBENV_ROOT}/shims' \$PATH; and setenv PATH '${RBENV_ROOT}/shims' \$PATH"
   echo "setenv RBENV_SHELL $shell"
 ;;
 * )
