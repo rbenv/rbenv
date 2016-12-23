@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# Summary: Display the installation directory for a Ruby
+# Usage: rbenv install
+#
+# Displays the directory where a given version of Ruby should
+# be installed, if the current working directory is a Ruby
+# download.
+
+dir=$(basename $PWD)
+if [ ${dir:0:5} != 'ruby-' ]; then
+  echo 1>&2 "${dir} is not a Ruby"
+  exit 1
+fi
+
+ruby_dir=${dir:5}
+echo "$(rbenv root)/versions/${ruby_dir}"
