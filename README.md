@@ -41,6 +41,7 @@ RVM?**](https://github.com/rbenv/rbenv/wiki/Why-rbenv%3F)
 * [Installation](#installation)
   * [Basic GitHub Checkout](#basic-github-checkout)
     * [Upgrading](#upgrading)
+    * [Custom Location](#custom-location)
   * [Homebrew on Mac OS X](#homebrew-on-mac-os-x)
   * [How rbenv hooks into your shell](#how-rbenv-hooks-into-your-shell)
   * [Installing Ruby versions](#installing-ruby-versions)
@@ -220,6 +221,29 @@ via its `brew` command:
 $ brew update
 $ brew upgrade rbenv ruby-build
 ~~~
+
+#### Custom Location
+rbenv assumes that it was installed in `~/.rbenv`, if you want to install it
+somewhere else you need to:
+
+1. Update the `RBENV_ROOT` so that it contains the new location
+
+    ~~~ sh
+    $ echo 'export RBENV_ROOT="/new/rbenv/location"' >> ~/.bash_profile
+    ~~~
+
+    _Same as before, use `~/.bashrc` on Ubuntu, or `~/.zshrc` for Zsh._
+
+2. Add `/new/rbenv/location/bin` to your `$PATH`.
+    ~~~ sh
+    $ echo 'export PATH="/new/rbenv/location/bin:$PATH"' >> ~/.bash_profile
+    ~~~
+
+    _Same as before, use `~/.bashrc` on Ubuntu, or `~/.zshrc` for Zsh._
+
+3. Restart the shell so that the new `RBENV_ROOT` changes take place,
+  and then follow the [installation guide](#basic-github-checkout), from step
+  3 onwards.
 
 ### Homebrew on Mac OS X
 
