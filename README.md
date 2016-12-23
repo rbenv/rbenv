@@ -86,7 +86,7 @@ then `/bin`.
 rbenv works by inserting a directory of _shims_ at the front of your
 `PATH`:
 
-    ~/.rbenv/shims:/usr/local/bin:/usr/bin:/bin
+    $HOME/.rbenv/shims:/usr/local/bin:/usr/bin:/bin
 
 Through a process called _rehashing_, rbenv maintains shims in that
 directory to match every Ruby command across every installed version
@@ -246,7 +246,7 @@ opposed to this idea. Here's what `rbenv init` actually does:
 
 1. Sets up your shims path. This is the only requirement for rbenv to
    function properly. You can do this by hand by prepending
-   `~/.rbenv/shims` to your `$PATH`.
+   `$HOME/.rbenv/shims` to your `$PATH`.
 
 2. Installs autocompletion. This is entirely optional but pretty
    useful. Sourcing `~/.rbenv/completions/rbenv.bash` will set that
