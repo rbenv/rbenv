@@ -32,6 +32,7 @@ fi
 export RBENV_VERSION
 RBENV_COMMAND_PATH="$(rbenv-which "$RBENV_COMMAND")"
 RBENV_BIN_PATH="${RBENV_COMMAND_PATH%/*}"
+RBENV_LIB_PATH="${RBENV_ROOT}/versions/${RBENV_VERSION}/lib"
 
 OLDIFS="$IFS"
 IFS=$'\n' scripts=(`rbenv-hooks exec`)
@@ -43,5 +44,6 @@ done
 shift 1
 if [ "$RBENV_VERSION" != "system" ]; then
   export PATH="${RBENV_BIN_PATH}:${PATH}"
+  export LD_LIBRARY_PATH=${RBENV_LIB_PATH}:${LD_LIBRARY_PATH}
 fi
 exec -a "$RBENV_COMMAND" "$RBENV_COMMAND_PATH" "$@"
