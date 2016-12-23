@@ -46,7 +46,7 @@ set -e
 [ -n "\$RBENV_DEBUG" ] && set -x
 
 program="\${0##*/}"
-if [ "\$program" = "ruby" ]; then
+if [[ "\$program" =~ ^ruby([0-9][.0-9]+)?$ ]]; then
   for arg; do
     case "\$arg" in
     -e* | -- ) break ;;
