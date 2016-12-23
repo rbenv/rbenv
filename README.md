@@ -183,6 +183,11 @@ easy to fork and contribute any changes back upstream.
 3. Run `~/.rbenv/bin/rbenv init` for shell-specific instructions on how to
    initialize rbenv to enable shims and autocompletion.
 
+    If you start having slow shell starts, this may be because `rbenv init`
+    also executes `rbenv rehash`, which is slower the more Rubies you have.
+    You can disable this rehashing on startup with `eval "$(rbenv init -
+    --no-rehash)"` instead.
+
 4. Restart your shell so that PATH changes take effect. (Opening a new
    terminal tab will usually do it.) Now check if rbenv was set up:
 
