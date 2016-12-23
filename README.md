@@ -269,6 +269,22 @@ hood.
 
 ### Installing Ruby versions
 
+####From source
+
+Dowmload ruby source from [ruby-lang](https://www.ruby-lang.org/en/downloads/) now unpack the tar ball using the following command:
+```
+tar -xvzf ruby-<version_number>.tar.gz
+```
+Replace `<version_number>` with the version you have downloaded. `cd` into the directory then configure the makefile with:
+```
+./configure –prefix=$HOME/.rbenv/versions/ruby-<version_number>
+```
+Compile and install ruby with:
+```
+make
+make install
+```
+#### Using rbenv install
 The `rbenv install` command doesn't ship with rbenv out of the box, but
 is provided by the [ruby-build][] project. If you installed it either
 as part of GitHub checkout process outlined above or via Homebrew, you
