@@ -83,14 +83,15 @@ if [ -z "$print" ]; then
 fi
 
 mkdir -p "${RBENV_ROOT}/"{shims,versions}
+SHIMS_PATH="${RBENV_ROOT}/shims"
 
 case "$shell" in
 fish )
-  echo "setenv PATH '${RBENV_ROOT}/shims' \$PATH"
+  echo "setenv PATH '${SHIMS_PATH}' \$PATH"
   echo "setenv RBENV_SHELL $shell"
 ;;
 * )
-  echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+  echo '[[ ":${PATH}:" != *":'${SHIMS_PATH}':"* ]] && export PATH="'${SHIMS_PATH}':${PATH}"'
   echo "export RBENV_SHELL=$shell"
 ;;
 esac
