@@ -269,7 +269,7 @@ hood.
 
 ### Installing Ruby versions
 
-The `rbenv install` command doesn't ship with rbenv out of the box, but
+The `rbenv install` command doesn't ship with ruby out of the box, but
 is provided by the [ruby-build][] project. If you installed it either
 as part of GitHub checkout process outlined above or via Homebrew, you
 should be able to:
