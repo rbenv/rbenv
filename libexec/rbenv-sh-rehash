@@ -17,6 +17,9 @@ case "$shell" in
 fish )
   # no rehash support
   ;;
+rc )
+  echo "hash -r \>[2]/dev/null || true"
+  ;;
 * )
   echo "hash -r 2>/dev/null || true"
   ;;

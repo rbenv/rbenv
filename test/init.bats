@@ -56,6 +56,12 @@ OUT
   assert_line 'status --is-interactive; and source (rbenv init -|psub)'
 }
 
+@test "rc instructions" {
+  run rbenv-init rc
+  assert [ "$status" -eq 1 ]
+  assert_line '. <{rbenv init -}'
+}
+
 @test "option to skip rehash" {
   run rbenv-init - --no-rehash
   assert_success
@@ -76,6 +82,13 @@ OUT
   assert_line 0 "setenv PATH '${RBENV_ROOT}/shims' \$PATH"
 }
 
+@test "adds shims to PATH (rc)" {
+  export PATH="${BATS_TEST_DIRNAME}/../libexec:/usr/bin:/bin:/usr/local/bin"
+  run rbenv-init - rc
+  assert_success
+  assert_line 0 "path=($RBENV_ROOT/shims \$path)"
+}
+
 @test "can add shims to PATH more than once" {
   export PATH="${RBENV_ROOT}/shims:$PATH"
   run rbenv-init - bash
@@ -88,6 +101,13 @@ OUT
   run rbenv-init - fish
   assert_success
   assert_line 0 "setenv PATH '${RBENV_ROOT}/shims' \$PATH"
+}
+
+@test "can add shims to PATH more than once (rc)" {
+  export PATH="${RBENV_ROOT}/shims:$PATH"
+  run rbenv-init - rc
+  assert_success
+  assert_line 0 "path=($RBENV_ROOT/shims \$path)"
 }
 
 @test "outputs sh-compatible syntax" {
@@ -104,5 +124,12 @@ OUT
   run rbenv-init - fish
   assert_success
   assert_line '  switch "$command"'
+  refute_line '  case "$command" in'
+}
+
+@test "outputs rc-specific syntax (rc)" {
+  run rbenv-init - rc
+  assert_success
+  assert_line '    switch($command) {'
   refute_line '  case "$command" in'
 }

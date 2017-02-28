@@ -20,6 +20,11 @@ load test_helper
   assert_success 'echo "$RBENV_VERSION"'
 }
 
+@test "shell version (rc)" {
+  RBENV_SHELL=rc RBENV_VERSION="1.2.3" run rbenv-sh-shell
+  assert_success 'echo ''$RBENV_VERSION'''
+}
+
 @test "shell revert" {
   RBENV_SHELL=bash run rbenv-sh-shell -
   assert_success
@@ -30,6 +35,12 @@ load test_helper
   RBENV_SHELL=fish run rbenv-sh-shell -
   assert_success
   assert_line 0 'if set -q RBENV_VERSION_OLD'
+}
+
+@test "shell revert (rc)" {
+  RBENV_SHELL=rc run rbenv-sh-shell -
+  assert_success
+  assert_line 0 'if (test -n `{whatis RBENV_VERSION_OLD}) {'
 }
 
 @test "shell unset" {
@@ -47,6 +58,15 @@ OUT
   assert_output <<OUT
 set -gu RBENV_VERSION_OLD "\$RBENV_VERSION"
 set -e RBENV_VERSION
+OUT
+}
+
+@test "shell unset (rc)" {
+  RBENV_SHELL=rc run rbenv-sh-shell --unset
+  assert_success
+  assert_output <<OUT
+RBENV_VERSION_OLD=\$RBENV_VERSION
+RBENV_VERSION=()
 OUT
 }
 
@@ -76,5 +96,15 @@ OUT
   assert_output <<OUT
 set -gu RBENV_VERSION_OLD "\$RBENV_VERSION"
 set -gx RBENV_VERSION "1.2.3"
+OUT
+}
+
+@test "shell change version (rc)" {
+  mkdir -p "${RBENV_ROOT}/versions/1.2.3"
+  RBENV_SHELL=rc run rbenv-sh-shell 1.2.3
+  assert_success
+  assert_output <<OUT
+RBENV_VERSION_OLD="$RBENV_VERSION"
+RBENV_VERSION=1.2.3
 OUT
 }
