@@ -12,6 +12,8 @@ if [ -z "$RBENV_VERSION" ] || [ -z "$RBENV_VERSION_FILE" ]; then
   exit 1
 fi
 
+RBENV_VERSION=`rbenv-resolve $RBENV_VERSION`
+
 # Make sure the specified version is installed.
 rbenv-prefix "$RBENV_VERSION" >/dev/null
 
