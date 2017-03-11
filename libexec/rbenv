@@ -51,7 +51,8 @@ else
 fi
 
 if [ -z "${RBENV_ROOT}" ]; then
-  RBENV_ROOT="${HOME}/.rbenv"
+  RBENV_ROOT=`dirname "$0"`
+  RBENV_ROOT=`cd "$RBENV_ROOT/.."; pwd`
 else
   RBENV_ROOT="${RBENV_ROOT%/}"
 fi
