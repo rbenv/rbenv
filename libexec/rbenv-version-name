@@ -5,7 +5,7 @@ set -e
 
 if [ -z "$RBENV_VERSION" ]; then
   RBENV_VERSION_FILE="$(rbenv-version-file)"
-  RBENV_VERSION="$(rbenv-version-file-read "$RBENV_VERSION_FILE" || true)"
+  RBENV_VERSION="$(rbenv-version-file-read "$RBENV_VERSION_FILE" || echo system)"
 fi
 
 OLDIFS="$IFS"
