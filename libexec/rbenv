@@ -50,6 +50,10 @@ else
   }
 fi
 
+if [ ! -z "${CDPATH}" ]; then
+  unset CDPATH
+fi
+
 if [ -z "${RBENV_ROOT}" ]; then
   RBENV_ROOT="${HOME}/.rbenv"
 else
