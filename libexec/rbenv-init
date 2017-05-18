@@ -136,6 +136,7 @@ EOS
 esac
 
 if [ "$shell" != "fish" ]; then
+OLDIFS="$IFS"
 IFS="|"
 cat <<EOS
   command="\$1"
@@ -151,4 +152,14 @@ cat <<EOS
   esac
 }
 EOS
+IFS="$OLDIFS"
 fi
+
+# Allow plugins to override initialization process.
+OLDIFS="$IFS"
+IFS=$'\n' scripts=(`rbenv-hooks init`)
+IFS="$OLDIFS"
+
+for script in "${scripts[@]}"; do
+  source "$script"
+done
