@@ -17,7 +17,9 @@ create_executable() {
 @test "fails with invalid version" {
   export RBENV_VERSION="2.0"
   run rbenv-exec ruby -v
-  assert_failure "rbenv: version \`2.0' is not installed (set by RBENV_VERSION environment variable)"
+  assert_failure "rbenv: version \`2.0' is not installed (set by RBENV_VERSION environment variable)
+install it with:
+  rbenv install 2.0"
 }
 
 @test "fails with invalid version set from file" {
@@ -25,7 +27,9 @@ create_executable() {
   cd "$RBENV_TEST_DIR"
   echo 1.9 > .ruby-version
   run rbenv-exec rspec
-  assert_failure "rbenv: version \`1.9' is not installed (set by $PWD/.ruby-version)"
+  assert_failure "rbenv: version \`1.9' is not installed (set by $PWD/.ruby-version)
+install it with:
+  rbenv install 1.9"
 }
 
 @test "completes with names of executables" {
