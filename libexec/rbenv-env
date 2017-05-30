@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#
+# Summary: Run an executable with the selected Ruby version
+#
+# Usage: rbenv exec <command> [arg1 arg2...]
+#
+# Runs an executable by first preparing PATH so that the selected Ruby
+# version's `bin' directory is at the front.
+#
+# For example, if the currently selected Ruby version is 1.9.3-p327:
+#   rbenv exec bundle install
+#
+# is equivalent to:
+#   PATH="$RBENV_ROOT/versions/1.9.3-p327/bin:$PATH" bundle install
+
+set -e
+[ -n "$RBENV_DEBUG" ] && set -x
+
+export RBENV_VERSION="$(rbenv-version-name)"
+
+for script in $(rbenv-hooks exec); do
+  source "$script"
+done
+
+RBENV_COMMAND="ruby"
+
+RBENV_COMMAND_PATH="$(rbenv-which "$RBENV_COMMAND")"
+RBENV_BIN_PATH="${RBENV_COMMAND_PATH%/*}"
+
+if [ "$RBENV_VERSION" != "system" ]; then
+  export PATH="${RBENV_BIN_PATH}:${PATH}"
+fi
+
+/usr/bin/env | egrep '^GEM|^RBENV|^PATH='

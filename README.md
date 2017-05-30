@@ -48,6 +48,7 @@ RVM?**](https://github.com/rbenv/rbenv/wiki/Why-rbenv%3F)
   * [Uninstalling Ruby versions](#uninstalling-ruby-versions)
   * [Uninstalling rbenv](#uninstalling-rbenv)
 * [Command Reference](#command-reference)
+  * [rbenv env](#rbenv-env)
   * [rbenv local](#rbenv-local)
   * [rbenv global](#rbenv-global)
   * [rbenv shell](#rbenv-shell)
@@ -352,6 +353,13 @@ uninstall from the system.
 
 Like `git`, the `rbenv` command delegates to subcommands based on its
 first argument. The most common subcommands are:
+
+### rbenv env
+
+Shows pertinent environment variables that are set by shims or rbenv exec
+(specifically PATH environment variable as well as any variables that start with GEM or RBENV)
+
+    $ rbenv env
 
 ### rbenv local
 
