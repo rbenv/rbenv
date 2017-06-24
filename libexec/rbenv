@@ -28,8 +28,8 @@ if enable -f "${BASH_SOURCE%/*}"/../libexec/rbenv-realpath.dylib realpath 2>/dev
 else
   [ -z "$RBENV_NATIVE_EXT" ] || abort "failed to load \`realpath' builtin"
 
-  READLINK=$(type -p greadlink readlink | head -1)
-  [ -n "$READLINK" ] || abort "cannot find readlink - are you missing GNU coreutils?"
+  READLINK=$(type -p greadlink || type -p readlink \
+    || abort 'cannot find greadlink/readlink - are you missing GNU coreutils?')
 
   resolve_link() {
     $READLINK "$1"

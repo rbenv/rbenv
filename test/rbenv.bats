@@ -84,3 +84,13 @@ load test_helper
   assert_output "${BATS_TEST_DIRNAME%/*}/libexec:$PATH"
   assert_success
 }
+
+@test "missing readlink" {
+  PATH="$(path_without greadlink readlink)" run rbenv which readlink
+  if [[ -z "$RBENV_NATIVE_EXT" ]]; then
+    assert_output "rbenv: cannot find greadlink/readlink - are you missing GNU coreutils?"
+    assert_failure
+  else
+    assert_failure "rbenv: readlink: command not found"
+  fi
+}
