@@ -76,13 +76,18 @@ load test_helper
 }
 
 @test "abs_dirname with symlink in same dir" {
-  mkdir -p "$RBENV_TEST_DIR"
-  cd "$RBENV_TEST_DIR"
-  ln -s $(which rbenv) rbenv-wrapper
-  ln -s rbenv-wrapper rbenv-wrapper-link
-  run ./rbenv-wrapper-link echo "PATH"
-  assert_output "${BATS_TEST_DIRNAME%/*}/libexec:$PATH"
-  assert_success
+  # Only test this without realpath.dylib, since otherwise BASH_SOURCE would
+  # need to get resolved using the fallback method first.
+  if [[ -z "$RBENV_NATIVE_EXT" ]]; then
+    mkdir -p "$RBENV_TEST_DIR"
+    cd "$RBENV_TEST_DIR"
+    pwd
+    ln -s $(which rbenv) rbenv-wrapper
+    ln -s rbenv-wrapper rbenv-wrapper-link
+    run ./rbenv-wrapper-link echo "PATH"
+    assert_output "${BATS_TEST_DIRNAME%/*}/libexec:$PATH"
+    assert_success
+  fi
 }
 
 @test "missing readlink" {
