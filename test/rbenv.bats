@@ -81,5 +81,6 @@ load test_helper
   ln -s $(which rbenv) rbenv-wrapper
   ln -s rbenv-wrapper rbenv-wrapper-link
   run ./rbenv-wrapper-link echo "PATH"
-  assert_success "${BATS_TEST_DIRNAME%/*}/libexec:$PATH"
+  assert_output "${BATS_TEST_DIRNAME%/*}/libexec:$PATH"
+  assert_success
 }
