@@ -1,0 +1,38 @@
+---
+# Front matter comment to ensure Jekyll properly reads file.
+---
+
+body {
+  padding-top: 60px;
+}
+
+nav {
+  overflow: hidden;
+  background-color: #333;
+  position: fixed; 
+  top: 0; 
+  width: 100%; 
+
+  a:hover {
+    text-decoration: none;
+  }
+}
+
+pre {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 2px;
+  padding: 5px;
+
+  code {
+    color: white;
+  }
+
+}
+
+a {
+  color: red;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
