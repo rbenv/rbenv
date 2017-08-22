@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css">
+      <link rel="stylesheet" href="/css/styles.css">
+    </head>
+    <body>
+ 
+<nav class="red">
+  <div class="nav-wrapper">
+    <div class="container">
+      <a href="/index/" class="brand-logo">rbenv</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li><a href="/usage/">Usage</a></li>
+        <li><a href="/docs/">Docs</a></li>
+        <li><a href="/quick-start/">Quick Start</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+     <h3 id="command-reference">Command Reference</h3>
+
+<p>Like <code class="highlighter-rouge">git</code>, the <code class="highlighter-rouge">rbenv</code> command delegates to subcommands based on its
+first argument. The most common subcommands are:</p>
+
+<h5 id="rbenv-local">rbenv local</h5>
+
+<p>Sets a local application-specific Ruby version by writing the version
+name to a <code class="highlighter-rouge">.ruby-version</code> file in the current directory. This version
+overrides the global version, and can be overridden itself by setting
+the <code class="highlighter-rouge">RBENV_VERSION</code> environment variable or with the <code class="highlighter-rouge">rbenv shell</code>
+command.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rbenv local 1.9.3-p327
+</code></pre>
+</div>
+
+<p>When run without a version number, <code class="highlighter-rouge">rbenv local</code> reports the currently
+configured local version. You can also unset the local version:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rbenv local --unset
+</code></pre>
+</div>
+
+<h5 id="rbenv-global">rbenv global</h5>
+
+<p>Sets the global version of Ruby to be used in all shells by writing
+the version name to the <code class="highlighter-rouge">~/.rbenv/version</code> file. This version can be
+overridden by an application-specific <code class="highlighter-rouge">.ruby-version</code> file, or by
+setting the <code class="highlighter-rouge">RBENV_VERSION</code> environment variable.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rbenv global 1.8.7-p352
+</code></pre>
+</div>
+
+<p>The special version name <code class="highlighter-rouge">system</code> tells rbenv to use the system Ruby
+(detected by searching your <code class="highlighter-rouge">$PATH</code>).</p>
+
+<p>When run without a version number, <code class="highlighter-rouge">rbenv global</code> reports the
+currently configured global version.</p>
+
+<h5 id="rbenv-shell">rbenv shell</h5>
+
+<p>Sets a shell-specific Ruby version by setting the <code class="highlighter-rouge">RBENV_VERSION</code>
+environment variable in your shell. This version overrides
+application-specific versions and the global version.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rbenv shell jruby-1.7.1
+</code></pre>
+</div>
+
+<p>When run without a version number, <code class="highlighter-rouge">rbenv shell</code> reports the current
+value of <code class="highlighter-rouge">RBENV_VERSION</code>. You can also unset the shell version:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rbenv shell --unset
+</code></pre>
+</div>
+
+<p>Note that you’ll need rbenv’s shell integration enabled (step 3 of
+the installation instructions) in order to use this command. If you
+prefer not to use shell integration, you may simply set the
+<code class="highlighter-rouge">RBENV_VERSION</code> variable yourself:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ export RBENV_VERSION=jruby-1.7.1
+</code></pre>
+</div>
+
+<h5 id="rbenv-versions">rbenv versions</h5>
+
+<p>Lists all Ruby versions known to rbenv, and shows an asterisk next to
+the currently active version.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rbenv versions
+  1.8.7-p352
+  1.9.2-p290
+* 1.9.3-p327 (set by /Users/sam/.rbenv/version)
+  jruby-1.7.1
+  rbx-1.2.4
+  ree-1.8.7-2011.03
+</code></pre>
+</div>
+
+<h5 id="rbenv-version">rbenv version</h5>
+
+<p>Displays the currently active Ruby version, along with information on
+how it was set.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rbenv version
+1.9.3-p327 (set by /Users/sam/.rbenv/version)
+</code></pre>
+</div>
+
+<h5 id="rbenv-rehash">rbenv rehash</h5>
+
+<p>Installs shims for all Ruby executables known to rbenv (i.e.,
+<code class="highlighter-rouge">~/.rbenv/versions/*/bin/*</code>). Run this command after you install a new
+version of Ruby, or install a gem that provides commands.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rbenv rehash
+</code></pre>
+</div>
+
+<h5 id="rbenv-which">rbenv which</h5>
+
+<p>Displays the full path to the executable that rbenv will invoke when
+you run the given command.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rbenv which irb
+/Users/sam/.rbenv/versions/1.9.3-p327/bin/irb
+</code></pre>
+</div>
+
+<h5 id="rbenv-whence">rbenv whence</h5>
+
+<p>Lists all Ruby versions with the given command installed.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rbenv whence rackup
+1.9.3-p327
+jruby-1.7.1
+ree-1.8.7-2011.03
+</code></pre>
+</div>
+ 
+</div>
+ 
+    <footer class="page-footer red">
+      <div class="container">
+        <div class="row">
+          <div class="col l6 s12">
+            <h5 class="white-text"> rbenv </h5>
+            <p class="grey-text text-lighten-4"> Groom your app’s Ruby environment with rbenv. Use rbenv to pick a Ruby version  for your application and guarantee that your development environment matches  production. Put rbenv to work with Bundler for painless  Ruby upgrades and bulletproof deployments.
+ </p>
+          </div>
+          <div class="col l4 offset-l2 s12">
+            <h5 class="white-text">Links</h5>
+            <ul>
+              <li><a class="grey-text text-lighten-3" href="https://github.com/rbenv/rbenv/issues">Submit an Issue</a></li>
+              <li><a class="grey-text text-lighten-3" href="https://github.com/rbenv/rbenv">View on GitHub</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-copyright">
+        <div class="container">
+        © 2017 Copyright  | All rights reserved.
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
+  </body>
+</html>

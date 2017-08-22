@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css">
+      <link rel="stylesheet" href="/css/styles.css">
+    </head>
+    <body>
+ 
+<nav class="red">
+  <div class="nav-wrapper">
+    <div class="container">
+      <a href="/index/" class="brand-logo">rbenv</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li><a href="/usage/">Usage</a></li>
+        <li><a href="/docs/">Docs</a></li>
+        <li><a href="/quick-start/">Quick Start</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+     <h5 id="homebrew">Homebrew</h5>
+
+<p>The quickest way to get up and running with rbenv is with <a href="https://brew.sh/">Homebrew</a>.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ brew update
+$ brew install rbenv
+$ rbenv init
+</code></pre>
+</div>
+
+<p>You’ll only ever have to run <code class="highlighter-rouge">rbenv init</code> once.</p>
+
+<h5 id="installing-ruby-versions">Installing Ruby versions</h5>
+
+<div class="language-sh highlighter-rouge"><pre class="highlight"><code><span class="c"># list all available versions:</span>
+<span class="gp">$ </span>rbenv install -l
+
+<span class="c"># install a Ruby version:</span>
+<span class="gp">$ </span>rbenv install 2.0.0-p247
+</code></pre>
+</div>
+
+<p>Alternatively to the <code class="highlighter-rouge">install</code> command, you can download and compile
+Ruby manually as a subdirectory of <code class="highlighter-rouge">~/.rbenv/versions/</code>. An entry in
+that directory can also be a symlink to a Ruby version installed
+elsewhere on the filesystem. rbenv doesn’t care; it will simply treat
+any entry in the <code class="highlighter-rouge">versions/</code> directory as a separate Ruby version.</p>
+ 
+</div>
+ 
+    <footer class="page-footer red">
+      <div class="container">
+        <div class="row">
+          <div class="col l6 s12">
+            <h5 class="white-text"> rbenv </h5>
+            <p class="grey-text text-lighten-4"> Groom your app’s Ruby environment with rbenv. Use rbenv to pick a Ruby version  for your application and guarantee that your development environment matches  production. Put rbenv to work with Bundler for painless  Ruby upgrades and bulletproof deployments.
+ </p>
+          </div>
+          <div class="col l4 offset-l2 s12">
+            <h5 class="white-text">Links</h5>
+            <ul>
+              <li><a class="grey-text text-lighten-3" href="https://github.com/rbenv/rbenv/issues">Submit an Issue</a></li>
+              <li><a class="grey-text text-lighten-3" href="https://github.com/rbenv/rbenv">View on GitHub</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-copyright">
+        <div class="container">
+        © 2017 Copyright  | All rights reserved.
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
+  </body>
+</html>
