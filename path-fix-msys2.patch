@@ -1,0 +1,15 @@
+ bin/rbenv | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/bin/rbenv b/bin/rbenv
+index f1e9c5f..cb556af 120000
+--- a/bin/rbenv
++++ b/bin/rbenv
+@@ -1 +1,4 @@
+-../libexec/rbenv
+\ No newline at end of file
++pushd `dirname $0` > /dev/null
++SCRIPTPATH=`pwd`
++popd > /dev/null
++$SCRIPTPATH/../libexec/rbenv $@
+\ No newline at end of file
