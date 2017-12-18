@@ -90,7 +90,7 @@ fish )
   echo "set -gx RBENV_SHELL $shell"
 ;;
 * )
-  echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+  echo ":${PATH}:" | grep -q ":${RBENV_ROOT}/shims:" || echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
   echo "export RBENV_SHELL=$shell"
 ;;
 esac
@@ -145,9 +145,9 @@ cat <<EOS
 
   case "\$command" in
   ${commands[*]})
-    eval "\$(rbenv "sh-\$command" "\$@")";;
+    eval "\$($RBENV_ROOT/bin/rbenv "sh-\$command" "\$@")";;
   *)
-    command rbenv "\$command" "\$@";;
+    $RBENV_ROOT/bin/rbenv "\$command" "\$@";;
   esac
 }
 EOS
