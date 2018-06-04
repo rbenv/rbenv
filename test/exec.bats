@@ -14,6 +14,21 @@ create_executable() {
   chmod +x "${bin}/$name"
 }
 
+@test "does not change PATH for exec'ed commands" {
+  export RBENV_VERSION="2.0"
+  create_executable "ruby" <<SH
+#!$BASH
+echo \$PATH
+SH
+  rbenv-rehash
+
+  run rbenv-exec ruby
+  assert_success "$PATH"
+
+  run ruby
+  assert_success "$PATH"
+}
+
 @test "fails with invalid version" {
   export RBENV_VERSION="2.0"
   run rbenv-exec ruby -v

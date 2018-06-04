@@ -40,4 +40,8 @@ for script in "${scripts[@]}"; do
 done
 
 shift 1
+if [ -n "$_RBENV_ORIG_PATH" ]; then
+  PATH="$_RBENV_ORIG_PATH"
+  unset _RBENV_ORIG_PATH
+fi
 exec -a "$RBENV_COMMAND" "$RBENV_COMMAND_PATH" "$@"
