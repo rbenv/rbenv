@@ -41,7 +41,4 @@ for script in "${scripts[@]}"; do
 done
 
 shift 1
-if [ "$RBENV_VERSION" != "system" ]; then
-  export PATH="${RBENV_BIN_PATH}:${PATH}"
-fi
 exec -a "$RBENV_COMMAND" "$RBENV_COMMAND_PATH" "$@"
