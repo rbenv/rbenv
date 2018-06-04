@@ -5,10 +5,7 @@ set -e
 
 unset RBENV_VERSION_ORIGIN
 
-OLDIFS="$IFS"
-IFS=$'\n' scripts=(`rbenv-hooks version-origin`)
-IFS="$OLDIFS"
-for script in "${scripts[@]}"; do
+rbenv-hooks version-origin | while read -ra script; do
   source "$script"
 done
 

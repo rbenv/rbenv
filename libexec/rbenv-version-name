@@ -8,10 +8,7 @@ if [ -z "$RBENV_VERSION" ]; then
   RBENV_VERSION="$(rbenv-version-file-read "$RBENV_VERSION_FILE" || true)"
 fi
 
-OLDIFS="$IFS"
-IFS=$'\n' scripts=(`rbenv-hooks version-name`)
-IFS="$OLDIFS"
-for script in "${scripts[@]}"; do
+rbenv-hooks version-name | while read -ra script; do
   source "$script"
 done
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Summary: Configure the shell environment for rbenv
 # Usage: eval "$(rbenv init - [--no-rehash] [<shell>])"
+# shellcheck disable=SC2016,SC2086,SC2088
 
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
@@ -104,7 +105,10 @@ if [ -z "$no_rehash" ]; then
   echo 'command rbenv rehash 2>/dev/null'
 fi
 
-commands=(`rbenv-commands --sh`)
+shell_commands=()
+while read -ra shell_command; do
+  shell_commands+=("$shell_command")
+done < <(rbenv-commands --sh)
 case "$shell" in
 fish )
   cat <<EOS
@@ -113,7 +117,7 @@ function rbenv
   set -e argv[1]
 
   switch "\$command"
-  case ${commands[*]}
+  case ${shell_commands[*]}
     source (rbenv "sh-\$command" \$argv|psub)
   case '*'
     command rbenv "\$command" \$argv
@@ -144,7 +148,7 @@ cat <<EOS
   fi
 
   case "\$command" in
-  ${commands[*]})
+  ${shell_commands[*]})
     eval "\$(rbenv "sh-\$command" "\$@")";;
   *)
     command rbenv "\$command" "\$@";;

@@ -141,11 +141,7 @@ make_shims $(list_executable_names | sort -u)
 
 
 # Allow plugins to register shims.
-OLDIFS="$IFS"
-IFS=$'\n' scripts=(`rbenv-hooks rehash`)
-IFS="$OLDIFS"
-
-for script in "${scripts[@]}"; do
+rbenv-hooks rehash | while read -ra script; do
   source "$script"
 done
 
