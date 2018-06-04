@@ -61,7 +61,7 @@ if [ "\$program" = "ruby" ]; then
 fi
 
 export RBENV_ROOT="$RBENV_ROOT"
-exec "$(command -v rbenv)" exec "\$program" "\$@"
+source $RBENV_ROOT/libexec/rbenv-exec "\$program" "\$@"
 SH
   chmod +x "$PROTOTYPE_SHIM_PATH"
 }

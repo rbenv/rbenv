@@ -103,6 +103,8 @@ SH
 echo hello rake
 SH
 
+  mkdir $RBENV_ROOT/libexec
+  cp -a $BATS_CWD/libexec/rbenv-exec $RBENV_ROOT/libexec
   rbenv-rehash
   run ruby -S rake
   assert_success "hello rake"
