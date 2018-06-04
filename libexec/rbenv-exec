@@ -31,7 +31,6 @@ fi
 
 export RBENV_VERSION
 RBENV_COMMAND_PATH="$(rbenv-which "$RBENV_COMMAND")"
-RBENV_BIN_PATH="${RBENV_COMMAND_PATH%/*}"
 
 OLDIFS="$IFS"
 IFS=$'\n' scripts=(`rbenv-hooks exec`)
@@ -41,7 +40,4 @@ for script in "${scripts[@]}"; do
 done
 
 shift 1
-if [ "$RBENV_VERSION" != "system" ]; then
-  export PATH="${RBENV_BIN_PATH}:${PATH}"
-fi
 exec -a "$RBENV_COMMAND" "$RBENV_COMMAND_PATH" "$@"
