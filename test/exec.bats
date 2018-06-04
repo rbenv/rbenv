@@ -14,6 +14,21 @@ create_executable() {
   chmod +x "${bin}/$name"
 }
 
+@test "does not change PATH for exec'ed commands" {
+  export RBENV_VERSION="2.0"
+  create_executable "ruby" <<SH
+#!$BASH
+echo \$PATH
+SH
+  rbenv-rehash
+
+  run rbenv-exec ruby
+  assert_success "$PATH"
+
+  run ruby
+  assert_success "$PATH"
+}
+
 @test "fails with invalid version" {
   export RBENV_VERSION="2.0"
   run rbenv-exec ruby -v
@@ -81,21 +96,9 @@ OUT
 @test "supports ruby -S <cmd>" {
   export RBENV_VERSION="2.0"
 
-  # emulate `ruby -S' behavior
   create_executable "ruby" <<SH
 #!$BASH
-if [[ \$1 == "-S"* ]]; then
-  found="\$(PATH="\${RUBYPATH:-\$PATH}" which \$2)"
-  # assert that the found executable has ruby for shebang
-  if head -1 "\$found" | grep ruby >/dev/null; then
-    \$BASH "\$found"
-  else
-    echo "ruby: no Ruby script found in input (LoadError)" >&2
-    exit 1
-  fi
-else
-  echo 'ruby 2.0 (rbenv test)'
-fi
+echo "\$0 \$@"
 SH
 
   create_executable "rake" <<SH
@@ -105,5 +108,5 @@ SH
 
   rbenv-rehash
   run ruby -S rake
-  assert_success "hello rake"
+  assert_success "${RBENV_TEST_DIR}/root/versions/2.0/bin/ruby -S rake"
 }
