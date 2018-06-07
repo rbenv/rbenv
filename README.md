@@ -163,9 +163,15 @@ If you're on macOS, we recommend installing rbenv with
    Note that this also installs `ruby-build`, so you'll be ready to
    install other Ruby versions out of the box.
 
-2. Run `rbenv init` and follow the instructions to set up
-   rbenv integration with your shell. This is the step that will make
-   running `ruby` "see" the Ruby version that you choose with rbenv.
+2. Initialize rbenv.
+
+    ~~~ sh
+    $ rbenv init
+    ~~~
+
+   Follow the instructions to set up rbenv integration with your shell. This 
+   is the step that will make running `ruby` "see" the Ruby version that you
+   choose with rbenv.
 
 3. Close your Terminal window and open a new one so your changes take
    effect.
@@ -245,9 +251,15 @@ a systemwide install.
      $ set -Ux fish_user_paths $HOME/.rbenv/bin $fish_user_paths
      ~~~
 
-3. Run `~/.rbenv/bin/rbenv init` and follow the instructions to set up
-   rbenv integration with your shell. This is the step that will make
-   running `ruby` "see" the Ruby version that you choose with rbenv.
+3. Initialize rbenv.
+
+   ~~~ sh
+   $ ~/.rbenv/bin/rbenv init
+   ~~~
+   
+   Follow the instructions to set up rbenv integration with your shell. This 
+   is the step that will make running `ruby` "see" the Ruby version that you
+   choose with rbenv.
 
 4. Restart your shell so that PATH changes take effect. (Opening a new
    terminal tab will usually do it.)
