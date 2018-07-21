@@ -41,7 +41,7 @@ remove_prototype_shim() {
 # serves as a locking mechanism.
 create_prototype_shim() {
   cat > "$PROTOTYPE_SHIM_PATH" <<SH
-#!$RBENV_ROOT/libexec/rbenv-exec
+#!$RBENV_ROOT/bin/rbenv exec
 
 SH
   chmod +x "$PROTOTYPE_SHIM_PATH"
