@@ -345,9 +345,10 @@ any entry in the `versions/` directory as a separate Ruby version.
 #### Installing Ruby gems
 
 Once you've installed some Ruby versions, you'll want to install gems.
-First, ensure that the target version for your project is the one you want by
-checking `rbenv version` (see [Command Reference](#command-reference)). Select
-another version using `rbenv local 2.0.0-p247`, for example. Then, proceed to
+First, ensure that you've seleted the newly installed ruby version by
+checking `rbenv versions` (see [Command Reference](#command-reference)).
+Select another version using `rbenv local 2.0.0-p247`, for example. After
+this, you may need to restart your terminal session. Then, proceed to
 install gems as you normally would:
 
 ```sh
