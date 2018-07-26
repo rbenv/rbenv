@@ -22,11 +22,26 @@ if [ "$1" = "--complete" ]; then
 fi
 
 RBENV_VERSION="$(rbenv-version-name)"
-RBENV_COMMAND="$1"
+RBENV_COMMAND="$(basename $1)"
 
 if [ -z "$RBENV_COMMAND" ]; then
   rbenv-help --usage exec >&2
   exit 1
+fi
+
+program="\${RBENV_COMMAND##*/}"
+if [ "\$program" = "ruby" ]; then
+  for arg; do
+    case "\$arg" in
+    -e* | -- ) break ;;
+    */* )
+      if [ -f "\$arg" ]; then
+        export RBENV_DIR="\${arg%/*}"
+        break
+      fi
+      ;;
+    esac
+  done
 fi
 
 export RBENV_VERSION
