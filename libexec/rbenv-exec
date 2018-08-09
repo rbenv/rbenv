@@ -29,6 +29,20 @@ if [ -z "$RBENV_COMMAND" ]; then
   exit 1
 fi
 
+if [ "\$program" = "ruby" ]; then
+  for arg; do
+    case "\$arg" in
+    -e* | -- ) break ;;
+    */* )
+      if [ -f "\$arg" ]; then
+        export RBENV_DIR="\${arg%/*}"
+        break
+      fi
+      ;;
+    esac
+  done
+fi
+
 export RBENV_VERSION
 RBENV_COMMAND_PATH="$(rbenv-which "$RBENV_COMMAND")"
 RBENV_BIN_PATH="${RBENV_COMMAND_PATH%/*}"
