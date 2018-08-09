@@ -74,3 +74,28 @@ load test_helper
   run rbenv echo "RBENV_HOOK_PATH"
   assert_success "${RBENV_ROOT}/rbenv.d:${BATS_TEST_DIRNAME%/*}/rbenv.d:/usr/local/etc/rbenv.d:/etc/rbenv.d:/usr/lib/rbenv/hooks"
 }
+
+@test "abs_dirname with symlink in same dir" {
+  # Only test this without realpath.dylib, since otherwise BASH_SOURCE would
+  # need to get resolved using the fallback method first.
+  if [[ -z "$RBENV_NATIVE_EXT" ]]; then
+    mkdir -p "$RBENV_TEST_DIR"
+    cd "$RBENV_TEST_DIR"
+    pwd
+    ln -s $(which rbenv) rbenv-wrapper
+    ln -s rbenv-wrapper rbenv-wrapper-link
+    run ./rbenv-wrapper-link echo "PATH"
+    assert_output "${BATS_TEST_DIRNAME%/*}/libexec:$PATH"
+    assert_success
+  fi
+}
+
+@test "missing readlink" {
+  PATH="$(path_without greadlink readlink)" run rbenv which readlink
+  if [[ -z "$RBENV_NATIVE_EXT" ]]; then
+    assert_output "rbenv: cannot find greadlink/readlink - are you missing GNU coreutils?"
+    assert_failure
+  else
+    assert_failure "rbenv: readlink: command not found"
+  fi
+}
