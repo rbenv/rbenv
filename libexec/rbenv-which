@@ -42,14 +42,9 @@ if [ "$RBENV_VERSION" = "system" ]; then
 else
   RBENV_COMMAND_PATH="${RBENV_ROOT}/versions/${RBENV_VERSION}/bin/${RBENV_COMMAND}"
   if [ ! -x "$RBENV_COMMAND_PATH" ]; then
-    PATH="$(remove_from_path "${RBENV_ROOT}/shims")" \
-    RBENV_ALT_COMMAND_PATH="$(command -v "$RBENV_COMMAND" || true)"
-    if [ -x "$RBENV_ALT_COMMAND_PATH" ]; then
-      RBENV_COMMAND_PATH=$RBENV_ALT_COMMAND_PATH
-      echo "rbenv: Could not find "$RBENV_COMMAND", falling back to system" >&2
-    else
-      unset RBENV_ALT_COMMAND_PATH
-    fi
+    echo "rbenv: Could not find "$RBENV_COMMAND", falling back to system" >&2
+    export RBENV_VERSION=system
+    exec rbenv which $RBENV_COMMAND
   fi
 fi
 
