@@ -29,7 +29,7 @@ if [ -z "$RBENV_COMMAND" ]; then
   exit 1
 fi
 
-if [ "\$program" = "ruby" ]; then
+if [ "\$RBENV_COMMAND" = "ruby" ]; then
   for arg; do
     case "\$arg" in
     -e* | -- ) break ;;
