@@ -223,7 +223,7 @@ a systemwide install.
     worry if it fails; rbenv will still work normally:
 
     ~~~
-    $ cd ~/.rbenv && src/configure && make -C src
+    $ cd ~/.rbenv && ./src/configure && make -C src
     ~~~
 
 2. Add `~/.rbenv/bin` to your `$PATH` for access to the `rbenv`
