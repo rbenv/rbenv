@@ -100,14 +100,16 @@ print_summary() {
   eval "$(documentation_for "$command")"
 
   if [ -n "$summary" ]; then
-    printf "   %-9s   %s\n" "$command" "$summary"
+    printf "   %-9s   %s\n " "$command" "$summary"
   fi
 }
 
 print_summaries() {
+  local buffer=""
   for command; do
-    print_summary "$command"
+    buffer="${buffer}$(print_summary "$command")"
   done
+  printf "${buffer}"
 }
 
 print_help() {
@@ -147,14 +149,17 @@ if [ "$1" = "--usage" ]; then
 fi
 
 if [ -z "$1" ] || [ "$1" == "rbenv" ]; then
-  echo "Usage: rbenv <command> [<args>]"
-  [ -z "$usage" ] || exit
-  echo
-  echo "Some useful rbenv commands are:"
-  print_summaries commands local global shell install uninstall rehash version versions which whence
-  echo
-  echo "See \`rbenv help <command>' for information on a specific command."
-  echo "For full documentation, see: https://github.com/rbenv/rbenv#readme"
+  buffer=""
+  buffer="${buffer}Usage: rbenv <command> [<args>]\n"
+  if [ -n "$usage" ];  then
+    printf "$buffer"
+    exit
+  fi
+  buffer="${buffer}\nSome useful rbenv commands are:\n"
+  buffer="${buffer} $(print_summaries commands local global shell install uninstall rehash version versions which whence)\n"
+  buffer="${buffer}See \`rbenv help <command>' for information on a specific command.\n"
+  buffer="${buffer}For full documentation, see: https://github.com/rbenv/rbenv#readme\n"
+  printf "${buffer}"
 else
   command="$1"
   if [ -n "$(command_path "$command")" ]; then
