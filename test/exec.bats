@@ -107,3 +107,16 @@ SH
   run ruby -S rake
   assert_success "hello rake"
 }
+
+@test "shims handle SHELLOPTS" {
+  export RBENV_VERSION="2.0"
+
+  create_executable "myshim" <<SH
+#!/usr/bin/env bash
+echo hello from shim
+SH
+
+  rbenv-rehash
+  run env SHELLOPTS=nounset:pipefail myshim
+  assert_success "hello from shim"
+}

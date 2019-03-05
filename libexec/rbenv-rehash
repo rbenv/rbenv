@@ -39,11 +39,14 @@ remove_prototype_shim() {
 # hard-linked for every executable and then removed. The linking
 # technique is fast, uses less disk space than unique files, and also
 # serves as a locking mechanism.
+# It protects itself against outer options (nounset, pipefail).
 create_prototype_shim() {
   cat > "$PROTOTYPE_SHIM_PATH" <<SH
 #!/usr/bin/env bash
 set -e
+set +o nounset
 [ -n "\$RBENV_DEBUG" ] && set -x
+set +o pipefail
 
 program="\${0##*/}"
 if [ "\$program" = "ruby" ]; then
