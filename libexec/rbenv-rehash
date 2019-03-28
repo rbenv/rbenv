@@ -82,10 +82,17 @@ remove_outdated_shims() {
 # List basenames of executables for every Ruby version
 list_executable_names() {
   local version file
+  local -a version_dirs
   rbenv-versions --bare --skip-aliases | \
   while read -r version; do
-    for file in "${RBENV_ROOT}/versions/${version}/bin/"*; do
-      echo "${file##*/}"
+    version_dirs=("${RBENV_ROOT}/versions/${version}")
+    if [ -n "$RBENV_SYSTEM_VERSIONS_DIR" ]; then
+      version_dirs+=("$RBENV_SYSTEM_VERSIONS_DIR/${version}")
+    fi
+    for version_dir in "${version_dirs[@]}"; do
+      for file in "${version_dir}/bin/"*; do
+        echo "${file##*/}"
+      done
     done
   done
 }

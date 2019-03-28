@@ -25,7 +25,10 @@ for arg; do
   esac
 done
 
-versions_dir="${RBENV_ROOT}/versions"
+versions_dirs=("${RBENV_ROOT}/versions")
+if [ -n "$RBENV_SYSTEM_VERSIONS_DIR" ]; then
+  versions_dirs+=("$RBENV_SYSTEM_VERSIONS_DIR")
+fi
 
 if ! enable -f "${BASH_SOURCE%/*}"/rbenv-realpath.dylib realpath 2>/dev/null; then
   if [ -n "$RBENV_NATIVE_EXT" ]; then
@@ -59,9 +62,12 @@ if ! enable -f "${BASH_SOURCE%/*}"/rbenv-realpath.dylib realpath 2>/dev/null; th
   }
 fi
 
-if [ -d "$versions_dir" ]; then
-  versions_dir="$(realpath "$versions_dir")"
-fi
+for i in "${!versions_dirs[@]}"; do
+  versions_dir="${versions_dirs[$i]}"
+  if [ -d "$versions_dir" ]; then
+    versions_dirs[$i]="$(realpath "$versions_dir")"
+  fi
+done
 
 if [ -n "$bare" ]; then
   hit_prefix=""
@@ -92,14 +98,16 @@ if [ -n "$include_system" ] && RBENV_VERSION=system rbenv-which ruby >/dev/null 
 fi
 
 shopt -s nullglob
-for path in "$versions_dir"/*; do
-  if [ -d "$path" ]; then
-    if [ -n "$skip_aliases" ] && [ -L "$path" ]; then
-      target="$(realpath "$path")"
-      [ "${target%/*}" != "$versions_dir" ] || continue
+for versions_dir in "${versions_dirs[@]}"; do
+  for path in "$versions_dir"/*; do
+    if [ -d "$path" ]; then
+      if [ -n "$skip_aliases" ] && [ -L "$path" ]; then
+        target="$(realpath "$path")"
+        [ "${target%/*}" != "$versions_dir" ] || continue
+      fi
+      print_version "${path##*/}"
     fi
-    print_version "${path##*/}"
-  fi
+  done
 done
 shopt -u nullglob
 

@@ -26,6 +26,8 @@ if [ -z "$RBENV_TEST_DIR" ]; then
   PATH="${RBENV_ROOT}/shims:$PATH"
   export PATH
 
+  unset RBENV_SYSTEM_VERSIONS_DIR
+
   for xdg_var in `env 2>/dev/null | grep ^XDG_ | cut -d= -f1`; do unset "$xdg_var"; done
   unset xdg_var
 fi

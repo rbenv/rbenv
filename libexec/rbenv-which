@@ -38,9 +38,12 @@ RBENV_VERSION="${RBENV_VERSION:-$(rbenv-version-name)}"
 
 if [ "$RBENV_VERSION" = "system" ]; then
   PATH="$(remove_from_path "${RBENV_ROOT}/shims")" \
-    RBENV_COMMAND_PATH="$(command -v "$RBENV_COMMAND" || true)"
+    RBENV_COMMAND_PATHS=("$(command -v "$RBENV_COMMAND" || true)")
 else
-  RBENV_COMMAND_PATH="${RBENV_ROOT}/versions/${RBENV_VERSION}/bin/${RBENV_COMMAND}"
+  RBENV_COMMAND_PATHS=("${RBENV_ROOT}/versions/${RBENV_VERSION}/bin/${RBENV_COMMAND}")
+  if [ -n "$RBENV_SYSTEM_VERSIONS_DIR" ]; then
+    RBENV_COMMAND_PATHS+=("${RBENV_SYSTEM_VERSIONS_DIR}/${RBENV_VERSION}/bin/${RBENV_COMMAND}")
+  fi
 fi
 
 OLDIFS="$IFS"
@@ -50,9 +53,14 @@ for script in "${scripts[@]}"; do
   source "$script"
 done
 
-if [ -x "$RBENV_COMMAND_PATH" ]; then
-  echo "$RBENV_COMMAND_PATH"
-elif [ "$RBENV_VERSION" != "system" ] && [ ! -d "${RBENV_ROOT}/versions/${RBENV_VERSION}" ]; then
+for RBENV_COMMAND_PATH in "${RBENV_COMMAND_PATHS[@]}"; do
+  if [ -x "$RBENV_COMMAND_PATH" ]; then
+    echo "$RBENV_COMMAND_PATH"
+    exit 0
+  fi
+done
+
+if [ "$RBENV_VERSION" != "system" ] && [ ! -d "${RBENV_ROOT}/versions/${RBENV_VERSION}" ]; then
   echo "rbenv: version \`$RBENV_VERSION' is not installed (set by $(rbenv-version-origin))" >&2
   exit 1
 else

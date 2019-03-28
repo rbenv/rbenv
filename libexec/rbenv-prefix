@@ -33,10 +33,17 @@ if [ "$RBENV_VERSION" = "system" ]; then
   fi
 fi
 
-RBENV_PREFIX_PATH="${RBENV_ROOT}/versions/${RBENV_VERSION}"
-if [ ! -d "$RBENV_PREFIX_PATH" ]; then
-  echo "rbenv: version \`${RBENV_VERSION}' not installed" >&2
-  exit 1
+RBENV_PREFIX_PATHS=("${RBENV_ROOT}/versions/${RBENV_VERSION}")
+if [ -n "$RBENV_SYSTEM_VERSIONS_DIR" ]; then
+  RBENV_PREFIX_PATHS+=("${RBENV_SYSTEM_VERSIONS_DIR}/${RBENV_VERSION}")
 fi
 
-echo "$RBENV_PREFIX_PATH"
+for RBENV_PREFIX_PATH in "${RBENV_PREFIX_PATHS[@]}"; do
+  if [ -d "$RBENV_PREFIX_PATH" ]; then
+    echo "$RBENV_PREFIX_PATH"
+    exit 0
+  fi
+done
+
+echo "rbenv: version \`${RBENV_VERSION}' not installed" >&2
+exit 1

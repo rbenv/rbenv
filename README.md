@@ -143,6 +143,25 @@ installed:
 Version names to rbenv are simply the names of the directories in
 `~/.rbenv/versions`.
 
+#### System-wide Ruby Installations
+
+Rbenv also supports system-wide Ruby installations. Such installations
+are available to all users on the system because they are not located
+in a home directory. This works through the `RBENV_SYSTEM_VERSIONS_DIR`
+environment variable: if it is set, then rbenv will look there
+*in addition to* looking in `~/.rbenv/versions`.
+
+For example, suppose that `RBENV_SYSTEM_VERSIONS_DIR` is set to
+`/usr/local/lib/rbenv/versions`. You might then have those versions
+installed:
+
+* `/usr/local/lib/rbenv/versions/2.4.0/`
+* `/usr/local/lib/rbenv/versions/2.6.2/`
+
+Note that `~/.rbenv/versions` has priority over `RBENV_SYSTEM_VERSIONS_DIR`.
+If a Ruby installation exists in both `~/.rbenv/versions` and
+`RBENV_SYSTEM_VERSIONS_DIR`, then rbenv will use the one in `~/.rbenv/versions`.
+
 ## Installation
 
 **Compatibility note**: rbenv is _incompatible_ with RVM. Please make
@@ -342,6 +361,30 @@ that directory can also be a symlink to a Ruby version installed
 elsewhere on the filesystem. rbenv doesn't care; it will simply treat
 any entry in the `versions/` directory as a separate Ruby version.
 
+#### Installing System-wide Ruby versions
+
+`rbenv install` always installs to `~/.rbenv/versions/`. If you want to
+install a Ruby version system-wide (i.e. you're going to use
+`RBENV_SYSTEM_VERSIONS_DIR`) then here's how to do it with ruby-build:
+
+~~~ sh
+# if ruby-build is installed as an rbenv plugin:
+$ sudo "$(rbenv root)/plugins/ruby-build" 2.6.2 "$RBENV_SYSTEM_VERSIONS_DIR/2.6.2"
+
+# if ruby-build is installed standalone:
+$ sudo ruby-build 2.6.2 "$RBENV_SYSTEM_VERSIONS_DIR/2.6.2"
+~~~
+
+The use of `sudo` in the above example is under the assumption that
+`RBENV_SYSTEM_VERSIONS_DIR` is only writable by root. You can omit sudo
+if the directory is writable by the current user. Note however that you
+should then carefully think about what appropriate permissions should be:
+it is generally a bad idea for a Ruby installation directory to be writable
+by multiple users.
+
+Again (as an alternative to using ruby-build), you can download and compile
+Ruby manually as a subdirectory of `RBENV_SYSTEM_VERSIONS_DIR`.
+
 #### Installing Ruby gems
 
 Once you've installed some Ruby versions, you'll want to install gems.
@@ -354,7 +397,8 @@ install gems as you normally would:
 $ gem install bundler
 ```
 
-**You don't need sudo** to install gems. Typically, the Ruby versions will be
+Unless the corresponding Ruby installation was installed system-wide,
+**you don't need sudo** to install gems. Typically, the Ruby versions will be
 installed and writeable by your user. No extra privileges are required to
 install gems.
 
@@ -368,7 +412,7 @@ $ gem env home
 ### Uninstalling Ruby versions
 
 As time goes on, Ruby versions you install will accumulate in your
-`~/.rbenv/versions` directory.
+`~/.rbenv/versions` directory (or in `RBENV_SYSTEM_VERSIONS_DIR`).
 
 To remove old Ruby versions, simply `rm -rf` the directory of the
 version you want to remove. You can find the directory of a particular
@@ -376,7 +420,8 @@ Ruby version with the `rbenv prefix` command, e.g. `rbenv prefix
 1.8.7-p357`.
 
 The [ruby-build][] plugin provides an `rbenv uninstall` command to
-automate the removal process.
+automate the removal process. That command however only supports
+removing from `~/.rbenv/versions`, not from `RBENV_SYSTEM_VERSIONS_DIR`.
 
 ### Uninstalling rbenv
 
@@ -401,6 +446,11 @@ uninstall from the system.
    perform the rbenv package removal. For instance, for Homebrew:
 
         brew uninstall rbenv
+
+ 3. If you installed any Ruby versions system-wide, then also be sure to
+    remove the entire `RBENV_SYSTEM_VERSIONS_DIR` directory:
+
+        sudo rm -rf "$RBENV_SYSTEM_VERSIONS_DIR"
 
 ## Command Reference
 
@@ -514,6 +564,7 @@ name | default | description
 `RBENV_DEBUG` | | Outputs debug information.<br>Also as: `rbenv --debug <subcommand>`
 `RBENV_HOOK_PATH` | [_see wiki_][hooks] | Colon-separated list of paths searched for rbenv hooks.
 `RBENV_DIR` | `$PWD` | Directory to start searching for `.ruby-version` files.
+`RBENV_SYSTEM_VERSIONS_DIR` | | Defines the directory under which system-wide Ruby versions reside.
 
 ## Development
 
