@@ -36,6 +36,11 @@ teardown() {
   rm -rf "$RBENV_TEST_DIR"
 }
 
+setup_system_versions_dir() {
+  export RBENV_SYSTEM_VERSIONS_DIR="$RBENV_TEST_DIR/system-versions"
+  mkdir -p "$RBENV_SYSTEM_VERSIONS_DIR"
+}
+
 flunk() {
   { if [ "$#" -eq 0 ]; then cat -
     else echo "$@"

@@ -6,6 +6,10 @@ create_version() {
   mkdir -p "${RBENV_ROOT}/versions/$1"
 }
 
+create_system_version() {
+  mkdir -p "${RBENV_SYSTEM_VERSIONS_DIR}/$1"
+}
+
 setup() {
   mkdir -p "$RBENV_TEST_DIR"
   cd "$RBENV_TEST_DIR"
@@ -152,5 +156,15 @@ OUT
   assert_output <<OUT
 1.8.7
 1.9
+OUT
+}
+
+@test "finds versions in the system versions dir" {
+  setup_system_versions_dir
+  create_system_version "2.6.2"
+  run rbenv-versions --bare
+  assert_success
+  assert_output <<OUT
+2.6.2
 OUT
 }
