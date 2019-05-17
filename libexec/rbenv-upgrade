@@ -22,19 +22,19 @@ is_app_installed() {
 base_path=$(dirname $0)
 
 if is_git_repository "${base_path}"; then
- cd "${base_path}"
+  cd "${base_path}"
  
- echo "Upgrading rbenv..."
- git pull
-
- ruby_build_path="../plugins/ruby-build"
-
- if [ -d "${ruby_build_path}" ]; then
-  cd "${ruby_build_path}"
-
-  echo "Upgrading Ruby-build..."
+  echo "Upgrading rbenv..."
   git pull
-fi
+
+  ruby_build_path="../plugins/ruby-build"
+
+  if [ -d "${ruby_build_path}" ]; then
+    cd "${ruby_build_path}"
+
+    echo "Upgrading Ruby-build..."
+    git pull
+  fi
 elif is_app_installed 'brew'; then
   echo "Upgrading rbenv..."
   brew upgrade rbenv ruby-build
