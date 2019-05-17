@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Summary: Upgrade rbenv (and ruby-build, if installed) to the latest version
+#
+# Upgrades rbenv and ruby-build to the latest version.
+
+set -e
+[ -n "$RBENV_DEBUG" ] && set -x
+
+is_git_repository() {
+  local path
+  path="$1"
+  [[ -n $(cd "$path" && git rev-parse --git-dir 2> /dev/null) ]]
+}
+
+is_app_installed() {
+  local app_name;
+  app_name="$1"
+
+  which "$1" > /dev/null 2>&1
+}
+
+base_path=$(dirname $0)
+
+if is_git_repository "${base_path}"; then
+ cd "${base_path}"
+ 
+ echo "Upgrading rbenv..."
+ git pull
+
+ ruby_build_path="../plugins/ruby-build"
+
+ if [ -d "${ruby_build_path}" ]; then
+  cd "${ruby_build_path}"
+
+  echo "Upgrading Ruby-build..."
+  git pull
+fi
+elif is_app_installed 'brew'; then
+  echo "Upgrading rbenv..."
+  brew upgrade rbenv ruby-build
+fi
