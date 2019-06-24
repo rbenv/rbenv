@@ -34,7 +34,15 @@ if [ -z "$RBENV_COMMAND" ]; then
   exit 1
 fi
 
-RBENV_VERSION="${RBENV_VERSION:-$(rbenv-version-name)}"
+if [ -z "$RBENV_VERSION" ]; then
+  RBENV_VERSION="$(rbenv-version-name)"
+elif [ ! -d "${RBENV_ROOT}/versions/${RBENV_VERSION}" ]; then
+  RBENV_VERSION="${RBENV_VERSION#ruby-}"
+  if [ ! -d "${RBENV_ROOT}/versions/${RBENV_VERSION}" ]; then
+    echo "rbenv: version \`$RBENV_VERSION' is not installed (set by $(rbenv-version-origin))" >&2
+    exit 1
+  fi
+fi
 
 if [ "$RBENV_VERSION" = "system" ]; then
   PATH="$(remove_from_path "${RBENV_ROOT}/shims")" \

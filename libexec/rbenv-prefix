@@ -17,8 +17,16 @@ fi
 
 if [ -n "$1" ]; then
   export RBENV_VERSION="$1"
-elif [ -z "$RBENV_VERSION" ]; then
+fi
+
+if [ -z "$RBENV_VERSION" ]; then
   RBENV_VERSION="$(rbenv-version-name)"
+elif [ ! -d "${RBENV_ROOT}/versions/${RBENV_VERSION}" ]; then
+  RBENV_VERSION="${RBENV_VERSION#ruby-}"
+  if [ ! -d "${RBENV_ROOT}/versions/${RBENV_VERSION}" ]; then
+    echo "rbenv: version \`$RBENV_VERSION' is not installed" >&2
+    exit 1
+  fi
 fi
 
 if [ "$RBENV_VERSION" = "system" ]; then
