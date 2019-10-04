@@ -193,6 +193,10 @@ If you're on macOS, we recommend installing rbenv with
 5. That's it! Installing rbenv includes ruby-build, so now you're ready to
    [install some other Ruby versions](#installing-ruby-versions) using
    `rbenv install`.
+   
+   Attention: If you have installed anti-virus-software on your pc, 
+   you should stop it before your `rbenv install`. 
+   If you use this without stopping, you cannot install ruby ver.xxx.
 
 
 #### Upgrading with Homebrew
