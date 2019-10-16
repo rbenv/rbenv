@@ -217,7 +217,7 @@ a systemwide install.
 1. Clone rbenv into `~/.rbenv`.
 
     ~~~ sh
-    $ git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+    $ git clone --depth=1 https://github.com/rbenv/rbenv.git ~/.rbenv
     ~~~
 
     Optionally, try to compile dynamic bash extension to speed up rbenv. Don't
