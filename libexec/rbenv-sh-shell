@@ -37,7 +37,14 @@ if [ -z "$version" ]; then
     echo "rbenv: no shell-specific version configured" >&2
     exit 1
   else
-    echo 'echo "$RBENV_VERSION"'
+    case "$shell" in
+    rc )
+      echo 'echo ''$RBENV_VERSION'''
+      ;;
+    * )
+      echo 'echo "$RBENV_VERSION"'
+      ;;
+    esac
     exit
   fi
 fi
@@ -47,6 +54,10 @@ if [ "$version" = "--unset" ]; then
   fish )
     echo 'set -gu RBENV_VERSION_OLD "$RBENV_VERSION"'
     echo "set -e RBENV_VERSION"
+    ;;
+  rc )
+    echo 'RBENV_VERSION_OLD=''$RBENV_VERSION'''
+    echo 'RBENV_VERSION=()'
     ;;
   * )
     echo 'RBENV_VERSION_OLD="$RBENV_VERSION"'
@@ -74,6 +85,26 @@ else
   echo "rbenv: RBENV_VERSION_OLD is not set" >&2
   false
 end
+EOS
+    ;;
+  rc )
+    cat <<EOS
+if (test -n \`{whatis RBENV_VERSION_OLD}) {
+  if (test -n '$RBENV_VERSION_OLD') {
+    RBENV_VERSION_OLD_='$RBENV_VERSION'
+    RBENV_VERSION='$RBENV_VERSION_OLD'
+    RBENV_VERSION_OLD='$RBENV_VERSION_OLD_'
+    RBENV_VERSION_OLD=()
+  } 
+  if not {
+    RBENV_VERSION_OLD='$RBENV_VERSION'
+    RBENV_VERSION=()
+  }
+} 
+if not {
+  echo 'rbenv: RBENV_VERSION_OLD is not set' >[1=2]
+  false
+}
 EOS
     ;;
   * )
@@ -105,6 +136,10 @@ if rbenv-prefix "$version" >/dev/null; then
     fish )
       echo 'set -gu RBENV_VERSION_OLD "$RBENV_VERSION"'
       echo "set -gx RBENV_VERSION \"$version\""
+      ;;
+    rc )
+      echo "RBENV_VERSION_OLD=\"$RBENV_VERSION\""
+      echo "RBENV_VERSION=$version"
       ;;
     * )
       echo 'RBENV_VERSION_OLD="$RBENV_VERSION"'

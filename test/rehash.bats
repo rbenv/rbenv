@@ -129,3 +129,10 @@ SH
   assert_success ""
   assert [ -x "${RBENV_ROOT}/shims/ruby" ]
 }
+
+@test "sh-rehash in rc" {
+  create_executable "2.0" "ruby"
+  RBENV_SHELL=rc run rbenv-sh-rehash
+  assert_success "hash -r \>[2]/dev/null || true"
+  assert [ -x "${RBENV_ROOT}/shims/ruby" ]
+}
