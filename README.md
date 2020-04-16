@@ -112,11 +112,7 @@ reading it from the following sources, in this order:
    the [`rbenv shell`](#rbenv-shell) command to set this environment
    variable in your current shell session.
 
-2. The first `.ruby-version` file found by searching the directory of the
-   script you are executing and each of its parent directories until reaching
-   the root of your filesystem.
-
-3. The first `.ruby-version` file found by searching the current working
+2. The first `.ruby-version` file found by searching the current working
    directory and each of its parent directories until reaching the root of your
    filesystem. You can modify the `.ruby-version` file in the current working
    directory with the [`rbenv local`](#rbenv-local) command.
