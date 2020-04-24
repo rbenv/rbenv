@@ -31,6 +31,15 @@ create_executable() {
   assert_failure "rbenv: cannot rehash: ${RBENV_ROOT}/shims/.rbenv-shim exists"
 }
 
+@test "force even though rehash in progress" {
+  mkdir -p "${RBENV_ROOT}/shims"
+  touch "${RBENV_ROOT}/shims/.rbenv-shim"
+  run rbenv-rehash -f
+  assert_success ""
+  run rbenv-rehash --force
+  assert_success ""
+}
+
 @test "creates shims" {
   create_executable "1.8" "ruby"
   create_executable "1.8" "rake"
