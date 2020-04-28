@@ -41,6 +41,8 @@ RVM?**](https://github.com/rbenv/rbenv/wiki/Why-rbenv%3F)
 * [Installation](#installation)
   * [Homebrew on macOS](#homebrew-on-macos)
     * [Upgrading with Homebrew](#upgrading-with-homebrew)
+  * [via ZPlug plugin manager for Zsh](#via-zplug-plugin-manager-for-zsh)
+    * [Upgrading with ZPlug](#upgrading-with-zplug)
   * [Basic GitHub Checkout](#basic-github-checkout)
     * [Upgrading with Git](#upgrading-with-git)
     * [Updating the list of available Ruby versions](#updating-the-list-of-available-ruby-versions)
@@ -204,6 +206,26 @@ Ruby versions, upgrade the Homebrew packages:
 $ brew upgrade rbenv ruby-build
 ~~~
 
+### via ZPlug plugin manager for Zsh
+
+Add the following line to your `.zshrc`:
+
+```zplug "RiverGlide/zsh-rbenv", from:gitlab```
+Then install the plugin
+~~~ zsh
+  $ source ~/.zshrc
+  $ zplug install
+~~~
+The ZPlug plugin will install and initialise `rbenv` and `ruby-build` and add `rbenv` and `rbenv-install` to your `PATH`
+
+#### Upgrading with ZPlug
+
+To update to the latest rbenv and update ruby-build with newly released
+Ruby versions, update the ZPlug plugin:
+
+~~~ sh
+$ zplug update RiverGlide/rbenv
+~~~
 
 ### Basic GitHub Checkout
 
