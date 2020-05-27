@@ -230,7 +230,7 @@ a systemwide install.
 2. Add `~/.rbenv/bin` to your `$PATH` for access to the `rbenv`
    command-line utility.
 
-   * For **bash**:
+   * For **Bash (and Windows Subsystem for Linux)**:
      ~~~ bash
      $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
      ~~~
