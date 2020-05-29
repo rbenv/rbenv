@@ -17,7 +17,7 @@ setup() {
   assert_success "system"
 }
 
-@test "system version is not checked for existence" {
+@test "system version is not checked for existance" {
   RBENV_VERSION=system run rbenv-version-name
   assert_success "system"
 }
