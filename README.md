@@ -39,6 +39,7 @@ RVM?**](https://github.com/rbenv/rbenv/wiki/Why-rbenv%3F)
   * [Choosing the Ruby Version](#choosing-the-ruby-version)
   * [Locating the Ruby Installation](#locating-the-ruby-installation)
 * [Installation](#installation)
+  * [Automated Installation with rbenv-installer](#automated-installion-with-rbenv-installer)
   * [Homebrew on macOS](#homebrew-on-macos)
     * [Upgrading with Homebrew](#upgrading-with-homebrew)
   * [Basic GitHub Checkout](#basic-github-checkout)
@@ -150,65 +151,17 @@ Version names to rbenv are simply the names of the directories in
   sure to fully uninstall RVM and remove any references to it from
   your shell initialization files before installing rbenv.
 
-### Homebrew on macOS
 
-If you're on macOS, we recommend installing rbenv with
-[Homebrew](https://brew.sh).
+### Automated Installation with rbenv-installer
 
-1. Install rbenv.
+For an automated installation, you can use
+[rbenv-installer](https://github.com/rbenv/rbenv-installer#rbenv-installer).
 
-    ~~~ sh
-    $ brew install rbenv
-    ~~~
-
-   Note that this also installs `ruby-build`, so you'll be ready to
-   install other Ruby versions out of the box.
-
-2. Set up rbenv in your shell.
-
-    ~~~ sh
-    $ rbenv init
-    ~~~
-
-   Follow the printed instructions to [set up rbenv shell integration](#how-rbenv-hooks-into-your-shell).
-
-3. Close your Terminal window and open a new one so your changes take
-   effect.
-
-4. Verify that rbenv is properly set up using this
-   [rbenv-doctor](https://github.com/rbenv/rbenv-installer/blob/master/bin/rbenv-doctor) script:
-
-    ~~~ sh
-    $ curl -fsSL https://github.com/rbenv/rbenv-installer/raw/master/bin/rbenv-doctor | bash
-    Checking for `rbenv' in PATH: /usr/local/bin/rbenv
-    Checking for rbenv shims in PATH: OK
-    Checking `rbenv install' support: /usr/local/bin/rbenv-install (ruby-build 20170523)
-    Counting installed Ruby versions: none
-      There aren't any Ruby versions installed under `~/.rbenv/versions'.
-      You can install Ruby versions like so: rbenv install 2.2.4
-    Checking RubyGems settings: OK
-    Auditing installed plugins: OK
-    ~~~
-
-5. That's it! Installing rbenv includes ruby-build, so now you're ready to
-   [install some other Ruby versions](#installing-ruby-versions) using
-   `rbenv install`.
-
-
-#### Upgrading with Homebrew
-
-To upgrade to the latest rbenv and update ruby-build with newly released
-Ruby versions, upgrade the Homebrew packages:
-
-~~~ sh
-$ brew upgrade rbenv ruby-build
-~~~
+MacOS users can also [install rbenv with Homebrew](#homebrew-on-macos).
 
 
 ### Basic GitHub Checkout
 
-For a more automated install, you can use
-[rbenv-installer](https://github.com/rbenv/rbenv-installer#rbenv-installer).
 If you prefer a manual approach, follow the steps below.
 
 This will get you going with the latest version of rbenv without needing
@@ -298,6 +251,62 @@ If you're using the `rbenv install` command, then the list of available Ruby ver
 $ cd ~/.rbenv/plugins/ruby-build
 $ git pull
 ```
+
+
+### Homebrew on macOS
+
+If you're on macOS, we recommend installing rbenv with
+[Homebrew](https://brew.sh).
+
+1. Install rbenv.
+
+    ~~~ sh
+    $ brew install rbenv
+    ~~~
+
+   Note that this also installs `ruby-build`, so you'll be ready to
+   install other Ruby versions out of the box.
+
+2. Set up rbenv in your shell.
+
+    ~~~ sh
+    $ rbenv init
+    ~~~
+
+   Follow the printed instructions to [set up rbenv shell integration](#how-rbenv-hooks-into-your-shell).
+
+3. Close your Terminal window and open a new one so your changes take
+   effect.
+
+4. Verify that rbenv is properly set up using this
+   [rbenv-doctor](https://github.com/rbenv/rbenv-installer/blob/master/bin/rbenv-doctor) script:
+
+    ~~~ sh
+    $ curl -fsSL https://github.com/rbenv/rbenv-installer/raw/master/bin/rbenv-doctor | bash
+    Checking for `rbenv' in PATH: /usr/local/bin/rbenv
+    Checking for rbenv shims in PATH: OK
+    Checking `rbenv install' support: /usr/local/bin/rbenv-install (ruby-build 20170523)
+    Counting installed Ruby versions: none
+      There aren't any Ruby versions installed under `~/.rbenv/versions'.
+      You can install Ruby versions like so: rbenv install 2.2.4
+    Checking RubyGems settings: OK
+    Auditing installed plugins: OK
+    ~~~
+
+5. That's it! Installing rbenv includes ruby-build, so now you're ready to
+   [install some other Ruby versions](#installing-ruby-versions) using
+   `rbenv install`.
+
+
+#### Upgrading with Homebrew
+
+To upgrade to the latest rbenv and update ruby-build with newly released
+Ruby versions, upgrade the Homebrew packages:
+
+~~~ sh
+$ brew upgrade rbenv ruby-build
+~~~
+
 
 ### How rbenv hooks into your shell
 
