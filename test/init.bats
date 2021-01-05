@@ -77,18 +77,18 @@ OUT
   assert_line 0 "set -gx PATH '${RBENV_ROOT}/shims' \$PATH"
 }
 
-@test "can add shims to PATH more than once" {
+@test "does not add shims to PATH more than once" {
   export PATH="${RBENV_ROOT}/shims:$PATH"
   run rbenv-init - bash
   assert_success
-  assert_line 0 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+  refute_line 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
 }
 
-@test "can add shims to PATH more than once (fish)" {
+@test "does not add to PATH more than once (fish)" {
   export PATH="${RBENV_ROOT}/shims:$PATH"
   run rbenv-init - fish
   assert_success
-  assert_line 0 "set -gx PATH '${RBENV_ROOT}/shims' \$PATH"
+  refute_line "set -gx PATH '${RBENV_ROOT}/shims' \$PATH"
 }
 
 @test "outputs sh-compatible syntax" {

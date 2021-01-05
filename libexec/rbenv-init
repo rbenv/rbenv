@@ -84,13 +84,16 @@ fi
 
 mkdir -p "${RBENV_ROOT}/"{shims,versions}
 
+no_path=1
+[[ ":${PATH}:" != *":${RBENV_ROOT}/shims:"* ]] && no_path=""
+
 case "$shell" in
 fish )
-  echo "set -gx PATH '${RBENV_ROOT}/shims' \$PATH"
+  [[ -z "$no_path" ]] && echo "set -gx PATH '${RBENV_ROOT}/shims' \$PATH"
   echo "set -gx RBENV_SHELL $shell"
 ;;
 * )
-  echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+  [[ -z "$no_path" ]] && echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
   echo "export RBENV_SHELL=$shell"
 
   completion="${root}/completions/rbenv.${shell}"
