@@ -107,3 +107,15 @@ SH
   run ruby -S rake
   assert_success "hello rake"
 }
+
+@test "adds user install location to PATH for gem command" {
+  export RBENV_VERSION="2.1.6"
+  create_executable "gem" <<SH
+#!$BASH
+echo "\$PATH"
+SH
+
+  RBENV_HOOK_PATH="${BATS_TEST_DIRNAME}/../rbenv.d" run rbenv-exec gem install lolcat
+
+  assert_output "${RBENV_ROOT}/versions/2.1.6/bin:${HOME}/.gem/ruby/2.1.0/bin:$PATH"
+}

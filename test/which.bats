@@ -98,6 +98,14 @@ The \`rspec' command exists in these Ruby versions:
 OUT
 }
 
+@test "executable found in user-gems" {
+  create_executable "2.0" "ruby"
+  create_executable "${HOME}/.gem/ruby/2.0.0/bin" "lolcat"
+
+  RBENV_HOOK_PATH="${BATS_TEST_DIRNAME}/../rbenv.d" RBENV_VERSION=2.0 run rbenv-which lolcat
+  assert_success "${HOME}/.gem/ruby/2.0.0/bin/lolcat"
+}
+
 @test "carries original IFS within hooks" {
   create_hook which hello.bash <<SH
 hellos=(\$(printf "hello\\tugly world\\nagain"))
