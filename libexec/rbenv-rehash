@@ -40,6 +40,15 @@ remove_prototype_shim() {
 # technique is fast, uses less disk space than unique files, and also
 # serves as a locking mechanism.
 create_prototype_shim() {
+  local rbenv_path brew_prefix
+  rbenv_path="$(command -v rbenv)"
+  brew_prefix="$(brew --prefix 2>/dev/null)"
+  if [ $? -eq 0 ]; then
+    case "$rbenv_path" in "${brew_prefix}/Cellar"*)
+      rbenv_path="${brew_prefix}/opt/rbenv/bin/rbenv"
+      ;;
+    esac
+  fi
   cat > "$PROTOTYPE_SHIM_PATH" <<SH
 #!/usr/bin/env bash
 set -e
@@ -61,7 +70,7 @@ if [ "\$program" = "ruby" ]; then
 fi
 
 export RBENV_ROOT="$RBENV_ROOT"
-exec "$(command -v rbenv)" exec "\$program" "\$@"
+exec "$rbenv_path" exec "\$program" "\$@"
 SH
   chmod +x "$PROTOTYPE_SHIM_PATH"
 }
