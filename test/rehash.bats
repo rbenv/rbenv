@@ -25,10 +25,20 @@ create_executable() {
 }
 
 @test "rehash in progress" {
+  export RBENV_REHASH_TIMEOUT=1
   mkdir -p "${RBENV_ROOT}/shims"
   touch "${RBENV_ROOT}/shims/.rbenv-shim"
   run rbenv-rehash
   assert_failure "rbenv: cannot rehash: ${RBENV_ROOT}/shims/.rbenv-shim exists"
+}
+
+@test "wait until lock acquisition" {
+  export RBENV_REHASH_TIMEOUT=5
+  mkdir -p "${RBENV_ROOT}/shims"
+  touch "${RBENV_ROOT}/shims/.rbenv-shim"
+  bash -c "sleep 1 && rm -f ${RBENV_ROOT}/shims/.rbenv-shim" &
+  run rbenv-rehash
+  assert_success
 }
 
 @test "creates shims" {
