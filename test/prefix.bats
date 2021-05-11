@@ -43,3 +43,13 @@ rbenv: ruby: command not found
 rbenv: system version not found in PATH"
 EOF
 }
+
+@test "prefix for system-wide ruby version" {
+  setup_system_versions_dir
+  mkdir -p "${RBENV_TEST_DIR}/myproject"
+  cd "${RBENV_TEST_DIR}/myproject"
+  echo "1.2.3" > .ruby-version
+  mkdir -p "${RBENV_SYSTEM_VERSIONS_DIR}/1.2.3"
+  run rbenv-prefix
+  assert_success "${RBENV_SYSTEM_VERSIONS_DIR}/1.2.3"
+}

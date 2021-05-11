@@ -26,12 +26,19 @@ if [ -z "$RBENV_TEST_DIR" ]; then
   PATH="${RBENV_ROOT}/shims:$PATH"
   export PATH
 
+  unset RBENV_SYSTEM_VERSIONS_DIR
+
   for xdg_var in `env 2>/dev/null | grep ^XDG_ | cut -d= -f1`; do unset "$xdg_var"; done
   unset xdg_var
 fi
 
 teardown() {
   rm -rf "$RBENV_TEST_DIR"
+}
+
+setup_system_versions_dir() {
+  export RBENV_SYSTEM_VERSIONS_DIR="$RBENV_TEST_DIR/system-versions"
+  mkdir -p "$RBENV_SYSTEM_VERSIONS_DIR"
 }
 
 flunk() {

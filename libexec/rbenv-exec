@@ -10,7 +10,7 @@
 # For example, if the currently selected Ruby version is 1.9.3-p327:
 #   rbenv exec bundle install
 #
-# is equivalent to:
+# is similar to:
 #   PATH="$RBENV_ROOT/versions/1.9.3-p327/bin:$PATH" bundle install
 
 set -e

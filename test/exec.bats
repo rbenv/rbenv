@@ -14,6 +14,18 @@ create_executable() {
   chmod +x "${bin}/$name"
 }
 
+create_system_wide_executable() {
+  name="${1?}"
+  shift 1
+  bin="${RBENV_SYSTEM_VERSIONS_DIR}/${RBENV_VERSION}/bin"
+  mkdir -p "$bin"
+  { if [ $# -eq 0 ]; then cat -
+    else echo "$@"
+    fi
+  } | sed -Ee '1s/^ +//' > "${bin}/$name"
+  chmod +x "${bin}/$name"
+}
+
 @test "fails with invalid version" {
   export RBENV_VERSION="2.0"
   run rbenv-exec ruby -v
@@ -106,4 +118,20 @@ SH
   rbenv-rehash
   run ruby -S rake
   assert_success "hello rake"
+}
+
+@test "finds system-wide Ruby installations" {
+  setup_system_versions_dir
+  export RBENV_VERSION="2.0"
+  create_system_wide_executable "ruby" "#!/bin/sh"
+  create_system_wide_executable "rake" "#!/bin/sh"
+
+  rbenv-rehash
+  run rbenv-completions exec
+  assert_success
+  assert_output <<OUT
+--help
+rake
+ruby
+OUT
 }

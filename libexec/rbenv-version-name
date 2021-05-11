@@ -22,7 +22,16 @@ fi
 
 version_exists() {
   local version="$1"
-  [ -d "${RBENV_ROOT}/versions/${version}" ]
+  local -a version_dirs=("${RBENV_ROOT}/versions/${version}")
+  if [ -n "$RBENV_SYSTEM_VERSIONS_DIR" ]; then
+    version_dirs+=("$RBENV_SYSTEM_VERSIONS_DIR/${version}")
+  fi
+  for version_dir in "${version_dirs[@]}"; do
+    if [ -d "${version_dir}" ]; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 if version_exists "$RBENV_VERSION"; then

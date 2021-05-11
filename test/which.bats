@@ -12,6 +12,16 @@ create_executable() {
   chmod +x "${bin}/$2"
 }
 
+create_system_wide_executable() {
+  local bin
+  if [[ $1 == */* ]]; then bin="$1"
+  else bin="${RBENV_SYSTEM_VERSIONS_DIR}/${1}/bin"
+  fi
+  mkdir -p "$bin"
+  touch "${bin}/$2"
+  chmod +x "${bin}/$2"
+}
+
 @test "outputs path to executable" {
   create_executable "1.8" "ruby"
   create_executable "2.0" "rspec"
@@ -83,9 +93,11 @@ create_executable() {
 }
 
 @test "executable found in other versions" {
+  setup_system_versions_dir
   create_executable "1.8" "ruby"
   create_executable "1.9" "rspec"
   create_executable "2.0" "rspec"
+  create_system_wide_executable "2.1" "rspec"
 
   RBENV_VERSION=1.8 run rbenv-which rspec
   assert_failure
@@ -95,6 +107,7 @@ rbenv: rspec: command not found
 The \`rspec' command exists in these Ruby versions:
   1.9
   2.0
+  2.1
 OUT
 }
 
