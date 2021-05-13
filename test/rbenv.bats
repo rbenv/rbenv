@@ -46,6 +46,41 @@ load test_helper
   assert_output "rbenv: cannot change working directory to \`$dir'"
 }
 
+@test "RBENV_DIR should have higher precedence than RBENV_FILE_ARG" {
+  dir="${BATS_TMPDIR}/myproject"
+  mkdir -p "$dir"
+  touch "$dir/test.rb"
+  RBENV_DIR="$dir" RBENV_FILE_ARG="$dir/test.rb" run rbenv echo RBENV_DIR
+  assert_output "$dir"
+}
+
+@test "detect RBENV_DIR from RBENV_FILE_ARG" {
+  dir="${BATS_TMPDIR}/myproject"
+  mkdir -p "$dir"
+  touch "$dir/test.rb"
+  RBENV_FILE_ARG="$dir/test.rb" run rbenv echo RBENV_DIR
+  assert_output "$dir"
+}
+
+@test "detect RBENV_DIR from RBENV_FILE_ARG in current directory" {
+  dir="${BATS_TMPDIR}/myproject"
+  mkdir -p "$dir"
+  touch "$dir/test.rb"
+  cd "$dir"
+  BYENV_FILE_ARG="test.rb" run rbenv echo RBENV_DIR
+  assert_output "$dir"
+}
+
+@test "detect RBENV_DIR from RBENV_FILE_ARG via symlink" {
+  dir1="${BATS_TMPDIR}/myproject1"
+  dir2="${BATS_TMPDIR}/myproject2"
+  mkdir -p "$dir1" "$dir2"
+  touch "$dir1/test.rb"
+  ln -fs "$dir1/test.rb" "$dir2/test.rb"
+  RBENV_FILE_ARG="$dir2/test.rb" run rbenv echo RBENV_DIR
+  assert_output "$dir1"
+}
+
 @test "adds its own libexec to PATH" {
   run rbenv echo "PATH"
   assert_success "${BATS_TEST_DIRNAME%/*}/libexec:$PATH"
