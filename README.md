@@ -168,6 +168,11 @@ If you're on macOS, we recommend installing rbenv with
 
     ~~~ sh
     $ curl -fsSL https://github.com/rbenv/rbenv-installer/raw/main/bin/rbenv-doctor | bash
+    ~~~
+
+    If successful, you should see a similar image:
+
+    ~~~ sh
     Checking for `rbenv' in PATH: /usr/local/bin/rbenv
     Checking for rbenv shims in PATH: OK
     Checking `rbenv install' support: /usr/local/bin/rbenv-install (ruby-build 20170523)
