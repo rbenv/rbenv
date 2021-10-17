@@ -167,10 +167,8 @@ If you're on macOS, we recommend installing rbenv with
    [rbenv-doctor](https://github.com/rbenv/rbenv-installer/blob/main/bin/rbenv-doctor) script:
 
     ~~~ sh
-    $ curl -fsSL https://github.com/rbenv/rbenv-installer/raw/main/bin/rbenv-doctor | bash
+    curl -fsSL https://github.com/rbenv/rbenv-installer/raw/main/bin/rbenv-doctor | bash
     ~~~
-
-    If successful, you should see a similar image:
 
     ~~~ sh
     Checking for `rbenv' in PATH: /usr/local/bin/rbenv
