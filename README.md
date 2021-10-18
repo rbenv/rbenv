@@ -127,9 +127,9 @@ Version names to rbenv are simply the names of the directories in
 If you're on macOS, we recommend installing rbenv with
 [Homebrew](https://brew.sh).
 
-    ~~~ sh
-    $ brew install rbenv
-    ~~~
+    ``` sh
+    brew install rbenv
+    ```
     
    Note that this also installs `ruby-build`, so you'll be ready to
    install other Ruby versions out of the box.
@@ -139,13 +139,13 @@ If you're on macOS, we recommend installing rbenv with
     To upgrade to the latest rbenv and update ruby-build with newly released
     Ruby versions, upgrade the Homebrew packages:
 
-    ~~~ sh
-    $ brew upgrade rbenv ruby-build
-    ~~~
+    ``` sh
+    brew upgrade rbenv ruby-build
+    ```
 - **Debian, Ubuntu and their derivatives**
-    ~~~ sh
-    $ sudo apt install rbenv
-    ~~~
+    ``` sh
+    sudo apt install rbenv
+    ```
 - **Arch Linux and it's derivatives**
 
   Archlinux has an [AUR Package](https://aur.archlinux.org/packages/rbenv/) for
@@ -154,9 +154,9 @@ If you're on macOS, we recommend installing rbenv with
 
 2. Set up rbenv in your shell.
 
-    ~~~ sh
-    $ rbenv init
-    ~~~
+    ``` sh
+    rbenv init
+    ```
 
    Follow the printed instructions to [set up rbenv shell integration](#how-rbenv-hooks-into-your-shell).
 
@@ -166,12 +166,12 @@ If you're on macOS, we recommend installing rbenv with
 4. Verify that rbenv is properly set up using this
    [rbenv-doctor](https://github.com/rbenv/rbenv-installer/blob/main/bin/rbenv-doctor) script:
 
-    ~~~ sh
+    ``` sh
     curl -fsSL https://github.com/rbenv/rbenv-installer/raw/main/bin/rbenv-doctor | bash
-    ~~~
+    ```
 
-    ~~~ sh
-    Checking for `rbenv' in PATH: /usr/local/bin/rbenv
+    ``` sh
+    $ Checking for `rbenv' in PATH: /usr/local/bin/rbenv
     Checking for rbenv shims in PATH: OK
     Checking `rbenv install' support: /usr/local/bin/rbenv-install (ruby-build 20170523)
     Counting installed Ruby versions: none
@@ -179,7 +179,7 @@ If you're on macOS, we recommend installing rbenv with
       You can install Ruby versions like so: rbenv install 2.2.4
     Checking RubyGems settings: OK
     Auditing installed plugins: OK
-    ~~~
+    ```
 
 5. That's it! Installing rbenv includes ruby-build, so now you're ready to
    [install some other Ruby versions](#installing-ruby-versions) using
@@ -197,16 +197,16 @@ a systemwide install.
 
 1. Clone rbenv into `~/.rbenv`.
 
-    ~~~ sh
-    $ git clone https://github.com/rbenv/rbenv.git ~/.rbenv
-    ~~~
+    ``` sh
+    git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+    ```
 
     Optionally, try to compile dynamic bash extension to speed up rbenv. Don't
     worry if it fails; rbenv will still work normally:
 
-    ~~~
-    $ cd ~/.rbenv && src/configure && make -C src
-    ~~~
+    ``` sh
+    cd ~/.rbenv && src/configure && make -C src
+    ```
 
 2. Add `~/.rbenv/bin` to your `$PATH` for access to the `rbenv`
    command-line utility.
@@ -214,30 +214,30 @@ a systemwide install.
    * For **bash**:
      
      Ubuntu Desktop users should configure `~/.bashrc`:
-     ~~~ bash
-     $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
-     ~~~
+     ``` bash
+     echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+     ```
 
      On other platforms, bash is usually configured via `~/.bash_profile`:
-     ~~~ bash
-     $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
-     ~~~
+     ``` bash
+     echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+     ```
      
    * For **Zsh**:
-     ~~~ zsh
-     $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.zshrc
-     ~~~
+     ``` zsh
+     echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.zshrc
+     ```
    
    * For **Fish shell**:
-     ~~~ fish
-     $ set -Ux fish_user_paths $HOME/.rbenv/bin $fish_user_paths
-     ~~~
+     ``` fish
+     set -Ux fish_user_paths $HOME/.rbenv/bin $fish_user_paths
+     ```
 
 3. Set up rbenv in your shell.
 
-   ~~~ sh
-   $ ~/.rbenv/bin/rbenv init
-   ~~~
+   ``` sh
+   ~/.rbenv/bin/rbenv init
+   ```
    
    Follow the printed instructions to [set up rbenv shell integration](#how-rbenv-hooks-into-your-shell).
 
@@ -247,9 +247,12 @@ a systemwide install.
 5. Verify that rbenv is properly set up using this
    [rbenv-doctor](https://github.com/rbenv/rbenv-installer/blob/main/bin/rbenv-doctor) script:
 
-    ~~~ sh
-    $ curl -fsSL https://github.com/rbenv/rbenv-installer/raw/main/bin/rbenv-doctor | bash
-    Checking for `rbenv' in PATH: /usr/local/bin/rbenv
+    ``` sh
+    curl -fsSL https://github.com/rbenv/rbenv-installer/raw/main/bin/rbenv-doctor | bash
+    ```
+
+    ``` sh
+    $ Checking for `rbenv' in PATH: /usr/local/bin/rbenv
     Checking for rbenv shims in PATH: OK
     Checking `rbenv install' support: /usr/local/bin/rbenv-install (ruby-build 20170523)
     Counting installed Ruby versions: none
@@ -257,7 +260,7 @@ a systemwide install.
       You can install Ruby versions like so: rbenv install 2.2.4
     Checking RubyGems settings: OK
     Auditing installed plugins: OK
-    ~~~
+    ```
 
 6. _(Optional)_ Install [ruby-build][], which provides the
    `rbenv install` command that simplifies the process of
@@ -268,18 +271,18 @@ a systemwide install.
 If you've installed rbenv manually using Git, you can upgrade to the
 latest version by pulling from GitHub:
 
-~~~ sh
-$ cd ~/.rbenv
-$ git pull
-~~~
+``` sh
+cd ~/.rbenv
+git pull
+```
 
 #### Updating the list of available Ruby versions
 
 If you're using the `rbenv install` command, then the list of available Ruby versions is not automatically updated when pulling from the rbenv repo. To do this manually:
 
-```sh
-$ cd ~/.rbenv/plugins/ruby-build
-$ git pull
+``` sh
+cd ~/.rbenv/plugins/ruby-build
+git pull
 ```
 
 ### How rbenv hooks into your shell
@@ -321,7 +324,7 @@ is provided by the [ruby-build][] project. If you installed it either
 as part of GitHub checkout process outlined above or via Homebrew, you
 should be able to:
 
-~~~ sh
+``` sh
 # list latest stable versions:
 $ rbenv install -l
 
@@ -330,7 +333,7 @@ $ rbenv install -L
 
 # install a Ruby version:
 $ rbenv install 2.0.0-p247
-~~~
+```
 
 Set a Ruby version to finish installation and start using commands `rbenv global 2.0.0-p247` or `rbenv local 2.0.0-p247`
 
@@ -400,6 +403,7 @@ uninstall from the system.
    - Homebrew:
    
         `brew uninstall rbenv`
+
    - Debian, Ubuntu and their derivatives:
         
         `sudo apt purge rbenv`
@@ -421,12 +425,12 @@ overrides the global version, and can be overridden itself by setting
 the `RBENV_VERSION` environment variable or with the `rbenv shell`
 command.
 
-    $ rbenv local 1.9.3-p327
+  $ rbenv local 1.9.3-p327
 
 When run without a version number, `rbenv local` reports the currently
 configured local version. You can also unset the local version:
 
-    $ rbenv local --unset
+  $ rbenv local --unset
 
 ### rbenv global
 
@@ -435,7 +439,7 @@ the version name to the `~/.rbenv/version` file. This version can be
 overridden by an application-specific `.ruby-version` file, or by
 setting the `RBENV_VERSION` environment variable.
 
-    $ rbenv global 1.8.7-p352
+  $ rbenv global 1.8.7-p352
 
 The special version name `system` tells rbenv to use the system Ruby
 (detected by searching your `$PATH`).
@@ -449,12 +453,12 @@ Sets a shell-specific Ruby version by setting the `RBENV_VERSION`
 environment variable in your shell. This version overrides
 application-specific versions and the global version.
 
-    $ rbenv shell jruby-1.7.1
+  $ rbenv shell jruby-1.7.1
 
 When run without a version number, `rbenv shell` reports the current
 value of `RBENV_VERSION`. You can also unset the shell version:
 
-    $ rbenv shell --unset
+  $ rbenv shell --unset
 
 Note that you'll need rbenv's shell integration enabled (step 3 of
 the installation instructions) in order to use this command. If you
