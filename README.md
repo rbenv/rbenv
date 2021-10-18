@@ -127,7 +127,7 @@ Version names to rbenv are simply the names of the directories in
 If you're on macOS, we recommend installing rbenv with
 [Homebrew](https://brew.sh).
 
-    ``` sh
+    ```sh
     brew install rbenv
     ```
     
@@ -139,11 +139,11 @@ If you're on macOS, we recommend installing rbenv with
     To upgrade to the latest rbenv and update ruby-build with newly released
     Ruby versions, upgrade the Homebrew packages:
 
-    ``` sh
+    ```sh
     brew upgrade rbenv ruby-build
     ```
 - **Debian, Ubuntu and their derivatives**
-    ``` sh
+    ```sh
     sudo apt install rbenv
     ```
 - **Arch Linux and it's derivatives**
@@ -154,7 +154,7 @@ If you're on macOS, we recommend installing rbenv with
 
 2. Set up rbenv in your shell.
 
-    ``` sh
+    ```sh
     rbenv init
     ```
 
@@ -166,11 +166,11 @@ If you're on macOS, we recommend installing rbenv with
 4. Verify that rbenv is properly set up using this
    [rbenv-doctor](https://github.com/rbenv/rbenv-installer/blob/main/bin/rbenv-doctor) script:
 
-    ``` sh
+    ```sh
     curl -fsSL https://github.com/rbenv/rbenv-installer/raw/main/bin/rbenv-doctor | bash
     ```
 
-    ``` sh
+    ```sh
     $ Checking for `rbenv' in PATH: /usr/local/bin/rbenv
     Checking for rbenv shims in PATH: OK
     Checking `rbenv install' support: /usr/local/bin/rbenv-install (ruby-build 20170523)
@@ -197,14 +197,14 @@ a systemwide install.
 
 1. Clone rbenv into `~/.rbenv`.
 
-    ``` sh
+    ```sh
     git clone https://github.com/rbenv/rbenv.git ~/.rbenv
     ```
 
     Optionally, try to compile dynamic bash extension to speed up rbenv. Don't
     worry if it fails; rbenv will still work normally:
 
-    ``` sh
+    ```sh
     cd ~/.rbenv && src/configure && make -C src
     ```
 
@@ -214,28 +214,28 @@ a systemwide install.
    * For **bash**:
      
      Ubuntu Desktop users should configure `~/.bashrc`:
-     ``` bash
+     ```bash
      echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
      ```
 
      On other platforms, bash is usually configured via `~/.bash_profile`:
-     ``` bash
+     ```bash
      echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
      ```
      
    * For **Zsh**:
-     ``` zsh
+     ```zsh
      echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.zshrc
      ```
    
    * For **Fish shell**:
-     ``` fish
+     ```fish
      set -Ux fish_user_paths $HOME/.rbenv/bin $fish_user_paths
      ```
 
 3. Set up rbenv in your shell.
 
-   ``` sh
+   ```sh
    ~/.rbenv/bin/rbenv init
    ```
    
@@ -247,11 +247,11 @@ a systemwide install.
 5. Verify that rbenv is properly set up using this
    [rbenv-doctor](https://github.com/rbenv/rbenv-installer/blob/main/bin/rbenv-doctor) script:
 
-    ``` sh
+    ```sh
     curl -fsSL https://github.com/rbenv/rbenv-installer/raw/main/bin/rbenv-doctor | bash
     ```
 
-    ``` sh
+    ```sh
     $ Checking for `rbenv' in PATH: /usr/local/bin/rbenv
     Checking for rbenv shims in PATH: OK
     Checking `rbenv install' support: /usr/local/bin/rbenv-install (ruby-build 20170523)
@@ -271,7 +271,7 @@ a systemwide install.
 If you've installed rbenv manually using Git, you can upgrade to the
 latest version by pulling from GitHub:
 
-``` sh
+```sh
 cd ~/.rbenv
 git pull
 ```
@@ -280,7 +280,7 @@ git pull
 
 If you're using the `rbenv install` command, then the list of available Ruby versions is not automatically updated when pulling from the rbenv repo. To do this manually:
 
-``` sh
+```sh
 cd ~/.rbenv/plugins/ruby-build
 git pull
 ```
@@ -324,7 +324,7 @@ is provided by the [ruby-build][] project. If you installed it either
 as part of GitHub checkout process outlined above or via Homebrew, you
 should be able to:
 
-``` sh
+```sh
 # list latest stable versions:
 $ rbenv install -l
 
