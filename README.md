@@ -143,6 +143,7 @@ If you're on macOS, we recommend installing rbenv with
     brew upgrade rbenv ruby-build
     ```
 - **Debian, Ubuntu and their derivatives**
+    
     ```sh
     sudo apt install rbenv
     ```
@@ -410,7 +411,7 @@ uninstall from the system.
   
    - Archlinux and it's derivatives:
   
-          `sudo pacman -R rbenv`
+        `sudo pacman -R rbenv`
 
 ## Command Reference
 
