@@ -390,7 +390,7 @@ uninstall from the system.
   remove rbenv shims directory from PATH, and future invocations like
   `ruby` will execute the system Ruby version, as before rbenv.
 
-  `rbenv` will still be accessible on the command line, but your Ruby
+   While disabled, `rbenv` will still be accessible on the command line, but your Ruby
   apps won't be affected by version switching.
 
 2. To completely **uninstall** rbenv, perform step (1) and then remove
@@ -400,18 +400,11 @@ uninstall from the system.
         rm -rf `rbenv root`
 
    If you've installed rbenv using a package manager, as a final step
-   perform the rbenv package removal.
-   - Homebrew:
-   
-        `brew uninstall rbenv`
+   perform the rbenv package removal:
+   - Homebrew: `brew uninstall rbenv`
+   - Debian, Ubuntu, and their derivatives: `sudo apt purge rbenv`
+   - Archlinux and its derivatives: `sudo pacman -R rbenv`
 
-   - Debian, Ubuntu and their derivatives:
-        
-        `sudo apt purge rbenv`
-  
-   - Archlinux and it's derivatives:
-  
-        `sudo pacman -R rbenv`
 
 ## Command Reference
 
