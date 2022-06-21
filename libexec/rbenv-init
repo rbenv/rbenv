@@ -87,11 +87,15 @@ mkdir -p "${RBENV_ROOT}/"{shims,versions}
 
 case "$shell" in
 fish )
-  echo "set -gx PATH '${RBENV_ROOT}/shims' \$PATH"
+  echo "if not contains '${RBENV_ROOT}/shims' $PATH"
+  echo "  set -gx PATH '${RBENV_ROOT}/shims' $PATH"
+  echo "end"
   echo "set -gx RBENV_SHELL $shell"
 ;;
 * )
-  echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+  echo 'if [ "${PATH#*'${RBENV_ROOT}'/shims}" = "${PATH}" ]; then'
+  echo '  export PATH="'${RBENV_ROOT}'/shims:$PATH"'
+  echo "fi"
   echo "export RBENV_SHELL=$shell"
 
   completion="${root}/completions/rbenv.${shell}"
