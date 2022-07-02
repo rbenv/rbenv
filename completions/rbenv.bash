@@ -5,10 +5,7 @@ _rbenv() {
   if [ "$COMP_CWORD" -eq 1 ]; then
     COMPREPLY=( $(compgen -W "$(rbenv commands)" -- "$word") )
   else
-    local words=("${COMP_WORDS[@]}")
-    unset "words[0]"
-    unset "words[$COMP_CWORD]"
-    local completions=$(rbenv completions "${words[@]}")
+    local completions=$(rbenv completions "${COMP_WORDS[@]: -2:1}")
     COMPREPLY=( $(compgen -W "$completions" -- "$word") )
   fi
 }
