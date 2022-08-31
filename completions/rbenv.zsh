@@ -8,7 +8,7 @@ _rbenv() {
   local words completions
   read -cA words
 
-  emulate -LR zsh
+  emulate -L zsh
 
   if [ "${#words}" -eq 2 ]; then
     completions="$(rbenv commands)"
