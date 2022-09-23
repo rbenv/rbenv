@@ -40,7 +40,7 @@ The simplicity of rbenv has its benefits, but also some downsides. See the [comp
        
    Note that the version of rbenv that is packaged and maintained in the
    Debian and Ubuntu repositories is _out of date_. To install the latest
-   version, it is recommended to [install rbenv using git](#basic-github-checkout).
+   version, it is recommended to [install rbenv using git](#basic-git-checkout).
    
    ```sh
    sudo apt install rbenv
@@ -66,7 +66,11 @@ That's it! You are now ready to [install some Ruby versions](#installing-ruby-ve
 </details>
 
 <details>
-### Basic GitHub Checkout
+<summary>
+
+### Basic Git Checkout
+
+</summary>
 
 > **Note**  
 > For a more automated install, you can use [rbenv-installer](https://github.com/rbenv/rbenv-installer#rbenv-installer). If you do not want to execute scripts downloaded from a web URL or simply prefer a manual approach, follow the steps below.
