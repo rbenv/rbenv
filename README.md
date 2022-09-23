@@ -20,7 +20,11 @@ The simplicity of rbenv has its benefits, but also some downsides. See the [comp
 ## Installation
 
 <details>
+<summary>
+
 ### Using Package Managers
+
+</summary>
 
 1. Install rbenv using one of the following approaches.
 
