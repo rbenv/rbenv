@@ -76,6 +76,7 @@ if [ -z "$print" ]; then
       echo 'status --is-interactive; and rbenv init - fish | source'
       ;;
     * )
+      # shellcheck disable=SC2016
       printf 'eval "$(rbenv init - %s)"\n' "$shell"
       ;;
     esac
@@ -99,7 +100,9 @@ fish )
   printf 'set -gx RBENV_SHELL %s\n' "$shell"
 ;;
 * )
+  # shellcheck disable=SC2016
   [ -n "$rbenv_in_path" ] || printf 'export PATH="%s/bin:${PATH}"\n' "$root"
+  # shellcheck disable=SC2016
   printf 'export PATH="%s/shims:${PATH}"\n' "$RBENV_ROOT"
   printf 'export RBENV_SHELL=%s\n' "$shell"
 
