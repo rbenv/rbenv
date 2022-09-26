@@ -101,7 +101,7 @@ OUT
 @test "executable found in user gems" {
   create_executable "2.7.6" "ruby"
   create_executable "${HOME}/.gem/ruby/2.7.0/bin" "rake"
-  GEM_HOME= RBENV_VERSION=2.7.6 run rbenv-which rake
+  GEM_HOME='' RBENV_VERSION=2.7.6 run rbenv-which rake
   assert_success "${HOME}/.gem/ruby/2.7.0/bin/rake"
 }
 
@@ -133,6 +133,6 @@ SH
   mkdir -p "$RBENV_TEST_DIR"
   cd "$RBENV_TEST_DIR"
 
-  RBENV_VERSION= run rbenv-which ruby
+  RBENV_VERSION='' run rbenv-which ruby
   assert_success "${RBENV_ROOT}/versions/1.8/bin/ruby"
 }
