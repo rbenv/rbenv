@@ -3,8 +3,9 @@
 load test_helper
 
 @test "without args shows summary of common commands" {
-  PATH="$(path_without man)" run rbenv-help
+  run rbenv-help
   assert_success
+  assert_line "Usage: rbenv <command> [<args>]"
   assert_line "Some useful rbenv commands are:"
 }
 
