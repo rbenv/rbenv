@@ -44,9 +44,8 @@ shopt -s nullglob
 rbenv_bin="${BASH_SOURCE:-$0}"
 if [ -L "$rbenv_bin" ]; then
   # resolve rbenv symlink to find out where the actual libexec directory is
-  readlink=$(type -p greadlink readlink 2>/dev/null | head -n1)
-  if [ -n "$readlink" ]; then
-    resolved="$($readlink "$rbenv_bin" 2>/dev/null)"
+  if readlink="$(type -p greadlink)" || readlink="$(type -p readlink)"; then
+    resolved="$("$readlink" "$rbenv_bin" 2>/dev/null)"
     if [[ $resolved == /* ]]; then
       libexec_dir="${resolved%/*}"
     else
@@ -72,7 +71,7 @@ done
 export PATH="${libexec_dir}:${PATH}"
 
 RBENV_HOOK_PATH="${RBENV_HOOK_PATH}:${RBENV_ROOT}/rbenv.d"
-if [ "${libexec_dir%/*}" != "$RBENV_ROOT" ]; then
+if [ ! "${libexec_dir%/*}"/rbenv.d -ef "$RBENV_ROOT"/rbenv.d ]; then
   # Add rbenv's own `rbenv.d` unless rbenv was cloned to RBENV_ROOT
   RBENV_HOOK_PATH="${RBENV_HOOK_PATH}:${libexec_dir%/*}/rbenv.d"
 fi
