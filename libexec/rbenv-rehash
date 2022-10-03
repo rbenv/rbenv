@@ -104,10 +104,12 @@ list_executable_names() {
       echo "${file##*/}"
     done
   done
-  # list user-install'ed executables
-  for file in ~/.gem/ruby/*/bin/*; do
-    echo "${file##*/}"
-  done
+  if [ "$RBENV_USER_GEMS" != "0" ]; then
+    # list user-install'ed executables
+    for file in ~/.gem/ruby/*/bin/* "${XDG_DATA_HOME:-$HOME/.local/share}"/gem/ruby/*/bin/*; do
+      echo "${file##*/}"
+    done
+  fi
   if [ -n "$GEM_HOME" ]; then
     for file in "$GEM_HOME"/bin/*; do
       echo "${file##*/}"

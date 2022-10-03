@@ -45,12 +45,17 @@ else
     # discover user-install'ed gem executables
     if [ -n "$GEM_HOME" ]; then
       user_install_path="${GEM_HOME}/bin/${RBENV_COMMAND}"
+    elif [ "$RBENV_USER_GEMS" != "0" ]; then
+      # https://github.com/rubygems/rubygems/blob/7e9afc48a6aa70cc4fcc2c378b387188098c5169/lib/rubygems/defaults.rb#L102-L108
+      # FIXME: guessing this path is somewhat fragile and works only for C Ruby
+      user_dir="${HOME}/.gem"
+      [ -e "$user_dir" ] || user_dir="${XDG_DATA_HOME:-$HOME/.local/share}/gem"
+      user_install_path="${user_dir}/ruby/${RBENV_VERSION%.*}.0/bin/${RBENV_COMMAND}"
     else
-      # FIXME: guessing this path is very fragile and works only for C Ruby
-      user_install_path="${HOME}/.gem/ruby/${RBENV_VERSION%.*}.0/bin/${RBENV_COMMAND}"
+      user_install_path=""
     fi
     [ -x "$user_install_path" ] && RBENV_COMMAND_PATH="$user_install_path"
-    unset user_install_path
+    unset user_install_path user_dir
   fi
 fi
 
