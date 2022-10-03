@@ -41,22 +41,29 @@ if [ "$RBENV_VERSION" = "system" ]; then
     RBENV_COMMAND_PATH="$(command -v "$RBENV_COMMAND" || true)"
 else
   RBENV_COMMAND_PATH="${RBENV_ROOT}/versions/${RBENV_VERSION}/bin/${RBENV_COMMAND}"
-  if [ ! -x "$RBENV_COMMAND_PATH" ]; then
-    # discover user-install'ed gem executables
-    if [ -n "$GEM_HOME" ]; then
-      user_install_path="${GEM_HOME}/bin/${RBENV_COMMAND}"
-    elif [ "$RBENV_USER_GEMS" != "0" ]; then
-      # https://github.com/rubygems/rubygems/blob/7e9afc48a6aa70cc4fcc2c378b387188098c5169/lib/rubygems/defaults.rb#L102-L108
-      # FIXME: guessing this path is somewhat fragile and works only for C Ruby
-      user_dir="${HOME}/.gem"
-      [ -e "$user_dir" ] || user_dir="${XDG_DATA_HOME:-$HOME/.local/share}/gem"
-      user_install_path="${user_dir}/ruby/${RBENV_VERSION%.*}.0/bin/${RBENV_COMMAND}"
-    else
-      user_install_path=""
+fi
+
+if [ ! -x "$RBENV_COMMAND_PATH" ]; then
+  # discover user-install'ed gem executables
+  user_install_path=""
+  if [ -n "$GEM_HOME" ]; then
+    user_install_path="${GEM_HOME}/bin/${RBENV_COMMAND}"
+  elif [ "$RBENV_USER_GEMS" != "0" ]; then
+    # https://github.com/rubygems/rubygems/blob/7e9afc48a6aa70cc4fcc2c378b387188098c5169/lib/rubygems/defaults.rb#L102-L108
+    # FIXME: guessing this path is somewhat fragile and works only when RBENV_VERSION is "X.Y.Z" or "X.Y" but not "system"
+    user_dir="${HOME}/.gem"
+    [ -e "$user_dir" ] || user_dir="${XDG_DATA_HOME:-$HOME/.local/share}/gem"
+    user_install_version="$RBENV_VERSION"
+    if [[ $RBENV_VERSION == *.*.* ]]; then
+      user_install_version="${RBENV_VERSION%.*}.0"
+    elif [[ $RBENV_VERSION == *.* ]]; then
+      user_install_version="${RBENV_VERSION}.0"
     fi
-    [ -x "$user_install_path" ] && RBENV_COMMAND_PATH="$user_install_path"
-    unset user_install_path user_dir
+    user_install_path="${user_dir}/ruby/${user_install_version}/bin/${RBENV_COMMAND}"
+    unset user_dir user_install_version
   fi
+  [ ! -x "$user_install_path" ] || RBENV_COMMAND_PATH="$user_install_path"
+  unset user_install_path
 fi
 
 OLDIFS="$IFS"
