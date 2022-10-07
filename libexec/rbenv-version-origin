@@ -5,7 +5,7 @@ set -e
 
 unset RBENV_VERSION_ORIGIN
 
-IFS=$'\n' read -d '' -r -a scripts <<<"$(rbenv-hooks version-origin)"
+IFS=$'\n' read -d '' -r -a scripts <<<"$(rbenv-hooks version-origin)" || true
 for script in "${scripts[@]}"; do
   # shellcheck disable=SC1090
   source "$script"

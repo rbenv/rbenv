@@ -33,7 +33,7 @@ export RBENV_VERSION
 RBENV_COMMAND_PATH="$(rbenv-which "$RBENV_COMMAND")"
 RBENV_BIN_PATH="${RBENV_COMMAND_PATH%/*}"
 
-IFS=$'\n' read -d '' -r -a scripts <<<"$(rbenv-hooks exec)"
+IFS=$'\n' read -d '' -r -a scripts <<<"$(rbenv-hooks exec)" || true
 for script in "${scripts[@]}"; do
   # shellcheck disable=SC1090
   source "$script"
