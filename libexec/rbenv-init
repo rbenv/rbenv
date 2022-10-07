@@ -126,7 +126,8 @@ if [ -z "$no_rehash" ]; then
   echo 'command rbenv rehash 2>/dev/null'
 fi
 
-commands=(`rbenv-commands --sh`)
+read -d '' -r -a commands <<<"$(rbenv-commands --sh)" || true
+
 case "$shell" in
 fish )
   cat <<EOS
