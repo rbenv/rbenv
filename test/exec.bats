@@ -78,6 +78,26 @@ ${RBENV_ROOT}/versions/2.0/bin/ruby
 OUT
 }
 
+@test "prepends Ruby to PATH" {
+  export RBENV_VERSION="2.0"
+  create_executable "ruby" <<SH
+#!$BASH
+echo \$PATH
+SH
+
+  run rbenv-exec ruby
+  assert_success
+  [[ $output == "${RBENV_ROOT}/versions/${RBENV_VERSION}/bin:"* ]]
+}
+
+@test "does not modify PATH for fallback" {
+  export RBENV_VERSION="2.0"
+  create_executable "ruby" "#!/bin/sh"
+
+  run rbenv-exec bash -c 'echo $PATH'
+  assert_success "$PATH"
+}
+
 @test "supports ruby -S <cmd>" {
   export RBENV_VERSION="2.0"
 

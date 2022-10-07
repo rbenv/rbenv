@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 #
-# Summary: Run an executable with the selected Ruby version
+# Summary: Run an executable with the current Ruby version
 #
-# Usage: rbenv exec <command> [arg1 arg2...]
+# Usage: rbenv exec <command> [<args>...]
 #
-# Runs an executable by first preparing PATH so that the selected Ruby
-# version's `bin' directory is at the front.
+# Runs an executable by first prepending the current Ruby version's
+# `bin' directory to PATH.
 #
-# For example, if the currently selected Ruby version is 1.9.3-p327:
-#   rbenv exec bundle install
+# For example, this invocation:
 #
-# is equivalent to:
-#   PATH="$RBENV_ROOT/versions/1.9.3-p327/bin:$PATH" bundle install
+#   RBENV_VERSION=3.1.2 rbenv exec bundle install
+#
+# roughly translates to:
+#
+#   PATH="$RBENV_ROOT/versions/3.1.2/bin:$PATH" bundle install
+#
+# See `rbenv help which' for information about the fallback mechanism.
 
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
@@ -41,7 +45,7 @@ for script in "${scripts[@]}"; do
 done
 
 shift 1
-if [ "$RBENV_VERSION" != "system" ]; then
+if [ "$RBENV_BIN_PATH" = "${RBENV_ROOT}/versions/${RBENV_VERSION}/bin" ]; then
   export PATH="${RBENV_BIN_PATH}:${PATH}"
 fi
 exec -a "$RBENV_COMMAND" "$RBENV_COMMAND_PATH" "$@"
