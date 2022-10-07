@@ -98,18 +98,11 @@ The \`rspec' command exists in these Ruby versions:
 OUT
 }
 
-@test "executable found in user gems" {
+@test "executable not found in user gems" {
   create_executable "2.7.6" "ruby"
   create_executable "${HOME}/.gem/ruby/2.7.0/bin" "rake"
   GEM_HOME='' RBENV_VERSION=2.7.6 run rbenv-which rake
-  assert_success "${HOME}/.gem/ruby/2.7.0/bin/rake"
-}
-
-@test "executable found in user gems (short version string)" {
-  create_executable "2.7.6" "ruby"
-  create_executable "${HOME}/.gem/ruby/2.7.0/bin" "rake"
-  GEM_HOME='' RBENV_VERSION=2.7 run rbenv-which rake
-  assert_success "${HOME}/.gem/ruby/2.7.0/bin/rake"
+  assert_failure
 }
 
 @test "executable found in gem home" {
