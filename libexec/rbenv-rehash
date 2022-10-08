@@ -90,8 +90,8 @@ remove_outdated_shims() {
   for shim in "$SHIM_PATH"/*; do
     if ! diff "$PROTOTYPE_SHIM_PATH" "$shim" >/dev/null 2>&1; then
       rm -f "$SHIM_PATH"/*
+      break
     fi
-    break
   done
 }
 
