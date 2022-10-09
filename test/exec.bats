@@ -15,8 +15,7 @@ create_executable() {
 }
 
 @test "fails with invalid version" {
-  export RBENV_VERSION="2.0"
-  run rbenv-exec ruby -v
+  RBENV_VERSION="2.0" run rbenv-exec ruby -v
   assert_failure "rbenv: version \`2.0' is not installed (set by RBENV_VERSION environment variable)"
 }
 
@@ -29,6 +28,7 @@ create_executable() {
 }
 
 @test "completes with names of executables" {
+  # shellcheck disable=SC2030,SC2031
   export RBENV_VERSION="2.0"
   create_executable "ruby" "#!/bin/sh"
   create_executable "rake" "#!/bin/sh"
@@ -49,13 +49,13 @@ hellos=(\$(printf "hello\\tugly world\\nagain"))
 echo HELLO="\$(printf ":%s" "\${hellos[@]}")"
 SH
 
-  export RBENV_VERSION=system
-  IFS=$' \t\n' run rbenv-exec env
+  RBENV_VERSION=system IFS=$' \t\n' run rbenv-exec env
   assert_success
   assert_line "HELLO=:hello:ugly:world:again"
 }
 
 @test "forwards all arguments" {
+  # shellcheck disable=SC2030,SC2031
   export RBENV_VERSION="2.0"
   create_executable "ruby" <<SH
 #!$BASH
@@ -79,6 +79,7 @@ OUT
 }
 
 @test "prepends Ruby to PATH" {
+  # shellcheck disable=SC2030,SC2031
   export RBENV_VERSION="2.0"
   create_executable "ruby" <<SH
 #!$BASH
@@ -91,14 +92,17 @@ SH
 }
 
 @test "does not modify PATH for fallback" {
+  # shellcheck disable=SC2030,SC2031
   export RBENV_VERSION="2.0"
   create_executable "ruby" "#!/bin/sh"
 
+  # shellcheck disable=SC2016
   run rbenv-exec bash -c 'echo $PATH'
   assert_success "$PATH"
 }
 
 @test "supports ruby -S <cmd>" {
+  # shellcheck disable=SC2030,SC2031
   export RBENV_VERSION="2.0"
 
   # emulate `ruby -S' behavior
