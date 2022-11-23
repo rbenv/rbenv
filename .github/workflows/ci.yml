@@ -8,10 +8,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-    
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Install bats
-      run: git clone --depth 1 https://github.com/sstephenson/bats.git
-    - name: Run tests
-      run: PATH="./bats/bin:$PATH" test/run
+      - uses: actions/checkout@v3
+      - name: Install bats
+        run: git clone --depth 1 https://github.com/sstephenson/bats.git
+      - name: Run tests
+        run: PATH="./bats/bin:$PATH" test/run
