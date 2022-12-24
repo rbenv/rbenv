@@ -46,6 +46,15 @@ load test_helper
 }
 
 @test "shell unset" {
+  RBENV_SHELL=bash run rbenv-sh-shell --unset
+  assert_success
+  assert_output <<OUT
+RBENV_VERSION_OLD="\${RBENV_VERSION-}"
+unset RBENV_VERSION
+OUT
+}
+
+@test "shell unset (integration test)" {
   export RBENV_VERSION="2.7.5"
   eval "$(rbenv init -)"
   run rbenv shell
