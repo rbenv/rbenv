@@ -67,12 +67,10 @@ OUT
 }
 
 @test "shell change invalid version" {
-  run rbenv-sh-shell 1.2.3
+  eval "$(rbenv init -)"
+  run rbenv shell 1.2.3
   assert_failure
-  assert_output <<SH
-rbenv: version \`1.2.3' not installed
-false
-SH
+  assert_output "rbenv: version \`1.2.3' not installed"
 }
 
 @test "shell change version" {
