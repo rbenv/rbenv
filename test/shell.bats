@@ -22,8 +22,9 @@ load test_helper
 }
 
 @test "shell version" {
-  RBENV_SHELL=bash RBENV_VERSION="1.2.3" run rbenv-sh-shell
-  assert_success 'echo "$RBENV_VERSION"'
+  eval "$(rbenv init -)"
+  RBENV_SHELL=bash RBENV_VERSION="1.2.3" run rbenv shell
+  assert_success '1.2.3'
 }
 
 @test "shell version (fish)" {
