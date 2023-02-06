@@ -65,6 +65,8 @@ load test_helper
   eval "$(rbenv init -)"
   export RBENV_SHELL=bash
   export RBENV_VERSION=1.7.5
+  unset RBENV_VERSION_OLD
+
   assert_equal "$RBENV_VERSION" 1.7.5
   assert [ -z "${RBENV_VERSION_OLD+x}" ];
 
