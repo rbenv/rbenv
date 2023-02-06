@@ -42,7 +42,7 @@ load test_helper
   assert_success '1.2.3'
 }
 
-@test "shell revert (RBENV_VERSION and RBENV_VERSION_OLD both non-null)" {
+@test "shell revert" {
   eval "$(rbenv init -)"
   export RBENV_SHELL=bash
   export RBENV_VERSION=1.7.5
@@ -52,6 +52,13 @@ load test_helper
 
   assert_equal $RBENV_VERSION 2.0.0
   assert_equal $RBENV_VERSION_OLD 1.7.5
+}
+
+@test "shell revert (fish)" {
+  $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-revert-fish.test)
+  exit_code="$?"
+
+  assert [ "0" = "$exit_code" ]
 }
 
 @test "shell unset" {
@@ -66,6 +73,13 @@ load test_helper
   assert_success
   assert_equal $RBENV_VERSION_OLD 1.7.5
   assert [ -z "${RBENV_VERSION+x}" ];
+}
+
+@test "shell unset (fish)" {
+  $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-unset-fish.test)
+  exit_code="$?"
+
+  assert [ "0" = "$exit_code" ]
 }
 
 @test "shell unset (integration test)" {
@@ -96,4 +110,11 @@ load test_helper
 
   assert_equal "$RBENV_VERSION" 1.2.3
   assert_equal "$RBENV_VERSION_OLD" ""
+}
+
+@test "shell change version (fish)" {
+  $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-change-version-fish.test)
+  exit_code="$?"
+
+  assert [ "0" = "$exit_code" ]
 }
