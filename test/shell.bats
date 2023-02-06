@@ -54,13 +54,6 @@ load test_helper
   assert_equal $RBENV_VERSION_OLD 1.7.5
 }
 
-@test "shell revert (fish)" {
-  $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-revert-fish.test)
-  exit_code="$?"
-
-  assert [ "0" = "$exit_code" ]
-}
-
 @test "shell unset" {
   eval "$(rbenv init -)"
   export RBENV_SHELL=bash
@@ -75,13 +68,6 @@ load test_helper
   assert_success
   assert_equal $RBENV_VERSION_OLD 1.7.5
   assert [ -z "${RBENV_VERSION+x}" ];
-}
-
-@test "shell unset (fish)" {
-  $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-unset-fish.test)
-  exit_code="$?"
-
-  assert [ "0" = "$exit_code" ]
 }
 
 @test "shell unset (integration test)" {
@@ -114,9 +100,41 @@ load test_helper
   assert_equal "$RBENV_VERSION_OLD" ""
 }
 
-@test "shell change version (fish)" {
-  $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-change-version-fish.test)
-  exit_code="$?"
+@test "shell unset (fish)" {
+  FISH_PATH="$(type -p fish 2>&1)"
 
-  assert [ "0" = "$exit_code" ]
+  if [ "fish not found" = "$FISH_PATH" ]; then
+    exit 0
+  else
+    $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-unset.fish)
+    exit_code="$?"
+
+    assert [ "0" = "$exit_code" ]
+  fi
+}
+
+@test "shell revert (fish)" {
+  FISH_PATH="$(type -p fish 2>&1)"
+
+  if [ "fish not found" = "$FISH_PATH" ]; then
+    exit 0
+  else
+    $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-revert.fish)
+    exit_code="$?"
+
+    assert [ "0" = "$exit_code" ]
+  fi
+}
+
+@test "shell change version (fish)" {
+  FISH_PATH="$(type -p fish 2>&1)"
+
+  if [ "fish not found" = "$FISH_PATH" ]; then
+    exit 0
+  else
+    $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-change-version.fish)
+    exit_code="$?"
+
+    assert [ "0" = "$exit_code" ]
+  fi
 }
