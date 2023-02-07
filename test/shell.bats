@@ -101,10 +101,9 @@ load test_helper
 }
 
 @test "shell unset (fish)" {
-  FISH_PATH="$(type -p fish 2>&1)"
-
+  FISH_PATH="$(command -v fish || echo 'fish not found')"
   if [ "fish not found" = "$FISH_PATH" ]; then
-    exit 0
+    skip
   else
     $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-unset.fish)
     exit_code="$?"
@@ -113,11 +112,13 @@ load test_helper
   fi
 }
 
+
+
 @test "shell revert (fish)" {
-  FISH_PATH="$(type -p fish 2>&1)"
+  FISH_PATH="$(command -v fish || echo 'fish not found')"
 
   if [ "fish not found" = "$FISH_PATH" ]; then
-    exit 0
+    skip
   else
     $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-revert.fish)
     exit_code="$?"
@@ -127,10 +128,10 @@ load test_helper
 }
 
 @test "shell change version (fish)" {
-  FISH_PATH="$(type -p fish 2>&1)"
+  FISH_PATH="$(command -v fish || echo 'fish not found')"
 
   if [ "fish not found" = "$FISH_PATH" ]; then
-    exit 0
+    skip
   else
     $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-change-version.fish)
     exit_code="$?"
