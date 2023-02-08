@@ -105,7 +105,7 @@ load test_helper
   if [ "fish not found" = "$FISH_PATH" ]; then
     skip
   else
-    $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-unset.fish)
+    $("$(dirname BASH_SOURCE[0])/test/shell-unset.fish")
     exit_code="$?"
 
     assert [ "0" = "$exit_code" ]
@@ -120,7 +120,7 @@ load test_helper
   if [ "fish not found" = "$FISH_PATH" ]; then
     skip
   else
-    $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-revert.fish)
+    $("$(dirname BASH_SOURCE[0])/test/shell-revert.fish")
     exit_code="$?"
 
     assert [ "0" = "$exit_code" ]
@@ -133,7 +133,7 @@ load test_helper
   if [ "fish not found" = "$FISH_PATH" ]; then
     skip
   else
-    $(/Users/richiethomas/Workspace/OpenSource/rbenv/test/shell-change-version.fish)
+    $("$(dirname BASH_SOURCE[0])/test/shell-change-version.fish")
     exit_code="$?"
 
     assert [ "0" = "$exit_code" ]
