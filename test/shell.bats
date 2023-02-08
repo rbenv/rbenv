@@ -66,9 +66,8 @@ OUT
   if [ "fish not found" = "$FISH_PATH" ]; then
     skip
   else
-    eval "$(dirname BASH_SOURCE[0])/test/shell-unset.fish"
-    exit_code="$?"
-    assert [ "0" = "$exit_code" ]
+    run "$(dirname BASH_SOURCE[0])/test/shell-unset.fish"
+    assert_success
   fi
 }
 
@@ -101,10 +100,8 @@ OUT
   if [ "fish not found" = "$FISH_PATH" ]; then
     skip
   else
-    eval "$(dirname BASH_SOURCE[0])/test/shell-revert.fish"
-    exit_code="$?"
-
-    assert [ "0" = "$exit_code" ]
+    run "$(dirname BASH_SOURCE[0])/test/shell-revert.fish"
+    assert_success
   fi
 }
 
@@ -192,9 +189,7 @@ OUT
   if [ "fish not found" = "$FISH_PATH" ]; then
     skip
   else
-    eval "$(dirname BASH_SOURCE[0])/test/shell-change-version.fish"
-    exit_code="$?"
-
-    assert [ "0" = "$exit_code" ]
+    run "$(dirname BASH_SOURCE[0])/test/shell-change-version.fish"
+    assert_success
   fi
 }
