@@ -66,9 +66,8 @@ OUT
   if [ "fish not found" = "$FISH_PATH" ]; then
     skip
   else
-    $("$(dirname BASH_SOURCE[0])/test/shell-unset.fish")
+    eval "$(dirname BASH_SOURCE[0])/test/shell-unset.fish"
     exit_code="$?"
-
     assert [ "0" = "$exit_code" ]
   fi
 }
@@ -81,9 +80,8 @@ OUT
 
 @test "shell revert (end-to-end test)" {
   eval "$(rbenv init -)"
-  export RBENV_SHELL=bash
-  export RBENV_VERSION=1.7.5
-  export RBENV_VERSION_OLD=2.0.0
+  RBENV_VERSION=1.7.5
+  RBENV_VERSION_OLD=2.0.0
 
   rbenv shell -
 
@@ -103,7 +101,7 @@ OUT
   if [ "fish not found" = "$FISH_PATH" ]; then
     skip
   else
-    $("$(dirname BASH_SOURCE[0])/test/shell-revert.fish")
+    eval "$(dirname BASH_SOURCE[0])/test/shell-revert.fish"
     exit_code="$?"
 
     assert [ "0" = "$exit_code" ]
@@ -121,8 +119,7 @@ OUT
 
 @test "shell unset (end-to-end test)" {
   eval "$(rbenv init -)"
-  export RBENV_SHELL=bash
-  export RBENV_VERSION=1.7.5
+  RBENV_VERSION=1.7.5
   unset RBENV_VERSION_OLD
 
   assert_equal "$RBENV_VERSION" 1.7.5
@@ -136,9 +133,7 @@ OUT
 
 @test "shell unset (end-to-end test)" {
   eval "$(rbenv init -)"
-  export RBENV_VERSION="2.7.5"
-
-  run rbenv shell
+  RBENV_VERSION="2.7.5" run rbenv shell
 
   assert_output "2.7.5"
 }
@@ -197,7 +192,7 @@ OUT
   if [ "fish not found" = "$FISH_PATH" ]; then
     skip
   else
-    $("$(dirname BASH_SOURCE[0])/test/shell-change-version.fish")
+    eval "$(dirname BASH_SOURCE[0])/test/shell-change-version.fish"
     exit_code="$?"
 
     assert [ "0" = "$exit_code" ]
