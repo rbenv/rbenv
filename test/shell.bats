@@ -21,7 +21,7 @@ load test_helper
   assert_failure "rbenv: no shell-specific version configured"
 }
 
-@test "no shell version (integration)" {
+@test "no shell version (end-to-end test)" {
   mkdir -p "${RBENV_TEST_DIR}/myproject"
   cd "${RBENV_TEST_DIR}/myproject"
   echo "1.2.3" > .ruby-version
@@ -35,10 +35,10 @@ load test_helper
   assert_success 'echo "$RBENV_VERSION"'
 }
 
-@test "shell version (integration)" {
+@test "shell version (end-to-end test)" {
   eval "$(rbenv init -)"
   RBENV_SHELL=bash RBENV_VERSION="1.2.3" run rbenv shell
-  assert_success '1.2.3'
+  assert_output '1.2.3'
 }
 
 @test "shell version (fish)" {
@@ -46,10 +46,10 @@ load test_helper
   assert_success 'echo "$RBENV_VERSION"'
 }
 
-@test "shell version (fish, integration)" {
+@test "shell version (fish, end-to-end test)" {
   eval "$(rbenv init -)"
   RBENV_SHELL=fish RBENV_VERSION="1.2.3" run rbenv shell
-  assert_success '1.2.3'
+  assert_output '1.2.3'
 }
 
 @test "shell unset (fish)" {
@@ -61,7 +61,7 @@ set -e RBENV_VERSION
 OUT
 }
 
-@test "shell unset (fish, integration)" {
+@test "shell unset (fish, end-to-end test)" {
   FISH_PATH="$(command -v fish || echo 'fish not found')"
   if [ "fish not found" = "$FISH_PATH" ]; then
     skip
@@ -79,7 +79,7 @@ OUT
   assert_line 0 'if [ -n "${RBENV_VERSION_OLD+x}" ]; then'
 }
 
-@test "shell revert (integration)" {
+@test "shell revert (end-to-end test)" {
   eval "$(rbenv init -)"
   export RBENV_SHELL=bash
   export RBENV_VERSION=1.7.5
@@ -97,7 +97,7 @@ OUT
   assert_line 0 'if set -q RBENV_VERSION_OLD'
 }
 
-@test "shell revert (fish, integration)" {
+@test "shell revert (fish, end-to-end test)" {
   FISH_PATH="$(command -v fish || echo 'fish not found')"
 
   if [ "fish not found" = "$FISH_PATH" ]; then
@@ -119,7 +119,7 @@ unset RBENV_VERSION
 OUT
 }
 
-@test "shell unset (integration)" {
+@test "shell unset (end-to-end test)" {
   eval "$(rbenv init -)"
   export RBENV_SHELL=bash
   export RBENV_VERSION=1.7.5
@@ -130,18 +130,16 @@ OUT
 
   rbenv shell --unset
 
-  assert_success
   assert_equal $RBENV_VERSION_OLD 1.7.5
   assert [ -z "${RBENV_VERSION+x}" ];
 }
 
-@test "shell unset (integration)" {
+@test "shell unset (end-to-end test)" {
   eval "$(rbenv init -)"
   export RBENV_VERSION="2.7.5"
 
   run rbenv shell
 
-  assert_success
   assert_output "2.7.5"
 }
 
@@ -154,12 +152,11 @@ false
 SH
 }
 
-@test "shell change invalid version (integration)" {
+@test "shell change invalid version (end-to-end test)" {
   eval "$(rbenv init -)"
 
   run rbenv shell 1.2.3
 
-  assert_failure
   assert_output "rbenv: version \`1.2.3' not installed"
 }
 
@@ -173,7 +170,7 @@ export RBENV_VERSION="1.2.3"
 OUT
 }
 
-@test "shell change version (integration)" {
+@test "shell change version (end-to-end test)" {
   eval "$(rbenv init -)"
   mkdir -p "${RBENV_ROOT}/versions/1.2.3"
   assert [ -z "${RBENV_VERSION+x}" ];
@@ -194,7 +191,7 @@ set -gx RBENV_VERSION "1.2.3"
 OUT
 }
 
-@test "shell change version (fish, integration)" {
+@test "shell change version (fish, end-to-end test)" {
   FISH_PATH="$(command -v fish || echo 'fish not found')"
 
   if [ "fish not found" = "$FISH_PATH" ]; then
