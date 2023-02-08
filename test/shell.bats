@@ -9,9 +9,7 @@ load test_helper
 
 @test "shell integration enabled" {
   eval "$(rbenv init -)"
-
   run rbenv shell
-
   assert_success "rbenv: no shell-specific version configured"
 }
 
@@ -19,30 +17,69 @@ load test_helper
   mkdir -p "${RBENV_TEST_DIR}/myproject"
   cd "${RBENV_TEST_DIR}/myproject"
   echo "1.2.3" > .ruby-version
+  RBENV_VERSION="" run rbenv-sh-shell
+  assert_failure "rbenv: no shell-specific version configured"
+}
+
+@test "no shell version (integration)" {
+  mkdir -p "${RBENV_TEST_DIR}/myproject"
+  cd "${RBENV_TEST_DIR}/myproject"
+  echo "1.2.3" > .ruby-version
   eval "$(rbenv init -)"
-
   RBENV_VERSION="" run rbenv shell
-
-  assert_success "rbenv: no shell-specific version configured"
+  assert_output "rbenv: no shell-specific version configured"
 }
 
 @test "shell version" {
+  RBENV_SHELL=bash RBENV_VERSION="1.2.3" run rbenv-sh-shell
+  assert_success 'echo "$RBENV_VERSION"'
+}
+
+@test "shell version (integration)" {
   eval "$(rbenv init -)"
-
   RBENV_SHELL=bash RBENV_VERSION="1.2.3" run rbenv shell
-
   assert_success '1.2.3'
 }
 
 @test "shell version (fish)" {
+  RBENV_SHELL=fish RBENV_VERSION="1.2.3" run rbenv-sh-shell
+  assert_success 'echo "$RBENV_VERSION"'
+}
+
+@test "shell version (fish, integration)" {
   eval "$(rbenv init -)"
-
   RBENV_SHELL=fish RBENV_VERSION="1.2.3" run rbenv shell
-
   assert_success '1.2.3'
 }
 
+@test "shell unset (fish)" {
+  RBENV_SHELL=fish run rbenv-sh-shell --unset
+  assert_success
+  assert_output <<OUT
+set -gu RBENV_VERSION_OLD "\$RBENV_VERSION"
+set -e RBENV_VERSION
+OUT
+}
+
+@test "shell unset (fish, integration)" {
+  FISH_PATH="$(command -v fish || echo 'fish not found')"
+  if [ "fish not found" = "$FISH_PATH" ]; then
+    skip
+  else
+    $("$(dirname BASH_SOURCE[0])/test/shell-unset.fish")
+    exit_code="$?"
+
+    assert [ "0" = "$exit_code" ]
+  fi
+}
+
 @test "shell revert" {
+  RBENV_SHELL=bash run rbenv-sh-shell -
+  assert_success
+  assert_line 0 'if [ -n "${RBENV_VERSION_OLD+x}" ]; then'
+}
+
+@test "shell revert (integration)" {
   eval "$(rbenv init -)"
   export RBENV_SHELL=bash
   export RBENV_VERSION=1.7.5
@@ -54,7 +91,35 @@ load test_helper
   assert_equal $RBENV_VERSION_OLD 1.7.5
 }
 
+@test "shell revert (fish)" {
+  RBENV_SHELL=fish run rbenv-sh-shell -
+  assert_success
+  assert_line 0 'if set -q RBENV_VERSION_OLD'
+}
+
+@test "shell revert (fish, integration)" {
+  FISH_PATH="$(command -v fish || echo 'fish not found')"
+
+  if [ "fish not found" = "$FISH_PATH" ]; then
+    skip
+  else
+    $("$(dirname BASH_SOURCE[0])/test/shell-revert.fish")
+    exit_code="$?"
+
+    assert [ "0" = "$exit_code" ]
+  fi
+}
+
 @test "shell unset" {
+  RBENV_SHELL=bash run rbenv-sh-shell --unset
+  assert_success
+  assert_output <<OUT
+RBENV_VERSION_OLD="\${RBENV_VERSION-}"
+unset RBENV_VERSION
+OUT
+}
+
+@test "shell unset (integration)" {
   eval "$(rbenv init -)"
   export RBENV_SHELL=bash
   export RBENV_VERSION=1.7.5
@@ -70,7 +135,7 @@ load test_helper
   assert [ -z "${RBENV_VERSION+x}" ];
 }
 
-@test "shell unset (integration test)" {
+@test "shell unset (integration)" {
   eval "$(rbenv init -)"
   export RBENV_VERSION="2.7.5"
 
@@ -81,6 +146,15 @@ load test_helper
 }
 
 @test "shell change invalid version" {
+  run rbenv-sh-shell 1.2.3
+  assert_failure
+  assert_output <<SH
+rbenv: version \`1.2.3' not installed
+false
+SH
+}
+
+@test "shell change invalid version (integration)" {
   eval "$(rbenv init -)"
 
   run rbenv shell 1.2.3
@@ -90,6 +164,16 @@ load test_helper
 }
 
 @test "shell change version" {
+  mkdir -p "${RBENV_ROOT}/versions/1.2.3"
+  RBENV_SHELL=bash run rbenv-sh-shell 1.2.3
+  assert_success
+  assert_output <<OUT
+RBENV_VERSION_OLD="\${RBENV_VERSION-}"
+export RBENV_VERSION="1.2.3"
+OUT
+}
+
+@test "shell change version (integration)" {
   eval "$(rbenv init -)"
   mkdir -p "${RBENV_ROOT}/versions/1.2.3"
   assert [ -z "${RBENV_VERSION+x}" ];
@@ -100,34 +184,17 @@ load test_helper
   assert_equal "$RBENV_VERSION_OLD" ""
 }
 
-@test "shell unset (fish)" {
-  FISH_PATH="$(command -v fish || echo 'fish not found')"
-  if [ "fish not found" = "$FISH_PATH" ]; then
-    skip
-  else
-    $("$(dirname BASH_SOURCE[0])/test/shell-unset.fish")
-    exit_code="$?"
-
-    assert [ "0" = "$exit_code" ]
-  fi
-}
-
-
-
-@test "shell revert (fish)" {
-  FISH_PATH="$(command -v fish || echo 'fish not found')"
-
-  if [ "fish not found" = "$FISH_PATH" ]; then
-    skip
-  else
-    $("$(dirname BASH_SOURCE[0])/test/shell-revert.fish")
-    exit_code="$?"
-
-    assert [ "0" = "$exit_code" ]
-  fi
-}
-
 @test "shell change version (fish)" {
+  mkdir -p "${RBENV_ROOT}/versions/1.2.3"
+  RBENV_SHELL=fish run rbenv-sh-shell 1.2.3
+  assert_success
+  assert_output <<OUT
+set -gu RBENV_VERSION_OLD "\$RBENV_VERSION"
+set -gx RBENV_VERSION "1.2.3"
+OUT
+}
+
+@test "shell change version (fish, integration)" {
   FISH_PATH="$(command -v fish || echo 'fish not found')"
 
   if [ "fish not found" = "$FISH_PATH" ]; then
