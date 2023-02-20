@@ -41,7 +41,7 @@ export RBENV_DIR
 
 canonicalize() {
   local readlink resolved_path
-  if readlink="$(type -P greadlink)" || readlink="$(type -P readlink)"; then
+  if readlink="$(type -P readlink)" || readlink="$(type -P greadlink)"; then
     # happy path: GNU & BSD readlink, macOS 12.3+
     if resolved_path="$("$readlink" -f "$1" 2>/dev/null)"; then
       printf "%s\n" "$resolved_path"
