@@ -21,7 +21,7 @@ if [ "$1" = "--complete" ]; then
   exec rbenv-shims --short
 fi
 
-RBENV_VERSION="$(rbenv-version-name)"
+RBENV_VERSION="$($BASH rbenv-version-name)"
 RBENV_COMMAND="$1"
 
 if [ -z "$RBENV_COMMAND" ]; then
@@ -30,10 +30,10 @@ if [ -z "$RBENV_COMMAND" ]; then
 fi
 
 export RBENV_VERSION
-RBENV_COMMAND_PATH="$(rbenv-which "$RBENV_COMMAND")"
+RBENV_COMMAND_PATH="$($BASH rbenv-which "$RBENV_COMMAND")"
 RBENV_BIN_PATH="${RBENV_COMMAND_PATH%/*}"
 
-IFS=$'\n' read -d '' -r -a scripts <<<"$(rbenv-hooks exec)" || true
+IFS=$'\n' read -d '' -r -a scripts <<<"$($BASH rbenv-hooks exec)" || true
 for script in "${scripts[@]}"; do
   # shellcheck disable=SC1090
   source "$script"
