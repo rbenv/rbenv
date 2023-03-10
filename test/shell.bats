@@ -80,6 +80,7 @@ OUT
 @test "shell revert (end-to-end test)" {
   eval "$(rbenv init -)"
   RBENV_VERSION=1.7.5
+  # shellcheck disable=SC2030
   RBENV_VERSION_OLD=2.0.0
 
   rbenv shell -
@@ -116,14 +117,17 @@ OUT
 
 @test "shell unset (end-to-end test)" {
   eval "$(rbenv init -)"
+  # shellcheck disable=SC2030
   RBENV_VERSION=1.7.5
   unset RBENV_VERSION_OLD
 
   assert_equal "$RBENV_VERSION" 1.7.5
+  # shellcheck disable=SC2031
   assert [ -z "${RBENV_VERSION_OLD+x}" ];
 
   rbenv shell --unset
 
+  # shellcheck disable=SC2031
   assert_equal $RBENV_VERSION_OLD 1.7.5
   assert [ -z "${RBENV_VERSION+x}" ];
 }
@@ -165,11 +169,14 @@ OUT
 @test "shell change version (end-to-end test)" {
   eval "$(rbenv init -)"
   mkdir -p "${RBENV_ROOT}/versions/1.2.3"
+  # shellcheck disable=SC2031
   assert [ -z "${RBENV_VERSION+x}" ];
 
   RBENV_SHELL=bash rbenv shell 1.2.3
 
+  # shellcheck disable=SC2031
   assert_equal "$RBENV_VERSION" 1.2.3
+  # shellcheck disable=SC2031
   assert_equal "$RBENV_VERSION_OLD" ""
 }
 
