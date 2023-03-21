@@ -38,6 +38,11 @@ load test_helper
   assert_output "$dir"
 }
 
+@test "inherited RBENV_DIR without a '/' char" {
+  RBENV_DIR="." run rbenv echo RBENV_DIR
+  assert_output "$(pwd)"
+}
+
 @test "invalid RBENV_DIR" {
   dir="${BATS_TMPDIR}/does-not-exist"
   assert [ ! -d "$dir" ]
