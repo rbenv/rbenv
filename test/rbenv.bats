@@ -59,6 +59,10 @@ load test_helper
   assert_line 0 "${BATS_TEST_DIRNAME%/*}/libexec"
   assert_line 1 "${RBENV_ROOT}/plugins/ruby-build/bin"
   assert_line 2 "${RBENV_ROOT}/plugins/rbenv-each/bin"
+
+  mkdir -p "$RBENV_ROOT"/plugins/rbenv-foo/etc/rbenv.d
+  run rbenv echo -F: "RBENV_HOOK_PATH"
+  assert_line 6 "${RBENV_ROOT}/plugins/rbenv-foo/etc/rbenv.d"
 }
 
 @test "RBENV_HOOK_PATH preserves value from environment" {
