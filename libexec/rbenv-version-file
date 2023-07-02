@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Usage: rbenv version-file [<dir>]
-# Summary: Detect the file that sets the current rbenv version
+# Summary: Detect the file that sets the current rbenv version.
+#
+# Prints locations of existing files, but also prints a location
+# of a file that, when created, would have dictated the version.
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
 
