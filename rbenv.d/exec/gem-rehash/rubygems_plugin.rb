@@ -1,9 +1,16 @@
+require 'open3'
+
+class CouldNotRehashError < StandardError; end;
+
 hook = lambda do |installer|
   begin
     # Ignore gems that aren't installed in locations that rbenv searches for binstubs
     if installer.spec.executables.any? &&
         [Gem.default_bindir, Gem.bindir(Gem.user_dir)].include?(installer.bin_dir)
-      `rbenv rehash`
+      stdout, stderr, status = Open3.capture3("rbenv rehash")
+      if stderr
+        raise CouldNotRehashError, stderr
+      end
     end
   rescue
     warn "rbenv: error in gem-rehash (#{$!.class.name}: #{$!.message})"
