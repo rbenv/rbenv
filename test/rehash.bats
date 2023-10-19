@@ -158,6 +158,6 @@ SH
 @test "sh-rehash in fish" {
   create_executable "2.0" "ruby"
   RBENV_SHELL=fish run rbenv-sh-rehash
-  assert_success "builtin history clear"
+  assert_success "builtin history clear 2>/dev/null; or true"
   assert [ -x "${RBENV_ROOT}/shims/ruby" ]
 }
