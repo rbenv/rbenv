@@ -11,8 +11,8 @@ hook = lambda do |installer|
 end
 
 if defined?(Bundler::Installer) &&
-   Bundler::Installer.private_instance_methods.include?(:install) &&
-   !Bundler::Installer.private_instance_methods.include?(:install_without_rbenv_rehash)
+   Bundler::Installer.private_method_defined?(:install) &&
+   !Bundler::Installer.private_method_defined?(:install_without_rbenv_rehash)
   Bundler::Installer.class_eval do
     private
 
