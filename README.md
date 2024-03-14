@@ -266,6 +266,12 @@ Lists all Ruby versions that contain the specified executable name.
     jruby-1.7.1
     ree-1.8.7-2011.03
 
+### rbenv exec
+
+Execute arbitrary commands in the context of the Ruby environment.
+
+    $ rbenv exec gem environment gemdir
+
 ## Environment variables
 
 You can affect how rbenv operates with the following settings:
