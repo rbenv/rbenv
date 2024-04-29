@@ -69,7 +69,7 @@ if [ -z "$print" ]; then
   rbenv_command=rbenv
   if [ -z "$rbenv_in_path" ]; then
     rbenv_command="$root/bin/rbenv"
-    rbenv_command="${rbenv_command/$HOME\//~/}"
+    rbenv_command="${rbenv_command/$HOME\//\~/}"
   fi
 
   color_start=""
@@ -81,13 +81,13 @@ if [ -z "$print" ]; then
 
   write_config() {
     if grep -q "rbenv init" "$1" 2>/dev/null; then
-      printf 'skipping %s%s%s: already configured for rbenv.\n' "$color_start" "${1/$HOME\//~/}" "$color_end"
+      printf 'skipping %s%s%s: already configured for rbenv.\n' "$color_start" "${1/$HOME\//\~/}" "$color_end"
       return 0
     fi
     mkdir -p "${1%/*}"
     # shellcheck disable=SC2016
     printf '\n# Added by `rbenv init` on %s\n%s\n' "$(date)" "$2" >> "$1"
-    printf 'writing %s%s%s: now configured for rbenv.\n' "$color_start" "${1/$HOME\//~/}" "$color_end"
+    printf 'writing %s%s%s: now configured for rbenv.\n' "$color_start" "${1/$HOME\//\~/}" "$color_end"
   }
 
   status=0
