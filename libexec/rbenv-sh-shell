@@ -49,7 +49,7 @@ if [ "$version" = "--unset" ]; then
     echo "set -e RBENV_VERSION"
     ;;
   zsh )
-    echo "typeset -g RBENV_VERSION_OLD=\"${RBENV_VERSION-}\""
+    echo "typeset -g RBENV_VERSION_OLD=\"\${RBENV_VERSION-}\""
     echo "unset RBENV_VERSION"
     ;;
   * )
@@ -129,7 +129,7 @@ if rbenv-prefix "$version" >/dev/null; then
       echo "set -gx RBENV_VERSION \"$version\""
       ;;
     zsh )
-      echo "typeset -g RBENV_VERSION_OLD=\"${RBENV_VERSION-}\""
+      echo "typeset -g RBENV_VERSION_OLD=\"\${RBENV_VERSION-}\""
       echo "export RBENV_VERSION=\"$version\""
       ;;
     * )
