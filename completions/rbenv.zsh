@@ -2,11 +2,10 @@ if [[ ! -o interactive ]]; then
     return
 fi
 
-compctl -K _rbenv rbenv
+compdef _rbenv rbenv
 
 _rbenv() {
-  local words completions
-  read -cA words
+  local completions
 
   emulate -L zsh
 
@@ -16,5 +15,5 @@ _rbenv() {
     completions="$(rbenv completions ${words[2,-2]})"
   fi
 
-  reply=("${(ps:\n:)completions}")
+  compadd - "${(ps:\n:)completions}"
 }
