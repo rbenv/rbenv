@@ -1,4 +1,4 @@
-#compdef _rbenv
+#compdef rbenv
 
 _rbenv() {
   local completions
