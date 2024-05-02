@@ -286,7 +286,7 @@ name | default | description
 
 1. Prepends `~/.rbenv/shims` directory to PATH. This is basically the only requirement for rbenv to function properly.
 
-2. Installs shell completion for rbenv commands.
+2. Installs bash shell completion for rbenv commands.
 
 3. Regenerates rbenv shims. If this step slows down your shell startup, you can invoke `rbenv init -` with the `--no-rehash` flag.
 

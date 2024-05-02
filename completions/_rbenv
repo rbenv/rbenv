@@ -1,8 +1,4 @@
-if [[ ! -o interactive ]]; then
-    return
-fi
-
-compdef _rbenv rbenv
+#compdef _rbenv
 
 _rbenv() {
   local completions
