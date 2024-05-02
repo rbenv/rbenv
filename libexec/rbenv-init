@@ -124,6 +124,11 @@ fish )
   if [ -r "$completion" ]; then
     printf "source '%s'\n" "$completion"
   fi
+
+  if [ "$shell" = "zsh" ]; then
+    # shellcheck disable=SC2016
+    printf 'export FPATH="%s:${FPATH}"\n' "${root}/completions"
+  fi
 ;;
 esac
 
