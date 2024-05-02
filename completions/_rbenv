@@ -3,13 +3,11 @@
 _rbenv() {
   local completions
 
-  emulate -L zsh
-
   if [ "${#words}" -eq 2 ]; then
-    completions="$(rbenv commands)"
+    completions=(${(f)"$(rbenv help --complete-commands "${words[2]}")"})
+    _describe 'rbenv commands' completions
   else
     completions="$(rbenv completions ${words[2,-2]})"
+    compadd - "${(ps:\n:)completions}"
   fi
-
-  compadd - "${(ps:\n:)completions}"
 }
