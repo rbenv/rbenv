@@ -34,7 +34,7 @@ if [ -z "$RBENV_COMMAND" ]; then
   exit 1
 fi
 
-RBENV_VERSION="${RBENV_VERSION:-$(rbenv-version-name)}"
+RBENV_VERSION="${RBENV_VERSION:-$($BASH rbenv-version-name)}"
 
 if [ "$RBENV_VERSION" = "system" ]; then
   PATH="$(remove_from_path "${RBENV_ROOT}/shims")" \
@@ -47,7 +47,7 @@ if [[ ! -x "$RBENV_COMMAND_PATH" && -n "$GEM_HOME" && -x "${GEM_HOME}/bin/${RBEN
   RBENV_COMMAND_PATH="${GEM_HOME}/bin/${RBENV_COMMAND}"
 fi
 
-IFS=$'\n' read -d '' -r -a scripts <<<"$(rbenv-hooks which)" || true
+IFS=$'\n' read -d '' -r -a scripts <<<"$($BASH rbenv-hooks which)" || true
 for script in "${scripts[@]}"; do
   # shellcheck disable=SC1090
   source "$script"
@@ -56,12 +56,12 @@ done
 if [ -x "$RBENV_COMMAND_PATH" ]; then
   echo "$RBENV_COMMAND_PATH"
 elif [ "$RBENV_VERSION" != "system" ] && [ ! -d "${RBENV_ROOT}/versions/${RBENV_VERSION}" ]; then
-  echo "rbenv: version \`$RBENV_VERSION' is not installed (set by $(rbenv-version-origin))" >&2
+  echo "rbenv: version \`$RBENV_VERSION' is not installed (set by $($BASH rbenv-version-origin))" >&2
   exit 1
 else
   echo "rbenv: $RBENV_COMMAND: command not found" >&2
 
-  versions="$(rbenv-whence "$RBENV_COMMAND" || true)"
+  versions="$($BASH rbenv-whence "$RBENV_COMMAND" || true)"
   if [ -n "$versions" ]; then
     { echo
       echo "The \`$1' command exists in these Ruby versions:"

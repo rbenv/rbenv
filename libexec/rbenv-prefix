@@ -18,11 +18,11 @@ fi
 if [ -n "$1" ]; then
   export RBENV_VERSION="$1"
 elif [ -z "$RBENV_VERSION" ]; then
-  RBENV_VERSION="$(rbenv-version-name)"
+  RBENV_VERSION="$($BASH rbenv-version-name)"
 fi
 
 if [ "$RBENV_VERSION" = "system" ]; then
-  if RUBY_PATH="$(rbenv-which ruby)"; then
+  if RUBY_PATH="$($BASH rbenv-which ruby)"; then
     RUBY_PATH="${RUBY_PATH%/*}"
     RBENV_PREFIX_PATH="${RUBY_PATH%/bin}"
     echo "${RBENV_PREFIX_PATH:-/}"

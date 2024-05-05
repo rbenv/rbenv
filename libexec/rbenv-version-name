@@ -4,11 +4,11 @@ set -e
 [ -n "$RBENV_DEBUG" ] && set -x
 
 if [ -z "$RBENV_VERSION" ]; then
-  RBENV_VERSION_FILE="$(rbenv-version-file)"
-  RBENV_VERSION="$(rbenv-version-file-read "$RBENV_VERSION_FILE" || true)"
+  RBENV_VERSION_FILE="$($BASH rbenv-version-file)"
+  RBENV_VERSION="$($BASH rbenv-version-file-read "$RBENV_VERSION_FILE" || true)"
 fi
 
-IFS=$'\n' read -d '' -r -a scripts <<<"$(rbenv-hooks version-name)" || true
+IFS=$'\n' read -d '' -r -a scripts <<<"$($BASH rbenv-hooks version-name)" || true
 for script in "${scripts[@]}"; do
   # shellcheck disable=SC1090
   source "$script"
@@ -29,6 +29,6 @@ if version_exists "$RBENV_VERSION"; then
 elif version_exists "${RBENV_VERSION#ruby-}"; then
   echo "${RBENV_VERSION#ruby-}"
 else
-  echo "rbenv: version \`$RBENV_VERSION' is not installed (set by $(rbenv-version-origin))" >&2
+  echo "rbenv: version \`$RBENV_VERSION' is not installed (set by $($BASH rbenv-version-origin))" >&2
   exit 1
 fi
