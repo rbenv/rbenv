@@ -26,10 +26,10 @@ elif [ "$1" = "--no-sh" ]; then
   shift
 fi
 
-if [ "$(type -t readarray)" = "builtin" ]; then
+if [ "$(type -t readarray)" = "builtin" ] && echo "" | readarray -d '' _ 2>/dev/null; then
   readarray -d : -t paths < <(printf "%s" "$PATH")
 else
-  # bash 3.x compatibility
+  # bash < 4.4 compatibility
   IFS=: read -r -a paths <<<"$PATH" || true
 fi
 
