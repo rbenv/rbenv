@@ -48,9 +48,11 @@ On systems with Homebrew package manager, the “Using Package Managers” metho
    
    #### Arch Linux and its derivatives
    
-   Archlinux has an [AUR Package](https://aur.archlinux.org/packages/rbenv/) for
-   rbenv and you can install it from the AUR using the instructions from this
-   [wiki page](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_and_upgrading_packages).
+   Archlinux has an [official package](https://archlinux.org/packages/extra/any/rbenv/):
+
+   ```sh
+   sudo pacman -Sy rbenv
+   ```
 
    #### Fedora
 
