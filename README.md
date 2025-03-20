@@ -9,8 +9,8 @@ After rbenv injects itself into your PATH at installation time, any invocation o
 You can choose the Ruby version for your project with, for example:
 ```sh
 cd myproject
-# choose Ruby version 3.1.2:
-rbenv local 3.1.2
+# choose Ruby version 3.4.2:
+rbenv local 3.4.2
 ```
 
 Doing so will create or update the `.ruby-version` file in the current directory with the version that you've chosen. A different project of yours that is another directory might be using a different version of Ruby altogether—rbenv will seamlessly transition from one Ruby version to another when you switch projects.
@@ -125,7 +125,7 @@ rbenv install -l
 rbenv install -L
 
 # install a Ruby version:
-rbenv install 3.1.2
+rbenv install 3.4.2
 ```
 
 For troubleshooting `BUILD FAILED` scenarios, check the [ruby-build Discussions section](https://github.com/rbenv/ruby-build/discussions/categories/build-failures).
@@ -138,16 +138,16 @@ For troubleshooting `BUILD FAILED` scenarios, check the [ruby-build Discussions 
 
 Set a Ruby version to finish installation and start using Ruby:
 ```sh
-rbenv global 3.1.2   # set the default Ruby version for this machine
+rbenv global 3.4.2   # set the default Ruby version for this machine
 # or:
-rbenv local 3.1.2    # set the Ruby version for this directory
+rbenv local 3.4.2    # set the Ruby version for this directory
 ```
 
 Alternatively to the `rbenv install` command, you can download and compile Ruby manually as a subdirectory of `~/.rbenv/versions`. An entry in that directory can also be a symlink to a Ruby version installed elsewhere on the filesystem.
 
 #### Installing Ruby gems
 
-Select a Ruby version for your project using `rbenv local 3.1.2`, for example. Then, proceed to install gems as you normally would:
+Select a Ruby version for your project using `rbenv local 3.4.2`, for example. Then, proceed to install gems as you normally would:
 
 ```sh
 gem install bundler
@@ -209,7 +209,7 @@ overrides the global version, and can be overridden itself by setting
 the `RBENV_VERSION` environment variable or with the `rbenv shell`
 command.
 
-    rbenv local 3.1.2
+    rbenv local 3.4.2
 
 When run without a version number, `rbenv local` reports the currently
 configured local version. You can also unset the local version:
@@ -223,7 +223,7 @@ the version name to the `~/.rbenv/version` file. This version can be
 overridden by an application-specific `.ruby-version` file, or by
 setting the `RBENV_VERSION` environment variable.
 
-    rbenv global 3.1.2
+    rbenv global 3.4.2
 
 The special version name `system` tells rbenv to use the system Ruby
 (detected by searching your `$PATH`).
