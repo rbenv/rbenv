@@ -11,7 +11,7 @@ Manage Your Enviroment with *rbenv*
      - [Arch Based](#homebrew)
    - [From Git](#git-checkout)
    - [Configure Terminal Shell](#shell-config)
- - [Check Your System](#can-build)
+ - [Make Sure That Your System Can Build Ruby](#make-sure-that-your-system-can-build-ruby)
  - [Installing A Ruby Version](#install-version)
    - [Listing Availble Ruby Versions](#list-versions)
    - [List All Versions](#list-all-versions)
@@ -28,6 +28,7 @@ Manage Your Enviroment with *rbenv*
   - [Uninstalling rbenv](#removing-rbenv)
   - [Developing For rbenv](#deving-rbenv)
   - [Alternatives](#alternatives)
+
 
  
 ### HOW IT WORKS
