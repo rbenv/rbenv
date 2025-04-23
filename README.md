@@ -19,7 +19,7 @@ Manage Your Enviroment with *rbenv*
    - [Setting a Ruby Version](#setting-a-ruby-version)
    - [Errors Installing](#errors-or-failures)
   - [Gems](#INSTALLING-RUBY-GEMS)
-   - [Gem Location](#GEM-HOME-LOCATION)
+   - [Gem Home Location](#GEM-HOME-LOCATION)
   - [Uninstalling Ruby Versions](#UNINSTALLING-RUBY-VERSIONS)
   - [Command Reference](#COMMAND-REFERENCE)
   - [Environment Variables](#environment-variables)
