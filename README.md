@@ -14,7 +14,7 @@ Manage Your Enviroment with *rbenv*
  - [Check Your System](#can-build)
  - [Installing A Ruby Version](#install-version)
    - [Listing Availble Ruby Versions](#list-versions)
-   - [List All Versions](list-all-versions)
+   - [List All Versions](#list-all-versions)
    - [Installing a Ruby Version](#version-install)
    - [Setting a Ruby Version](#setting-a-ruby-version)
    - [Errors Installing](errors-or-failures)
