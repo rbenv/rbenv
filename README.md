@@ -188,7 +188,7 @@ Or, manually by getting the location of the version to remove
 	rm -rf 3.4.3
 	
 	
-## [COMMAND REFERENCE](commands-ref)
+## [COMMAND REFERENCE](#commands-ref)
 List of commands available to `rbenv`
  
 | command          | description                                                                                                             |
