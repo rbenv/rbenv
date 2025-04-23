@@ -21,7 +21,7 @@ Manage Your Enviroment with *rbenv*
   - [Gems](#gems)
    - [Gem Location](#gems-location)
   - [Uninstalling Ruby Versions](#uninstall-versions)
-  - [Command Reference](commands-ref)
+  - [Command Reference](#commands-ref)
   - [Environment Variables](#env-ref)
   - [How rbenv Hooks Into Your Shell](#how-it-hooks)
   - [Disabling rbenv](#disabling-rbenv)
