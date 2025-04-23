@@ -100,7 +100,7 @@ After you have installed `rbenv` your shell needs to be configured to load `rben
 
 **Now you are now ready to install some Ruby versions!**
 
-If you are curious, click [here](https://github.com/rbenv/rbenv?tab=readme-ov-file#how-rbenv-hooks-into-your-shell) to see what `init` does
+If you are curious, click [here](#HOW-RBENV-HOOKS-INTO-YOUR-SHELL) to see what `init` does
 
 ## [MAKE SURE THAT YOUR SYSTEM CAN BUILD RUBY](#MAKE-SURE-THAT-YOUR-SYSTEM-CAN-BUILD-RUBY)
 [Click here](https://github.com/rbenv/ruby-build/wiki#suggested-build-environment) to make sure your system has all the necessary tools, libraries and packages to build Ruby.
