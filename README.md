@@ -4,21 +4,21 @@ Manage Your Enviroment with *rbenv*
 
 # TABLE OF CONTENTS
  - [Install rbenv](#installation)
-   - [Using A Package Manager]()
+   - [Using A Package Manager](#pkg-mgr)
      - [Homebrew](#homebrew)
      - [Debian Based](#homebrew)
      - [Fedora Based](#homebrew)
      - [Arch Based](#homebrew)
-   - [From Git]()
-   - [Configure Terminal Shell]()
- - [Check Your System]()
- - [Installing A Ruby Version]()
-   - [Listing Availble Ruby Versions]()
-   - [Installing a Ruby Version]()
-   - [Setting a Ruby Version]()
-   - [Errors Installing]()
-  - [Gems]()
-   - [Installing]()
+   - [From Git](#git-checkout)
+   - [Configure Terminal Shell](#shell-config)
+ - [Check Your System](#can-build)
+ - [Installing A Ruby Version](#install-version)
+   - [Listing Availble Ruby Versions](#list-versions)
+   - [Installing a Ruby Version](#version-install)
+   - [Setting a Ruby Version](#set-version)
+   - [Errors Installing](#error-version)
+  - [Gems](#gems)
+   - [Installing](#gems-location)
    - [Gem Location]()
   - [Uninstalling Ruby Versions]()
   - [Command Reference]()
@@ -59,7 +59,7 @@ On macOS or Linux, we recommend installing `rbenv` with [Homebrew](https://brew.
 
 	brew install rbenv
 	
-### USING A DISTRO PACKAGE MANAGER
+### [USING A DISTRO PACKAGE MANAGER](#pkg-mgr)
 
 ##### DEBIAN AND DERIVATIVES (UBUNTU)
 > **!!!CAUTION!!!** Debian based distros (like Ubuntu) ship a very old (circa 2019) version of `ruby-build` which does not include the latest version of the Ruby language
@@ -78,7 +78,7 @@ Fedora has [an official package](https://packages.fedoraproject.org/pkgs/rbenv/r
 
 	sudo dnf install rbenv
 	
-### BASIC GIT CHECKOUT
+### [BASIC GIT CHECKOUT](#git-checkout)
 Use [rbenv-installer](https://github.com/rbenv/rbenv-installer#rbenv-installer) for a more automated install
 
 **IF** you do not want to execute scripts downloaded from a web URL 
@@ -90,7 +90,7 @@ _(or simply prefer a manual approach, follow the steps below)_
    - `~/.rbenv/bin/rbenv init`
 	
 
-### CONFIGURE  YOUR SHELL
+### [CONFIGURE YOUR SHELL](#shell-config)
 **SKIP** if you did the _"Basic Git Checkout"_
 
 After you have installed `rbenv` your shell needs to be configured to load `rbenv`
@@ -101,15 +101,15 @@ After you have installed `rbenv` your shell needs to be configured to load `rben
 
 If you are curious, click [here](https://github.com/rbenv/rbenv?tab=readme-ov-file#how-rbenv-hooks-into-your-shell) to see what `init` does
 
-## MAKE SURE THAT YOUR SYSTEM CAN BUILD RUBY
+## [MAKE SURE THAT YOUR SYSTEM CAN BUILD RUBY](#can-build)
 [Click here](https://github.com/rbenv/ruby-build/wiki#suggested-build-environment) to make sure your system has all the necessary tools, libraries and packages to build Ruby.
 
 The command `install` is not part of `rbenv`, but is a plug-in provided by `ruby-build` [ruby-build](https://github.com/rbenv/ruby-build#readme)
 
-## INSTALLING RUBY VERSIONS
+## [INSTALLING RUBY VERSIONS](#install-version)
 As seen from the example section above, the `rbenv install x.y.z` is how to install a specific version of the Ruby language. But, to get a list of versions available, the following 2 commands are helpful
 
-###### LIST STABLE VERSIONS
+###### [LIST STABLE VERSIONS](#list-versions)
 This will list ONLY the **latest** stable versions of Ruby
 
     rbenv install -l
@@ -132,27 +132,27 @@ To list ALL versions of Ruby available for installation
 
     rbenv install -L or rbenv install --list-all
 	
-###### INSTALL A VERSION
+###### [INSTALL A VERSION](#version-install)
 
     rbenv install 3.1.2
 	
 Alternatively, you can download and compile Ruby manually as a subdirectory of ~/.rbenv/versions. An entry in that directory can also be a symlink to a Ruby version installed elsewhere on the filesystem.
 	
-###### SET THE RUBY VERSION
+###### [SET THE RUBY VERSION](#set-version)
 To finish installation, you **MUST** set a Ruby version
 
 	rbenv global 3.1.2   # set the default Ruby version for this machine
 	# or:
 	rbenv local 3.1.2    # set the Ruby version for this directory
 	
-###### ERRORS OR FAILURES?
+###### [ERRORS OR FAILURES?](#error-version)
 If a `BUILD FAILED` error occurrs, see the [Ruby Build Discussions](https://github.com/rbenv/ruby-build/discussions/categories/build-failures)
 
 If you get a `command not found` error, you can install ruby-build as a plugin
 
     git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build
 	
-## INSTALLING RUBY GEMS
+## [INSTALLING RUBY GEMS](#gems)
 Gems are installed as they normally would be
 
 	gem install bundler     # recommended gem for all projects
@@ -166,7 +166,7 @@ Gems are installed as they normally would be
 >
 > Make sure you ran `rbenv init`, then run `rbenv global <version>` or `rbenv local <version>`
 
-##### GEM HOME LOCATION
+##### [GEM HOME LOCATION](#gems-location)
 TO check the location where gems are being installed run the command `gem env home`
 	
     rbenv global 3.4.3  # for example, if 3.4.3 is installed
