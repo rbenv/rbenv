@@ -14,9 +14,10 @@ Manage Your Enviroment with *rbenv*
  - [Check Your System](#can-build)
  - [Installing A Ruby Version](#install-version)
    - [Listing Availble Ruby Versions](#list-versions)
+   - [List All Versions](list-all-versions)
    - [Installing a Ruby Version](#version-install)
-   - [Setting a Ruby Version](#set-version)
-   - [Errors Installing](#error-version)
+   - [Setting a Ruby Version](#setting-a-ruby-version)
+   - [Errors Installing](errors-or-failures)
   - [Gems](#gems)
    - [Gem Location](#gems-location)
   - [Uninstalling Ruby Versions](#uninstall-versions)
@@ -126,7 +127,7 @@ This will list ONLY the **latest** stable versions of Ruby
 	
 	Only latest stable releases for each Ruby implementation are shown.
 	
-###### LIST ALL VERSIONS
+###### [LIST ALL VERSIONS](list-all-versions)
 To list ALL versions of Ruby available for installation
 
     rbenv install -L or rbenv install --list-all
@@ -137,14 +138,14 @@ To list ALL versions of Ruby available for installation
 	
 Alternatively, you can download and compile Ruby manually as a subdirectory of ~/.rbenv/versions. An entry in that directory can also be a symlink to a Ruby version installed elsewhere on the filesystem.
 	
-###### [SET THE RUBY VERSION](#set-version)
+###### [SETTING A RUBY VERSION](#setting-a-ruby-version)
 To finish installation, you **MUST** set a Ruby version
 
 	rbenv global 3.1.2   # set the default Ruby version for this machine
 	# or:
 	rbenv local 3.1.2    # set the Ruby version for this directory
 	
-###### [ERRORS OR FAILURES?](#error-version)
+###### [ERRORS OR FAILURES?](error-version)
 If a `BUILD FAILED` error occurrs, see the [Ruby Build Discussions](https://github.com/rbenv/ruby-build/discussions/categories/build-failures)
 
 If you get a `command not found` error, you can install ruby-build as a plugin
