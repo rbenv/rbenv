@@ -17,11 +17,11 @@ Manage Your Enviroment with *rbenv*
    - [List All Versions](#list-all-versions)
    - [Installing a Ruby Version](#version-install)
    - [Setting a Ruby Version](#setting-a-ruby-version)
-   - [Errors Installing](errors-or-failures)
+   - [Errors Installing](#errors-or-failures)
   - [Gems](#gems)
    - [Gem Location](#gems-location)
   - [Uninstalling Ruby Versions](#uninstall-versions)
-  - [Command Reference](#commands-ref)
+  - [Command Reference](commands-ref)
   - [Environment Variables](#env-ref)
   - [How rbenv Hooks Into Your Shell](#how-it-hooks)
   - [Disabling rbenv](#disabling-rbenv)
@@ -166,13 +166,13 @@ Gems are installed as they normally would be
 >
 > Make sure you ran `rbenv init`, then run `rbenv global <version>` or `rbenv local <version>`
 
-##### [GEM HOME LOCATION](#gems-location)
+##### [GEM HOME LOCATION](gems-location)
 TO check the location where gems are being installed run the command `gem env home`
 	
     rbenv global 3.4.3  # for example, if 3.4.3 is installed
 	gem env home        # outputs ~/.rbenv/versions/3.4.3/lib/ruby/gems/3.4.0
 	
-## [UNINSTALLING RUBY VERSIONS](#uninstall-versions)
+## [UNINSTALLING RUBY VERSIONS](uninstall-versions)
 As time goes on, Ruby versions you install will accumulate in your `~/.rbenv/versions directory`
 
 There are 2 ways to remove a version
@@ -188,7 +188,7 @@ Or, manually by getting the location of the version to remove
 	rm -rf 3.4.3
 	
 	
-## [COMMAND REFERENCE](#commands-ref)
+## [COMMAND REFERENCE](commands-ref)
 List of commands available to `rbenv`
  
 | command          | description                                                                                                             |
