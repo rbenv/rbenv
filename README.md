@@ -172,7 +172,7 @@ TO check the location where gems are being installed run the command `gem env ho
     rbenv global 3.4.3  # for example, if 3.4.3 is installed
 	gem env home        # outputs ~/.rbenv/versions/3.4.3/lib/ruby/gems/3.4.0
 	
-## [UNINSTALLING RUBY VERSIONS](uninstall-versions)
+## [UNINSTALLING RUBY VERSIONS](#uninstall-versions)
 As time goes on, Ruby versions you install will accumulate in your `~/.rbenv/versions directory`
 
 There are 2 ways to remove a version
@@ -188,7 +188,7 @@ Or, manually by getting the location of the version to remove
 	rm -rf 3.4.3
 	
 	
-## [COMMAND REFERENCE](commands-ref)
+## [COMMAND REFERENCE](#commands-ref)
 List of commands available to `rbenv`
  
 | command          | description                                                                                                             |
