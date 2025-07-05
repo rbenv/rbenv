@@ -377,6 +377,37 @@ rbenvは単純なので、一時的に無効にしたりシステムからアン
 
 プルリクエストの提出や[イシュートラッカー](https://github.com/rbenv/rbenv/issues)でのバグ報告はご自由にどうぞ。
 
+## 翻訳
+
+このプロジェクトは`README`とmanページの現地化に対応しており、[GNU
+gettext](https://www.gnu.org/software/gettext/)と[po4a](https://po4a.org/)を使っています。
+
+### メンテナの作業工程
+
+`README`とmanページの原文が更新されたら、`make`を実行してください。
+これにより、対応する`.pot`と`.po`ファイルが更新されます。
+`.po`ファイルの未翻訳の部分や古くなったことが示されている部分は、最新のソースの内容を反映しています。
+これにより、翻訳者が最新の情報に対して確実に作業できるようになります。
+
+### 翻訳者の作業工程
+
+- `translation/po`ディレクトリ以下の関係する`.po`ファイルを編集してください。
+- 翻訳を眺めたり校正したりするには、`make`と実行するだけです。これにより、現地化された`README`とmanページが更新された`.po`ファイルから再生成されます。
+- 納得のいくものになったら、更新された`.po`ファイルと現地化されたファイルをプルリクエストでご提出ください。
+
+### 要件
+
+この作業工程はpo4aというツールに依存しています。po4aがインストールされていなければ、翻訳工程は飛ばされ、警告が表示されます。
+
+po4aをインストールするには、お手元の[システムのパッケージマネージャ](https://repology.org/project/po4a/versions)をお使いください。例えば次の通りです。
+
+```sh
+# Debian/Ubuntu
+sudo apt install po4a
+
+# macOS（Homebrewの場合）
+brew install po4a
+```
 
   [ruby-build]: https://github.com/gemmaro/ruby-build/tree/ja/translation/ja#readme
   [hooks]: https://github.com/rbenv/rbenv/wiki/Authoring-plugins#rbenv-hooks
