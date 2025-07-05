@@ -345,6 +345,33 @@ Tests are executed using [Bats](https://github.com/bats-core/bats-core):
 Please feel free to submit pull requests and file bugs on the [issue
 tracker](https://github.com/rbenv/rbenv/issues).
 
+## Translation
+
+This project supports localization of the `README` and man pages using [GNU gettext](https://www.gnu.org/software/gettext/) and [po4a](https://po4a.org/).
+
+### Maintainer Workflow
+
+When the original `README` or man pages are updated, run `make`.  This updates the corresponding `.pot` and `.po` files. Untranslated or outdated segments in the `.po` files will reflect the latest source content, ensuring translators always work with up-to-date information.
+
+### Translator Workflow
+
+- Edit the relevant `.po` files under the `translation/po` directory.
+- To preview or validate your translation, simply run `make`. This regenerates the localized `README` and man pages from your updated `.po` files.
+- Once satisfied, submit the updated `.po` files and localized files via a pull request.
+
+### Requirements
+
+This workflow depends on the po4a tool. If po4a is not installed, the translation steps will be skipped and a warning will be displayed.
+
+To install po4a, use your [system’s package manager](https://repology.org/project/po4a/versions). For example:
+
+```sh
+# Debian/Ubuntu
+sudo apt install po4a
+
+# macOS (with Homebrew)
+brew install po4a
+```
 
   [ruby-build]: https://github.com/rbenv/ruby-build#readme
   [hooks]: https://github.com/rbenv/rbenv/wiki/Authoring-plugins#rbenv-hooks
