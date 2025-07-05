@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: rbenv\n"
-"POT-Creation-Date: 2025-04-05 16:19+0900\n"
-"PO-Revision-Date: 2025-07-05 11:55+0900\n"
+"POT-Creation-Date: 2025-07-06 08:26+0900\n"
+"PO-Revision-Date: 2025-07-06 08:34+0900\n"
 "Last-Translator: gemmaro <gemmaro.dev@gmail.com>\n"
 "Language-Team: none\n"
 "Language: ja\n"
@@ -1432,38 +1432,120 @@ msgstr ""
 "プルリクエストの提出や[イシュートラッカー](https://github.com/rbenv/rbenv/"
 "issues)でのバグ報告はご自由にどうぞ。"
 
+#. type: Title ##
+#: ../README.md:348
+#, no-wrap
+msgid "Translation"
+msgstr "翻訳"
+
+#. type: Plain text
+#: ../README.md:351
+msgid ""
+"This project supports localization of the `README` and man pages using [GNU "
+"gettext](https://www.gnu.org/software/gettext/) and [po4a](https://po4a."
+"org/)."
+msgstr "このプロジェクトは`README`とmanページの現地化に対応しており、[GNU gettext](https://www.gnu.org/software/gettext/)と[po4a](https://po4a.org/)を使っています。"
+
+#. type: Title ###
+#: ../README.md:352
+#, no-wrap
+msgid "Maintainer Workflow"
+msgstr "メンテナの作業工程"
+
+#. type: Plain text
+#: ../README.md:355
+msgid ""
+"When the original `README` or man pages are updated, run `make`.  This "
+"updates the corresponding `.pot` and `.po` files. Untranslated or outdated "
+"segments in the `.po` files will reflect the latest source content, ensuring "
+"translators always work with up-to-date information."
+msgstr ""
+"`README`とmanページの原文が更新されたら、`make`を実行してください。\n"
+"これにより、対応する`.pot`と`.po`ファイルが更新されます。\n"
+"`.po`ファイルの未翻訳の部分や古くなったことが示されている部分は、最新のソースの内容を反映しています。\n"
+"これにより、翻訳者が最新の情報に対して確実に作業できるようになります。"
+
+#. type: Title ###
+#: ../README.md:356
+#, no-wrap
+msgid "Translator Workflow"
+msgstr "翻訳者の作業工程"
+
+#. type: Bullet: '- '
+#: ../README.md:361
+msgid "Edit the relevant `.po` files under the `translation/po` directory."
+msgstr "`translation/po`ディレクトリ以下の関係する`.po`ファイルを編集してください。"
+
+#. type: Bullet: '- '
+#: ../README.md:361
+msgid ""
+"To preview or validate your translation, simply run `make`. This regenerates "
+"the localized `README` and man pages from your updated `.po` files."
+msgstr "翻訳を眺めたり校正したりするには、`make`と実行するだけです。これにより、現地化された`README`とmanページが更新された`.po`ファイルから再生成されます。"
+
+#. type: Bullet: '- '
+#: ../README.md:361
+msgid ""
+"Once satisfied, submit the updated `.po` files and localized files via a "
+"pull request."
+msgstr "納得のいくものになったら、更新された`.po`ファイルと現地化されたファイルをプルリクエストでご提出ください。"
+
+#. type: Title ###
+#: ../README.md:362
+#, no-wrap
+msgid "Requirements"
+msgstr "要件"
+
+#. type: Plain text
+#: ../README.md:365
+msgid ""
+"This workflow depends on the po4a tool. If po4a is not installed, the "
+"translation steps will be skipped and a warning will be displayed."
+msgstr "この作業工程はpo4aというツールに依存しています。po4aがインストールされていなければ、翻訳工程は飛ばされ、警告が表示されます。"
+
+#. type: Plain text
+#: ../README.md:367
+msgid ""
+"To install po4a, use your [system’s package manager](https://repology.org/"
+"project/po4a/versions). For example:"
+msgstr "po4aをインストールするには、お手元の[システムのパッケージマネージャ](https://repology.org/project/po4a/versions)をお使いください。例えば次の通りです。"
+
+#. type: Fenced code block (sh)
+#: ../README.md:368
+#, no-wrap
+msgid ""
+"# Debian/Ubuntu\n"
+"sudo apt install po4a\n"
+"\n"
+"# macOS (with Homebrew)\n"
+"brew install po4a\n"
+msgstr ""
+"# Debian/Ubuntu\n"
+"sudo apt install po4a\n"
+"\n"
+"# macOS（Homebrewの場合）\n"
+"brew install po4a\n"
+
 #. type: Link reference
-#: ../README.md:349
+#: ../README.md:376
 #, no-wrap
 msgid "[ruby-build]: https://github.com/rbenv/ruby-build#readme"
 msgstr "[ruby-build]: https://github.com/gemmaro/ruby-build/tree/ja/translation/ja#readme"
 
 #. type: Link reference
-#: ../README.md:350
+#: ../README.md:377
 #, no-wrap
 msgid "[hooks]: https://github.com/rbenv/rbenv/wiki/Authoring-plugins#rbenv-hooks"
 msgstr "[hooks]: https://github.com/rbenv/rbenv/wiki/Authoring-plugins#rbenv-hooks"
 
 #. type: Link reference
-#: ../README.md:351
+#: ../README.md:378
 #, no-wrap
 msgid "[alternatives]: https://github.com/rbenv/rbenv/wiki/Comparison-of-version-managers"
 msgstr "[alternatives]: https://github.com/rbenv/rbenv/wiki/Comparison-of-version-managers"
 
 #. type: Link reference
-#: ../README.md:352
+#: ../README.md:379
 #, no-wrap
 msgid "[plugins]: https://github.com/rbenv/rbenv/wiki/Plugins"
 msgstr "[plugins]: https://github.com/rbenv/rbenv/wiki/Plugins"
-
-#, no-wrap
-#~ msgid ""
-#~ "   Archlinux has an [AUR Package](https://aur.archlinux.org/packages/rbenv/) for\n"
-#~ "   rbenv and you can install it from the AUR using the instructions from this\n"
-#~ "   [wiki page](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_and_upgrading_packages).\n"
-#~ msgstr "   Archlinuxにはrbenvの[AURパッケージ](https://aur.archlinux.org/packages/rbenv/)があり、こちらの[ウィキページ](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_and_upgrading_packages)にある手順を使ってAURからインストールできます。\n"
-
-#~ msgid ""
-#~ "You can run `rbenv init -` for yourself to inspect the generated script."
-#~ msgstr ""
-#~ "生成されたスクリプトを調べる上で、`rbenv init -`を走らせることもできます。"
