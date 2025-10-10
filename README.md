@@ -39,8 +39,8 @@ On systems with Homebrew package manager, the “Using Package Managers” metho
        
    > [!CAUTION]   
    > The version of rbenv that is packaged and maintained in official
-   Debian and Ubuntu repositories is _out of date_. To install the latest
-   version, it is recommended to [install rbenv using git](#basic-git-checkout).
+   > Debian and Ubuntu repositories is _out of date_. To install the latest
+   > version, it is recommended to [install rbenv using git](#basic-git-checkout).
    
    ```sh
    sudo apt install rbenv
@@ -60,6 +60,14 @@ On systems with Homebrew package manager, the “Using Package Managers” metho
 
    ```sh
    sudo dnf install rbenv
+   ```
+
+   #### OpenSUSE Tumbleweed
+
+   OpenSUSE has an [official package](https://software.opensuse.org/package/rbenv) which you can install:
+
+   ```sh
+   sudo zypper in rbenv
    ```
 
 2. Set up your shell to load rbenv.
