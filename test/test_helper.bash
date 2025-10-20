@@ -104,18 +104,23 @@ assert() {
 path_without() {
   local exe="$1"
   local path=":${PATH}:"
-  local found alt util
-  for found in $(type -aP "$exe"); do
-    found="${found%/*}"
-    if [ "$found" != "${RBENV_ROOT}/shims" ]; then
-      alt="${RBENV_TEST_DIR}/$(echo "${found#/}" | tr '/' '-')"
-      mkdir -p "$alt"
-      for util in bash head cut readlink greadlink sed sort awk; do
-        if [ -x "${found}/$util" ]; then
-          ln -s "${found}/$util" "${alt}/$util"
-        fi
-      done
-      path="${path/:${found}:/:${alt}:}"
+  local found alt util dir
+
+  # Iterate over each directory in $PATH
+  for dir in ${PATH//:/ }; do
+    [ -n "$dir" ] || continue
+    if [ -x "$dir/$exe" ]; then
+      found="$dir"
+      if [ "$found" != "${RBENV_ROOT}/shims" ]; then
+        alt="${RBENV_TEST_DIR}/$(echo "${found#/}" | tr '/' '-')"
+        mkdir -p "$alt"
+        for util in bash head cut readlink greadlink sed sort awk; do
+          if [ -x "${found}/$util" ]; then
+            ln -s "${found}/$util" "${alt}/$util"
+          fi
+        done
+        path="${path/:${found}:/:${alt}:}"
+      fi
     fi
   done
   path="${path#:}"

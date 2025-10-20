@@ -41,7 +41,7 @@ export RBENV_DIR
 
 canonicalize() {
   local readlink resolved_path
-  if readlink="$(type -P greadlink)" || readlink="$(type -P readlink)"; then
+  if readlink="$(command -v greadlink 2>/dev/null || command -v readlink 2>/dev/null)"; then
     # happy path: GNU & BSD readlink, macOS 12.3+
     if resolved_path="$("$readlink" -f "$1" 2>/dev/null)"; then
       printf "%s\n" "$resolved_path"
@@ -106,7 +106,7 @@ case "$command" in
   exec rbenv-help
   ;;
 * )
-  command_path="$(type -P "rbenv-$command" || true)"
+  command_path="$(command -v "rbenv-$command" 2>/dev/null || true)"
   if [ -z "$command_path" ]; then
     if [ "$command" == "shell" ]; then
       abort "shell integration not enabled. Run \`rbenv init' for instructions."
