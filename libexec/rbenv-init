@@ -168,7 +168,7 @@ fish )
 esac
 
 if [ -z "$no_rehash" ]; then
-  echo 'command rbenv rehash 2>/dev/null'
+  echo 'command rbenv rehash 2>/dev/null || true'
 fi
 
 IFS=$'\n' read -d '' -r -a commands <<<"$(rbenv-commands --sh)" || true
