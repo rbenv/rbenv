@@ -14,7 +14,7 @@ load test_helper
 @test "auto rehash" {
   run rbenv-init -
   assert_success
-  assert_line "command rbenv rehash 2>/dev/null"
+  assert_line "command rbenv rehash 2>/dev/null || true"
 }
 
 @test "setup shell completions" {
