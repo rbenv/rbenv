@@ -6,6 +6,17 @@
 #
 # Displays the full path to the executable that rbenv will invoke when
 # you run the given command.
+#
+# If GEM_HOME is set, the result will be `$GEM_HOME/bin/<command>' if
+# it exists.
+#
+# If the current Ruby version is "system", the command will be looked up
+# in PATH.
+#
+# For other Ruby versions, the command is first looked up in
+# `$RBENV_ROOT/versions/$RBENV_VERSION/bin'. If it does not exist and if
+# the command is not one of the core Ruby executables (e.g. "ruby",
+# "gem", "bundle"), it will be looked up in PATH.
 
 set -e
 [ -n "$RBENV_DEBUG" ] && set -x
@@ -36,15 +47,28 @@ fi
 
 RBENV_VERSION="${RBENV_VERSION:-$(rbenv-version-name)}"
 
-if [ "$RBENV_VERSION" = "system" ]; then
-  PATH="$(remove_from_path "${RBENV_ROOT}/shims")" \
-    RBENV_COMMAND_PATH="$(command -v "$RBENV_COMMAND" || true)"
+if [[ -n "$GEM_HOME" && -x "${GEM_HOME}/bin/${RBENV_COMMAND}" ]]; then
+  RBENV_COMMAND_PATH="${GEM_HOME}/bin/${RBENV_COMMAND}"
+elif [ "$RBENV_VERSION" = "system" ]; then
+  PATH="$(remove_from_path "${RBENV_ROOT}/shims")" RBENV_COMMAND_PATH="$(type -P "$RBENV_COMMAND" || true)"
 else
   RBENV_COMMAND_PATH="${RBENV_ROOT}/versions/${RBENV_VERSION}/bin/${RBENV_COMMAND}"
-fi
-
-if [[ ! -x "$RBENV_COMMAND_PATH" && -n "$GEM_HOME" && -x "${GEM_HOME}/bin/${RBENV_COMMAND}" ]]; then
-  RBENV_COMMAND_PATH="${GEM_HOME}/bin/${RBENV_COMMAND}"
+  if [ ! -x "$RBENV_COMMAND_PATH" ]; then
+    # Look up the command in PATH as fallback.
+    case "$RBENV_COMMAND" in
+    ruby | rake | gem | bundle | bundler | irb | rdoc | ri )
+      # Do not allow fallback to PATH for core Ruby commands. If any of these are missing
+      # in the current Ruby version, error out instead of allowing a potentially unrelated
+      # Ruby version to activate and potentially muck up the current project.
+      ;;
+    * )
+      if PATH="$(remove_from_path "${RBENV_ROOT}/shims")" RBENV_COMMAND_FALLBACK="$(type -P "$RBENV_COMMAND")"; then
+        RBENV_COMMAND_PATH="$RBENV_COMMAND_FALLBACK"
+      fi
+      unset RBENV_COMMAND_FALLBACK
+      ;;
+    esac
+  fi
 fi
 
 IFS=$'\n' read -d '' -r -a scripts <<<"$(rbenv-hooks which)" || true
