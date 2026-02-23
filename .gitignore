@@ -8,3 +8,4 @@
 /src/Makefile
 /src/*.o
 /gems
+/translation/po/en.pot
