@@ -149,9 +149,13 @@ mkdir -p "${RBENV_ROOT}/"{shims,versions}
 shell="${shells[0]}"
 case "$shell" in
 fish )
-  [ -n "$rbenv_in_path" ] || printf "set -gx PATH '%s/bin' \$PATH\n" "$root"
-  printf "set -gx PATH '%s/shims' \$PATH\n" "$RBENV_ROOT"
-  printf 'set -gx RBENV_SHELL %s\n' "$shell"
+  if fish -c 'fish_add_path --help' 2>/dev/null; then
+    [ -n "$rbenv_in_path" ] || printf "fish_add_path '%s/bin'\n" "$root"
+    printf "fish_add_path '%s/shims'\n" "$RBENV_ROOT"
+  else
+    [ -n "$rbenv_in_path" ] || printf "set -gx PATH '%s/bin' \$PATH\n" "$root"
+    printf "set -gx PATH '%s/shims' \$PATH\n" "$RBENV_ROOT"
+  fi
 ;;
 * )
   # shellcheck disable=SC2016
