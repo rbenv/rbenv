@@ -1,0 +1,170 @@
+'\" t
+.\"     Title: rbenv
+.\"    Author: Mislav Marohnić
+.\" Generator: Asciidoctor 2.0.21
+.\"      Date: 2025-07-05
+.\"    Manual: Rbenv Manual
+.\"    Source: rbenv 1.3.2
+.\"  Language: English
+.\"
+.TH "RBENV" "1" "2025-07-05" "rbenv 1.3.2" "Rbenv Manual"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "名称"
+rbenv \- アプリケーションのRuby環境の管理
+.SH "処方"
+.sp
+\fBrbenv\fP \fI＜コマンド＞\fP [\fI＜引数＞\fP...]
+.SH "説明"
+.sp
+rbenvは、プロジェクトディレクトリの \fI.ruby\-version\fP ファイルに従い、 \fBruby\fP や \fBgem\fP や \fBbundle\fP やその他のRubyのコマンド呼出しで、そのプロジェクトに構成されたRubyのバージョンが自動的に呼び出されるようにします。
+.sp
+このため、全てのRubyの実行プログラムにシンボリックリンクが生成されます。 rbenvのシンボリックリンクがPATHに前置されたとき、rbenvにより、Rubyのバージョンが自動で透過的に切り替わります。
+.sp
+rbenvにより、 \fI$RBENV_ROOT/versions\fP ディレクトリから、使えるRubyのバージョンが探し出されます。
+.SH "コマンド"
+.sp
+\fBrbenv global\fP [\fI＜バージョン＞\fP]
+.RS 4
+大域的なRubyのバージョンを表示、または変更します
+.RE
+.sp
+\fBrbenv local\fP [\fI＜バージョン＞\fP]
+.RS 4
+局所的なRubyのバージョンを表示、または変更します
+.RE
+.sp
+\fBrbenv shell\fP [\fI＜バージョン＞\fP]
+.RS 4
+現在のシェルセッションでのRubyのバージョンを表示、または変更します
+.RE
+.sp
+\fBrbenv version\fP
+.RS 4
+現在の活性なRubyのバージョンと、設定された場所を表示します
+.RE
+.sp
+\fBrbenv versions\fP
+.RS 4
+rbenvで把握されている、ローカルにインストールされたRubyの、全バージョンを一覧にします
+.RE
+.sp
+\fBrbenv install\fP [\fI＜バージョン＞\fP]
+.RS 4
+（これは \fBruby\-build\fP プラグインで提供される機能です） 新しくRubyのバージョンをダウンロードし、インストールします
+.RE
+.sp
+\fBrbenv rehash\fP
+.RS 4
+把握しているRubyの実行プログラムの、全てのシンボリックリンクを再生成します
+.RE
+.sp
+\fBrbenv which\fP [\fI＜コマンド＞\fP]
+.RS 4
+コマンドを解決したときの実行パスを表示します
+.RE
+.sp
+\fBrbenv init\fP
+.RS 4
+現在のシェル環境で、rbenvを使い始める手助けをします
+.RE
+.sp
+\fBrbenv help\fP [\fI＜コマンド＞\fP]
+.RS 4
+rbenvの全コマンドのヘルプテキストを表示します
+.RE
+.SH "環境変数"
+.sp
+\fBRBENV_VERSION\fP （既定では \fI.ruby\-version\fP ファイルから読み込まれます）
+.RS 4
+使われるRubyのバージョン名です
+.RE
+.sp
+\fBRBENV_ROOT\fP （既定では \fI~/.rbenv\fP です）
+.RS 4
+rbenvがRubyのバージョン、プラグイン、その他の構成を探す場所です
+.RE
+.sp
+\fBRBENV_DEBUG\fP
+.RS 4
+rbenvの内部についてのデバッグ情報について、標準エラーに印字する動作を有効にします
+.RE
+.sp
+\fBRBENV_HOOK_PATH\fP
+.RS 4
+rbenvのプラグインスクリプトを探索する、コロン区切りのパスのリストです
+.RE
+.sp
+\fBRBENV_DIR\fP （既定では \fI$PWD\fP です）
+.RS 4
+\fI.ruby\-version\fP ファイルの所在を走査する上での、基底となるディレクトリです
+.RE
+.SH "プラグイン"
+.sp
+中核機能としては、rbenvはRubyのバージョン間を切り替えるだけです。 それ以上のことはしません。 ただし、プラグインの機構は提供しています。 既定の動作のほぼ全ての面に対して、フックを掛けたり、処理を上塗りしたりできます。
+.sp
+rbenvの最もよく使われるプラグインは \fBruby\-build\fP です。 このプラグインには、新しいRubyのバージョンを \fI$RBENV_ROOT/versions\fP ディレクトリにインストールする機能があります。
+.sp
+詳しくは \c
+.URL "https://github.com/rbenv/rbenv/wiki/Plugins" "" ""
+をお読みください
+.SH "補足"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+.URL "https://github.com/rbenv/rbenv/discussions" "" ""
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+.URL "https://github.com/rbenv/rbenv/wiki" "" ""
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+.URL "https://github.com/gemmaro/ruby\-build/tree/ja/translation/ja#readme" "" ""
+.RE
+.sp
+.ce
+\l'\n(.lu*25u/100u\(ap'
+.SH "日本語訳について"
+.sp
+この日本語訳の原文は こちら です。
+.SH "AUTHOR"
+.sp
+Mislav Marohnić

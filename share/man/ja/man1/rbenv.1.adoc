@@ -1,0 +1,95 @@
+// GENERATED FILE, DO NOT EDIT
+= rbenv(1)
+Mislav Marohnić
+:doctype: manpage
+:man manual: Rbenv Manual
+:man source: rbenv {version}
+:man-linkstyle: pass:[blue R < >]
+
+== 名称
+
+rbenv - アプリケーションのRuby環境の管理
+
+== 処方
+
+*rbenv* _＜コマンド＞_ [_＜引数＞_...]
+
+== 説明
+
+rbenvは、プロジェクトディレクトリの _.ruby-version_ ファイルに従い、 *ruby* や *gem* や *bundle* やその他のRubyのコマンド呼出しで、そのプロジェクトに構成されたRubyのバージョンが自動的に呼び出されるようにします。
+
+このため、全てのRubyの実行プログラムにシンボリックリンクが生成されます。 rbenvのシンボリックリンクがPATHに前置されたとき、rbenvにより、Rubyのバージョンが自動で透過的に切り替わります。
+
+rbenvにより、 _$RBENV_ROOT/versions_ ディレクトリから、使えるRubyのバージョンが探し出されます。
+
+== コマンド
+
+*rbenv global* [_＜バージョン＞_]::
+  大域的なRubyのバージョンを表示、または変更します
+
+*rbenv local* [_＜バージョン＞_]::
+  局所的なRubyのバージョンを表示、または変更します
+
+*rbenv shell* [_＜バージョン＞_]::
+  現在のシェルセッションでのRubyのバージョンを表示、または変更します
+
+*rbenv version*::
+  現在の活性なRubyのバージョンと、設定された場所を表示します
+
+*rbenv versions*::
+  rbenvで把握されている、ローカルにインストールされたRubyの、全バージョンを一覧にします
+
+*rbenv install* [_＜バージョン＞_]::
+  （これは *ruby-build* プラグインで提供される機能です） 新しくRubyのバージョンをダウンロードし、インストールします
+
+*rbenv rehash*::
+  把握しているRubyの実行プログラムの、全てのシンボリックリンクを再生成します
+
+*rbenv which* [_＜コマンド＞_]::
+  コマンドを解決したときの実行パスを表示します
+
+*rbenv init*::
+  現在のシェル環境で、rbenvを使い始める手助けをします
+
+*rbenv help* [_＜コマンド＞_]::
+  rbenvの全コマンドのヘルプテキストを表示します
+
+== 環境変数
+
+*RBENV_VERSION* （既定では _.ruby-version_ ファイルから読み込まれます）::
+  使われるRubyのバージョン名です
+
+*RBENV_ROOT* （既定では _~/.rbenv_ です）::
+  rbenvがRubyのバージョン、プラグイン、その他の構成を探す場所です
+
+*RBENV_DEBUG*::
+  rbenvの内部についてのデバッグ情報について、標準エラーに印字する動作を有効にします
+
+*RBENV_HOOK_PATH*::
+  rbenvのプラグインスクリプトを探索する、コロン区切りのパスのリストです
+
+*RBENV_DIR* （既定では _$PWD_ です）::
+  _.ruby-version_ ファイルの所在を走査する上での、基底となるディレクトリです
+
+== プラグイン
+
+中核機能としては、rbenvはRubyのバージョン間を切り替えるだけです。 それ以上のことはしません。 ただし、プラグインの機構は提供しています。 既定の動作のほぼ全ての面に対して、フックを掛けたり、処理を上塗りしたりできます。
+
+rbenvの最もよく使われるプラグインは *ruby-build* です。 このプラグインには、新しいRubyのバージョンを _$RBENV_ROOT/versions_ ディレクトリにインストールする機能があります。
+
+詳しくは https://github.com/rbenv/rbenv/wiki/Plugins をお読みください
+
+== 補足
+
+* https://github.com/rbenv/rbenv/discussions
+
+* https://github.com/rbenv/rbenv/wiki
+
+* https://github.com/gemmaro/ruby-build/tree/ja/translation/ja#readme
+
+
+'''
+
+== 日本語訳について
+
+この日本語訳の原文は xref:../../man1/rbenv.1.adoc[こちら] です。

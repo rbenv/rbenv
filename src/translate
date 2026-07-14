@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+translation=$1
+
+if ! command -v po4a > /dev/null
+then
+    echo "Warning: po4a is not installed; skipping internationalization step" >&2
+    exit 0
+fi
+
+pot=translation/po/en.pot
+[ ! -f $pot ] && touch $pot
+
+(cd translation && po4a po4a.cfg)
+
+message="// GENERATED FILE, DO NOT EDIT"
+if ! grep --quiet "$message" "$translation"
+then
+  tmp=$(mktemp)
+  echo "$message" | cat - "$translation" > "$tmp"
+  mv "$tmp" "$translation"
+fi
