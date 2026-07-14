@@ -30,8 +30,16 @@ if [ -z "$RBENV_COMMAND" ]; then
 fi
 
 export RBENV_VERSION
-RBENV_COMMAND_PATH="$(rbenv-which "$RBENV_COMMAND")"
-RBENV_BIN_PATH="${RBENV_COMMAND_PATH%/*}"
+if [ "$1" = "--no-resolve" ]; then
+    RBENV_COMMAND="$2"
+    RBENV_COMMAND_PATH="$RBENV_COMMAND"
+    RBENV_BIN_PATH="$(rbenv-prefix)/bin"
+    shift 1
+else
+    RBENV_COMMAND_PATH="$(rbenv-which "$RBENV_COMMAND")"
+    RBENV_BIN_PATH="${RBENV_COMMAND_PATH%/*}"
+fi
+
 
 IFS=$'\n' read -d '' -r -a scripts <<<"$(rbenv-hooks exec)" || true
 for script in "${scripts[@]}"; do
