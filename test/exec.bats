@@ -107,3 +107,33 @@ SH
   run ruby -S rake
   assert_success "hello rake"
 }
+
+@test "does not duplicate gem-rehash in RUBYLIB for nested execs" {
+  local rehash_path
+  rehash_path="$(cd "${BATS_TEST_DIRNAME}/../rbenv.d/exec/gem-rehash" && pwd)"
+
+  RBENV_VERSION=system RUBYLIB="/custom ruby lib" run rbenv exec rbenv exec rbenv exec env
+  assert_success
+  assert_line "RUBYLIB=${rehash_path}:/custom ruby lib"
+}
+
+@test "preserves an existing gem-rehash entry in RUBYLIB" {
+  local rehash_path
+  rehash_path="$(cd "${BATS_TEST_DIRNAME}/../rbenv.d/exec/gem-rehash" && pwd)"
+  local libraries
+  for libraries in "$rehash_path:/after" "/before:$rehash_path:/after" "/before:$rehash_path"; do
+    RBENV_VERSION=system RUBYLIB="$libraries" run rbenv exec env
+    assert_success
+    assert_line "RUBYLIB=$libraries"
+  done
+}
+
+@test "does not confuse other RUBYLIB entries with gem-rehash" {
+  local rehash_path
+  rehash_path="$(cd "${BATS_TEST_DIRNAME}/../rbenv.d/exec/gem-rehash" && pwd)"
+  local libraries="${rehash_path}-other:/other${rehash_path}"
+
+  RBENV_VERSION=system RUBYLIB="$libraries" run rbenv exec env
+  assert_success
+  assert_line "RUBYLIB=${rehash_path}:${libraries}"
+}
