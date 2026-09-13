@@ -88,7 +88,9 @@ if [ -z "$print" ]; then
   fi
 
   write_config() {
-    if grep -q "rbenv init" "$1" 2>/dev/null; then
+    # Treat only active (non-comment) lines as configuration so a disabled
+    # `rbenv init` snippet does not skip setup (see #1631).
+    if grep -E "rbenv init" "$1" 2>/dev/null | grep -qvE "^[[:space:]]*#"; then
       printf 'skipping %s%s%s: already configured for rbenv.\n' "$color_start" "$(display_path "$1")" "$color_end"
       return 0
     fi
