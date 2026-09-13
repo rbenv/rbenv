@@ -92,6 +92,32 @@ OUT
   assert_line 'eval "$(rbenv init - --no-rehash zsh)"'
 }
 
+@test "set up zsh ignores commented rbenv init" {
+  unset ZDOTDIR
+  mkdir -p "$HOME"
+  cat > ~/.zshrc <<'OUT'
+#if command -v rbenv >/dev/null; then
+#  eval "$(rbenv init - zsh)"
+#fi
+OUT
+  run rbenv-init zsh
+  assert_success "writing ~/.zshrc: now configured for rbenv."
+  run cat ~/.zshrc
+  # shellcheck disable=SC2016
+  assert_line 'eval "$(rbenv init - --no-rehash zsh)"'
+}
+
+@test "skips when rbenv init is already active" {
+  assert [ ! -e ~/.bash_profile ]
+  mkdir -p "$HOME"
+  # shellcheck disable=SC2016
+  cat > ~/.bash_profile <<'OUT'
+eval "$(rbenv init - --no-rehash bash)"
+OUT
+  run rbenv-init bash
+  assert_success "skipping ~/.bash_profile: already configured for rbenv."
+}
+
 @test "set up fish" {
   unset XDG_CONFIG_HOME
   run rbenv-init fish
