@@ -50,10 +50,21 @@ done
 if [ "${#shells[@]}" -eq 0 ]; then
   shell="$(ps -p "$PPID" -o 'args=' 2>/dev/null || true)"
   shell="${shell%% *}"
-  shell="${shell##-}"
-  shell="${shell:-$SHELL}"
   shell="${shell##*/}"
-  shells=("${shell%%-*}")
+  shell="${shell#-}"
+  shell="${shell%%-*}"
+  if [ -z "$shell" ] || ! type -P "$shell" >/dev/null 2>&1; then
+    shell="$(ps -p "$PPID" -o 'comm=' 2>/dev/null || true)"
+    shell="${shell##*/}"
+    shell="${shell#-}"
+    shell="${shell%%-*}"
+  fi
+  if [ -z "$shell" ]; then
+    shell="${SHELL##*/}"
+    shell="${shell#-}"
+    shell="${shell%%-*}"
+  fi
+  shells=("${shell:-bash}")
 fi
 
 root="${BASH_SOURCE:-$0}"

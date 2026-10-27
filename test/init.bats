@@ -43,6 +43,18 @@ OUT
   assert_success "sh"
 }
 
+@test "detect parent shell with login flag as argv0" {
+  mkdir -p "$RBENV_TEST_DIR"
+  cd "$RBENV_TEST_DIR"
+  cat > myscript.sh <<'OUT'
+#!/usr/bin/env bash
+exec -a -l bash -c 'eval "$(rbenv-init -)"; echo "$RBENV_SHELL"'
+OUT
+  chmod +x myscript.sh
+  run ./myscript.sh
+  assert_success "bash"
+}
+
 @test "skip shell completions (fish)" {
   root="$(cd $BATS_TEST_DIRNAME/.. && pwd)"
   run rbenv-init - fish
