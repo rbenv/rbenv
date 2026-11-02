@@ -71,6 +71,24 @@ IN
   assert_success "1.9.3"
 }
 
+@test "ignores a leading UTF-8 byte order mark" {
+  printf '\xef\xbb\xbf3.3.0\r\n' > my-version
+  run rbenv-version-file-read my-version
+  assert_success "3.3.0"
+}
+
+@test "ignores a UTF-8 byte order mark followed by blank lines" {
+  printf '\xef\xbb\xbf\r\n\r\n  3.3.0\r\n' > my-version
+  run rbenv-version-file-read my-version
+  assert_success "3.3.0"
+}
+
+@test "prevents directory traversal behind a UTF-8 byte order mark" {
+  printf '\xef\xbb\xbf../foo\n' > my-version
+  run rbenv-version-file-read my-version
+  assert_failure "rbenv: invalid version in \`my-version'"
+}
+
 @test "prevents directory traversal" {
   cat > my-version <<<".."
   run rbenv-version-file-read my-version

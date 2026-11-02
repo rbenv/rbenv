@@ -8,7 +8,14 @@ VERSION_FILE="$1"
 if [ -s "$VERSION_FILE" ]; then
   # Read the first word from the specified version file. Avoid reading it whole.
   IFS="${IFS}"$'\r'
-  read -n 1024 -d "" -r version _ <"$VERSION_FILE" || :
+  read -n 1024 -d "" -r version rest <"$VERSION_FILE" || :
+  # Strip a UTF-8 byte order mark, as written by some Windows editors. If the
+  # mark was followed by whitespace, the version is the next word in the file.
+  bom=$'\xef\xbb\xbf'
+  if [[ $version == "$bom"* ]]; then
+    version="${version#"$bom"}"
+    [ -n "$version" ] || read -d "" -r version _ <<<"$rest" || :
+  fi
 
   if [ "$version" = ".." ] || [[ $version == */* ]]; then
     echo "rbenv: invalid version in \`$VERSION_FILE'" >&2
