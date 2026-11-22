@@ -1,1 +1,1 @@
-export RUBYLIB="${BASH_SOURCE%.bash}:$RUBYLIB"
+export RUBYLIB="${BASH_SOURCE%.bash}${RUBYLIB:+:$RUBYLIB}"

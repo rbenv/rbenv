@@ -107,3 +107,21 @@ SH
   run ruby -S rake
   assert_success "hello rake"
 }
+
+@test "gets gem-rehash prepended to existing RUBYLIB" {
+  export RUBYLIB='foo bar baz'
+  run rbenv exec printenv RUBYLIB
+  assert_success "$(cd $BATS_TEST_DIRNAME/../rbenv.d/exec/gem-rehash && pwd):foo bar baz"
+}
+
+@test "gets gem-rehash as only path for empty RUBYLIB" {
+  export RUBYLIB=''
+  run rbenv exec printenv RUBYLIB
+  assert_success "$(cd $BATS_TEST_DIRNAME/../rbenv.d/exec/gem-rehash && pwd)"
+}
+
+@test "gets gem-rehash as only path for absent RUBYLIB" {
+  unset RUBYLIB
+  run rbenv exec printenv RUBYLIB
+  assert_success "$(cd $BATS_TEST_DIRNAME/../rbenv.d/exec/gem-rehash && pwd)"
+}
